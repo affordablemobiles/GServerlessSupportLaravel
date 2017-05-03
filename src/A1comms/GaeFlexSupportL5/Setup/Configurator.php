@@ -76,6 +76,11 @@ class Configurator
 
         if ($revertToLocal) {
             $this->moveEnvForLocal($env_file, $env_production_file, $env_local_file);
+
+            Dotenv::makeMutable();
+            Dotenv::load(dirname($env_file), basename($env_file));
+
+            Artisan::call('config:cache', array());
         }
 
     }

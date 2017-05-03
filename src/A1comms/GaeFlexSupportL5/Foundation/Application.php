@@ -51,11 +51,6 @@ class Application extends IlluminateApplication
      */
     public function __construct($basePath = null)
     {
-        $this->configureMonologUsing(function ($monolog) {
-            $monolog->pushHandler($handler = new AppEngineFlexHandler());
-            $handler->setFormatter(new AppEngineFlexFormatter());
-        });
-
         $this->gaeBucketPath = null;
 
         // Load the 'realpath()' function replacement
@@ -65,6 +60,11 @@ class Application extends IlluminateApplication
         $this->detectGae();
 
         if ($this->isRunningOnGae()) {
+            $this->configureMonologUsing(function ($monolog) {
+                $monolog->pushHandler($handler = new AppEngineFlexHandler());
+                $handler->setFormatter(new AppEngineFlexFormatter());
+            });
+            
             $this->replaceDefaultSymfonyLineDumpers();
         }
 

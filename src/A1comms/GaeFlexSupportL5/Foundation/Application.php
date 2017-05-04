@@ -6,8 +6,8 @@ use Illuminate\Foundation\Application as IlluminateApplication;
 use A1comms\GaeFlexSupportL5\Storage\Optimizer;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Google\Cloud\Core\Logger\AppEngineFlexHandler;
-use A1comms\GaeFlexSupportL5\Logger\AppEngineFlexFormatter;
+use Google\Cloud\Logging\PsrBatchLogger;
+use Monolog\Handler\PsrHandler;
 
 class Application extends IlluminateApplication
 {
@@ -61,10 +61,9 @@ class Application extends IlluminateApplication
 
         if ($this->isRunningOnGae()) {
             $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler($handler = new AppEngineFlexHandler());
-                $handler->setFormatter(new AppEngineFlexFormatter());
+                $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
             });
-            
+
             $this->replaceDefaultSymfonyLineDumpers();
         }
 

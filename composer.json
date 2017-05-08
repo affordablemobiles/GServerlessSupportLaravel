@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "A1comms\\": "src/A1comms"
+            "A1comms\\GaeFlexSupportL5\\": "src/A1comms/GaeFlexSupportL5/"
         },
         "files": [
             "src/helpers.php"

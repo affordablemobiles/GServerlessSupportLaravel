@@ -8,6 +8,8 @@ Google App Engine (GAE) Flexible Environment support package for Laravel 5.1.
 [![Latest Unstable Version](https://poser.pugx.org/a1comms/gae-flex-support-l5/v/unstable)](https://packagist.org/packages/a1comms/gae-flex-support-l5)
 [![License](https://poser.pugx.org/a1comms/gae-flex-support-l5/license)](https://packagist.org/packages/a1comms/gae-flex-support-l5)
 
+Based on origional work for App Engine Standard by @shpasser https://github.com/shpasser/GaeSupportL5
+
 Currently supported features:
  * File system compatibility (write files to `/tmp/laravel/storage`).
  * Automatically cache and patch configuration files.

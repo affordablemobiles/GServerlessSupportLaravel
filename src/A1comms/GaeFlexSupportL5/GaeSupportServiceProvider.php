@@ -29,7 +29,7 @@ class GaeSupportServiceProvider extends ServiceProvider
     public function boot()
     {
         // Things to initialize only if we are running on GAE Flex.
-        if (!empty(gae_instance())) {
+        if (is_gae_flex()) {
             // Register the gs:// stream wrapper, as it isn't automatic on Flex.
             $storage = new GCSStorageClient();
             GCSStreamWrapper::register($storage);
@@ -65,6 +65,6 @@ class GaeSupportServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return array('gae-flex-support');
+        return array('gae-support');
     }
 }

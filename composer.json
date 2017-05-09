@@ -1,15 +1,15 @@
 {
-    "name": "a1comms/gae-flex-support-l5",
-    "description": "Google App Engine Flexible Runtime Support for Laravel 5.1 apps.",
+    "name": "a1comms/gae-support-laravel",
+    "description": "Google App Engine (Standard and Flexible Environment) runtime support for Laravel apps.",
     "license": "MIT",
     "authors": [
         {
             "name": "Samuel Melrose",
-            "email": "sam@infitialis.com"
+            "email": "sam.melrose@a1comms.com"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=5.5.9",
         "illuminate/support": "~5.1",
         "illuminate/session": "~5.1",
         "league/flysystem": "~1.0",
@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "A1comms\\GaeFlexSupportL5\\": "src/A1comms/GaeFlexSupportL5/"
+            "A1comms\\GaeSupportLaravel\\": "src/A1comms/GaeSupportLaravel/"
         },
         "files": [
             "src/helpers.php"

@@ -81,7 +81,7 @@ final class CacheFs
         if (is_null(self::$memcached) && class_exists('Memcached')) {
             $servers = [['host' => '127.0.0.1', 'port' => 11211, 'weight' => 100]];
 
-            self::$memcached = new Memcached();
+            self::$memcached = new CacheFsMemcacheContainer();
 
             foreach ($servers as $server) {
                 self::$memcached->addServer(

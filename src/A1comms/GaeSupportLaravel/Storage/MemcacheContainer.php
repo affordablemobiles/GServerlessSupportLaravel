@@ -11,8 +11,8 @@ use Illuminate\Filesystem\Filesystem as Filesystem;
  *
  * @package A1comms\GaeSupportLaravel\Storage
  */
-final class MemcacheContainer extends Filesystem {
-
+final class MemcacheContainer extends Filesystem
+{
     /**
     * $memcache - The memcache object for storing sessions.
     *

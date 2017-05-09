@@ -1,18 +1,18 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Session;
+namespace A1comms\GaeSupportLaravel\Session;
 
 use GDS;
 use Carbon\Carbon;
-use A1comms\GaeFlexSupportL5\Storage\MemcacheContainer;
 use SessionHandlerInterface;
+use A1comms\GaeSupportLaravel\Storage\MemcacheContainer;
 
 /**
- * DataStoreSessionHandler
+ * class DataStoreSessionHandler
  *
- * @uses     SessionHandlerInterface
+ * @uses SessionHandlerInterface
  *
- * @category GaeSupportL5
+ * @package A1comms\GaeSupportLaravel\Session
  */
 class DataStoreSessionHandler implements SessionHandlerInterface
 {
@@ -106,7 +106,15 @@ class DataStoreSessionHandler implements SessionHandlerInterface
         $this->lastaccess = $this->getTimeStamp();
         $this->deleteTime = Carbon::now()->subDay()->toDateTimeString();
 
-        $obj_gateway_one = new \GDS\Gateway\RESTv1(gae_project(), null);
+        $obj_gateway_one = false;
+        if ( is_gae_std() )
+        {
+            $obj_gateway_one = new \GDS\Gateway\ProtoBuf(null, null);
+        }
+        else
+        {
+            $obj_gateway_one = new \GDS\Gateway\RESTv1(gae_project(), null);
+        }
 
         $this->obj_schema = (new GDS\Schema('sessions'))
             ->addString('data', false)

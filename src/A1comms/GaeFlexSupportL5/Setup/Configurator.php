@@ -1,18 +1,17 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Setup;
+namespace A1comms\GaeSupportLaravel\Artisan;
 
 use Illuminate\Console\Command;
 use Artisan;
-use Shpasser\GaeSupportL5\Storage\Optimizer;
 use Dotenv;
+use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**
  * Class Configurator
  *
- * @package Shpasser\GaeSupportL5\Setup
+ * @package A1comms\GaeSupportLaravel\Artisan
  */
-
 class Configurator
 {
     protected $myCommand;
@@ -39,8 +38,14 @@ class Configurator
      * @param string $dbName Cloud SQL database name.
      * @param string $dbHost Cloud SQL host IPv4 address.
      */
-    public function configure($cacheConfig, $revertToLocal)
+    public function configure($gaeEnv, $cacheConfig, $revertToLocal)
     {
+        if ( ! in_array($gaeEnv, ['std', 'flex']) )
+        {
+            $this->myCommand->error('Invalid GAE Environment type, must be either "std" or "flex".');
+            return;
+        }
+
         $env_file               = app_path().'/../.env';
         $env_production_file    = app_path().'/../.env.production';
         $env_local_file         = app_path().'/../.env.local';

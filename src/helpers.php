@@ -56,7 +56,11 @@ if (!function_exists('is_gae')) {
 
 if (!function_exists('is_gae_std')) {
     function is_gae_std() {
-        return isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false;
+        return (
+            isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false
+        ||
+            isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === 0
+        );
     }
 }
 

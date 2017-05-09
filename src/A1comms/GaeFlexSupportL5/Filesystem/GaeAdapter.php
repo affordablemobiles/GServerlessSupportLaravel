@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Filesystem;
+namespace A1comms\GaeSupportLaravel\Filesystem;
 
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config;

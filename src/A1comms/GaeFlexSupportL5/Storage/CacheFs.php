@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Storage;
+namespace A1comms\GaeSupportLaravel\Storage;
 
 use Memcached;
 
@@ -61,7 +61,7 @@ final class CacheFs
                 return false;
             }
             // register the wrapper
-            stream_wrapper_register(self::PROTOCOL, 'Shpasser\GaeSupportL5\Storage\CacheFs');
+            stream_wrapper_register(self::PROTOCOL, 'A1comms\GaeSupportLaravel\Storage\CacheFs');
             self::$registered = true;
         } catch (\RuntimeException $ex) {
             return false;

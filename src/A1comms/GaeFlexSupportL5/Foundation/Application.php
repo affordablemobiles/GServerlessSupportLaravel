@@ -1,14 +1,21 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Foundation;
+namespace A1comms\GaeSupportLaravel\Foundation;
 
 use Illuminate\Foundation\Application as IlluminateApplication;
-use A1comms\GaeFlexSupportL5\Storage\Optimizer;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Google\Cloud\Logging\PsrBatchLogger;
 use Monolog\Handler\PsrHandler;
+use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
+/**
+ * class Application
+ *
+ * @uses IlluminateApplication
+ *
+ * @package A1comms\GaeSupportLaravel\Foundation
+ */
 class Application extends IlluminateApplication
 {
     /**
@@ -59,13 +66,17 @@ class Application extends IlluminateApplication
 
         $this->detectGae();
 
-        if ($this->isRunningOnGae()) {
+        if ( is_gae_std() ) {
+            $this->configureMonologUsing(function ($monolog) {
+                $monolog->pushHandler(new SyslogHandler('laravel'));
+            });
+        } else if ( is_gae_flex() ) {
             $this->configureMonologUsing(function ($monolog) {
                 $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
             });
-
-            $this->replaceDefaultSymfonyLineDumpers();
         }
+
+        $this->replaceDefaultSymfonyLineDumpers();
 
         $this->optimizer = new Optimizer($basePath, $this->runningInConsole());
         $this->optimizer->bootstrap();
@@ -125,7 +136,7 @@ class Application extends IlluminateApplication
      */
     protected function detectGae()
     {
-        if (empty(gae_instance())) {
+        if ( ! is_gae() ) {
             $this->runningOnGae = false;
             $this->appId = null;
             $this->appService = null;
@@ -208,18 +219,18 @@ class Application extends IlluminateApplication
     public function storagePath()
     {
         if ($this->runningOnGae) {
-            $bucket = '/tmp/laravel/storage';
-
-            if (! file_exists($bucket)) {
-                mkdir($bucket, 0755, true);
-                mkdir($bucket.'/app', 0755, true);
-                mkdir($bucket.'/framework', 0755, true);
-                mkdir($bucket.'/framework/views', 0755, true);
+            if (! is_null($this->gaeBucketPath)) {
+                return $this->gaeBucketPath;
             }
-
-            return $bucket;
+            $this->gaeBucketPath = Optimizer::getTemporaryPath();
+            if (! file_exists($this->gaeBucketPath)) {
+                mkdir($this->gaeBucketPath, 0755, true);
+                mkdir($this->gaeBucketPath.'/app', 0755, true);
+                mkdir($this->gaeBucketPath.'/framework', 0755, true);
+                mkdir($this->gaeBucketPath.'/framework/views', 0755, true);
+            }
+            return $this->gaeBucketPath;
         }
-
         return parent::storagePath();
     }
 }

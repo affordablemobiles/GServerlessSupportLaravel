@@ -1,16 +1,16 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Storage;
+namespace A1comms\GaeSupportLaravel\Storage;
 
 use Illuminate\Filesystem\Filesystem as Filesystem;
 
 /**
-* MemcacheContainer
-*
-* @uses     Filesystem
-*
-* @package  app
-*/
+ * class MemcacheContainer
+ *
+ * @uses Filesystem
+ *
+ * @package A1comms\GaeSupportLaravel\Storage
+ */
 final class MemcacheContainer extends Filesystem {
 
     /**

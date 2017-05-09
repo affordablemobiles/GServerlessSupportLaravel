@@ -7,25 +7,25 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
 /**
- * Class SetupCommand
+ * Class PrepareCommand
  *
  * @package A1comms\GaeSupportLaravel\Artisan
  */
-class SetupCommand extends Command
+class PrepareCommand extends Command
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'gae:setup';
+    protected $name = 'gae:prepare';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Setup an App with the ability to run on Google App Engine (Standard or Flexible Environment).';
+    protected $description = 'Prepare App to run on Google App Engine (Standard or Flexible Environment).';
 
     /**
      * Create a new command instance.
@@ -42,11 +42,9 @@ class SetupCommand extends Command
      */
     public function fire()
     {
-        $configurator = new Configurator($this);
-        $configurator->configure(
-            $this->argument('gae-env'),
-            $this->option('cache-config'),
-            $this->option('local-dev')
+        $preparator = nep Preparator($this);
+        $preparator->prepare(
+            $this->argument('gae-env')
         );
     }
 
@@ -58,7 +56,7 @@ class SetupCommand extends Command
     protected function getArguments()
     {
         return array(
-            array('gae-env', InputArgument::REQUIRED, 'GAE Environment: std or flex.'),
+            array('gae-env', InputArgument::REQUIRED, 'GAE Environment: std, flex or local (development).'),
         );
     }
 
@@ -70,10 +68,7 @@ class SetupCommand extends Command
     protected function getOptions()
     {
         return array(
-            array('cache-config', null, InputOption::VALUE_NONE,
-                'Generate cached Laravel config file for use on Google App Engine.', null),
-            array('local-dev', null, InputOption::VALUE_NONE,
-                'Revert the .env.local file back to .env for local development.', null),
+
         );
     }
 }

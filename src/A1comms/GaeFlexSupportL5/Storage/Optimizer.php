@@ -1,12 +1,16 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Storage;
+namespace A1comms\GaeSupportLaravel\Storage;
 
 use Dotenv;
 use InvalidArgumentException;
 
 /**
+ * class Optimizer
+ *
  * Initializes caching of Laravel 5.1 configuration files on GAE.
+ *
+ * @package A1comms\GaeSupportLaravel\Storage
  */
 class Optimizer
 {
@@ -51,11 +55,7 @@ class Optimizer
      */
     public function __construct($basePath, $runningInConsole)
     {
-        if (env('GAE_CACHEFS')) {
-            $this->config_path = 'cachefs://'.gae_project().'/'.gae_service().'/'.gae_version().'/bootstrap/cache';
-        } else {
-            $this->config_path = '/tmp/laravel/storage/bootstrap/cache';
-        }
+        $this->config_path = self::getTemporaryPath() . '/bootstrap/cache';
 
         $this->basePath = $basePath;
         $this->runningInConsole = $runningInConsole;
@@ -68,17 +68,27 @@ class Optimizer
     }
 
     /**
+     * Returns the temporary storage path for Laravel cache.
+     *
+     * @return string
+     */
+    public static function getTemporaryPath()
+    {
+        if (is_gae_std() || env('GAE_CACHEFS')) {
+            $this->config_path = 'cachefs://'.gae_project().'/'.gae_service().'/'.gae_version();
+        } else {
+            $this->config_path = '/tmp/laravel/storage';
+        }
+    }
+
+    /**
      * Returns the compiled views path.
      *
      * @return string
      */
     public static function compiledViewsPath()
     {
-        if (env('GAE_CACHEFS')) {
-            return 'cachefs://'.gae_project().'/'.gae_service().'/'.gae_version().'/framework/views';
-        } else {
-            return '/tmp/laravel/storage/framework/views';
-        }
+        return self::getTemporaryPath() . '/framework/views';
     }
 
     /**

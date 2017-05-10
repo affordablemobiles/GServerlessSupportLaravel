@@ -7,6 +7,7 @@ use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Google\Cloud\Logging\PsrBatchLogger;
 use Monolog\Handler\PsrHandler;
+use Monolog\Handler\SyslogHandler;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**

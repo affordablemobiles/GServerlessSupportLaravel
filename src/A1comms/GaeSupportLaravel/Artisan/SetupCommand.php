@@ -44,7 +44,7 @@ class SetupCommand extends Command
     {
         $configurator = new Configurator($this);
         $configurator->configure(
-            $this->argument('gae-env'),
+            $this->argument('gae-env')
         );
     }
 
@@ -68,7 +68,7 @@ class SetupCommand extends Command
     protected function getOptions()
     {
         return array(
-            
+
         );
     }
 }

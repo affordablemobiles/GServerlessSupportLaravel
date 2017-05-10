@@ -75,9 +75,9 @@ class Optimizer
     public static function getTemporaryPath()
     {
         if (is_gae_std() || env('GAE_CACHEFS')) {
-            $this->config_path = 'cachefs://'.gae_project().'/'.gae_service().'/'.gae_version();
+            return 'cachefs://'.gae_project().'/'.gae_service().'/'.gae_version();
         } else {
-            $this->config_path = '/tmp/laravel/storage';
+            return '/tmp/laravel/storage';
         }
     }
 

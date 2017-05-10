@@ -45,8 +45,6 @@ class SetupCommand extends Command
         $configurator = new Configurator($this);
         $configurator->configure(
             $this->argument('gae-env'),
-            $this->option('cache-config'),
-            $this->option('local-dev')
         );
     }
 
@@ -70,10 +68,7 @@ class SetupCommand extends Command
     protected function getOptions()
     {
         return array(
-            array('cache-config', null, InputOption::VALUE_NONE,
-                'Generate cached Laravel config file for use on Google App Engine.', null),
-            array('local-dev', null, InputOption::VALUE_NONE,
-                'Revert the .env.local file back to .env for local development.', null),
+            
         );
     }
 }

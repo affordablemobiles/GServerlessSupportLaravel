@@ -30,15 +30,9 @@ class Configurator
     /**
      * Configures a Laravel app to be deployed on GAE.
      *
-     * @param string $appId the GAE application ID.
-     * @param bool $generateConfig if 'true' => generate GAE config files(app.yaml and php.ini).
-     * @param bool $cacheConfig if 'true' => generate cached config file(config.php).
-     * @param string $bucketId the custom GCS bucket ID, if 'null' the default bucket is used.
-     * @param string $dbSocket Cloud SQL socket connection string.
-     * @param string $dbName Cloud SQL database name.
-     * @param string $dbHost Cloud SQL host IPv4 address.
+     * @param string $gaeEnv the GAE environment type (std or flex).
      */
-    public function configure($gaeEnv, $cacheConfig, $revertToLocal)
+    public function configure($gaeEnv)
     {
         if ( ! in_array($gaeEnv, ['std', 'flex']) )
         {
@@ -52,74 +46,13 @@ class Configurator
         $bootstrap_app_php      = app_path().'/../bootstrap/app.php';
         $config_app_php         = app_path().'/../config/app.php';
         $config_view_php        = app_path().'/../config/view.php';
-        $config_queue_php       = app_path().'/../config/queue.php';
-        $config_database_php    = app_path().'/../config/database.php';
         $config_filesystems_php = app_path().'/../config/filesystems.php';
         $cached_config_php      = base_path().'/bootstrap/cache/config.php';
 
         $this->processFile($bootstrap_app_php, ['replaceAppClass']);
-        $this->processFile($config_app_php, [
-           'replaceLaravelServiceProviders',
-           'setLogHandler'
-        ]);
+        $this->processFile($config_app_php, ['replaceLaravelServiceProviders']);
         $this->processFile($config_view_php, ['replaceCompiledPath']);
-        $this->processFile($config_queue_php, ['addQueueConfig']);
-        $this->processFile($config_database_php, ['addCloudSqlConfig']);
         $this->processFile($config_filesystems_php, ['addGaeDisk']);
-
-        if ($cacheConfig) {
-            $this->moveEnvForDeploy($env_file, $env_production_file, $env_local_file);
-
-            Dotenv::makeMutable();
-            Dotenv::load(dirname($env_file), basename($env_file));
-
-            $result = Artisan::call('config:cache', array());
-            if ($result === 0) {
-                $this->processFile($cached_config_php, ['fixCachedConfig']);
-            }
-        }
-
-        if ($revertToLocal) {
-            $this->moveEnvForLocal($env_file, $env_production_file, $env_local_file);
-
-            Dotenv::makeMutable();
-            Dotenv::load(dirname($env_file), basename($env_file));
-
-            Artisan::call('config:cache', array());
-        }
-
-    }
-
-    protected function moveEnvForDeploy($env_file, $env_production_file, $env_local_file)
-    {
-        if ( is_file($env_production_file) ) {
-            $this->myCommand->info('Moving .env.production to .env ready for deployment.');
-            rename($env_file, $env_local_file);
-            rename($env_production_file, $env_file);
-        }
-    }
-
-    protected function moveEnvForLocal($env_file, $env_production_file, $env_local_file)
-    {
-        if ( is_file($env_local_file) ) {
-            $this->myCommand->info('Moving .env.local to .env ready for local development.');
-            rename($env_file, $env_production_file);
-            rename($env_local_file, $env_file);
-        }
-    }
-
-    /**
-     * Adds 'Optimizer' options to an environment object.
-     *
-     * @param \Shpasser\GaeSupportL5\Setup\IniHelper $env
-     * the environment object to modify.
-     */
-    protected function addOptimizerOptions(IniHelper $env)
-    {
-        $env['CACHE_SERVICES_FILE']  = 'false';
-        $env['CACHE_CONFIG_FILE']    = 'false';
-        $env['CACHE_ROUTES_FILE']    = 'false';
-        $env['CACHE_COMPILED_VIEWS'] = 'false';
     }
 
     /**
@@ -170,7 +103,7 @@ class Configurator
     {
         $modified = str_replace(
             'Illuminate\Foundation\Application',
-            'A1comms\GaeFlexSupportL5\Foundation\Application',
+            'A1comms\GaeSupportLaravel\Foundation\Application',
             $contents);
 
         if ($contents !== $modified) {
@@ -191,45 +124,19 @@ class Configurator
     protected function replaceLaravelServiceProviders($contents)
     {
         $strings = [
-        //    'Illuminate\Mail\MailServiceProvider',
-        //    'Illuminate\Queue\QueueServiceProvider'
+            'Illuminate\View\ViewServiceProvider',
         ];
 
         // Replacement to:
-        //  - additionally support Google App Engine Queues,
-        //  - additionally support Google App Engine Mail.
+        //  - replace Blade compiler isExpired method for better cachefs support.
         $replacements = [
-        //    'Shpasser\GaeSupportL5\Mail\MailServiceProvider',
-        //    'Shpasser\GaeSupportL5\Queue\QueueServiceProvider'
+            'A1comms\GaeSupportLaravel\View\ViewServiceProvider',
         ];
 
         $modified = str_replace($strings, $replacements, $contents);
 
         if ($contents !== $modified) {
             $this->myCommand->info('Replaced the service providers in "config/app.php".');
-        }
-
-        return $modified;
-    }
-
-    /**
-     * Processor function. Sets the syslog log handler
-     * for a Laravel GAE app.
-     *
-     * @param string $contents the 'config/app.php' file contents.
-     *
-     * @return string the modified file contents.
-     */
-    protected function setLogHandler($contents)
-    {
-        $expression = "/'log'.*=>((?!env\('APP_LOG').)*'\b.+?\b'\)?/";
-        $replacement = "'log' => env('APP_LOG', 'single')";
-
-        $modified = preg_replace($expression, $replacement, $contents);
-
-        if ($contents !== $modified)
-        {
-            $this->myCommand->info('Set the log handler in "config/app.php".');
         }
 
         return $modified;
@@ -256,88 +163,6 @@ EOT;
 
         if ($contents !== $modified) {
             $this->myCommand->info('Replaced the \'compiled\' path in "config/view.php".');
-        }
-
-        return $modified;
-    }
-
-    /**
-     * Adds the GAE queue configuration to the 'config/queue.php'
-     * if it does not already exist.
-     *
-     * @param string $contents the 'config/queue.php' file contents.
-     * @return string the modified file contents.
-     */
-    protected function addQueueConfig($contents)
-    {
-        if (str_contains($contents, "'gae'")) {
-            return $contents;
-        }
-
-        $expression = "/'connections'\s*=>\s*\[/";
-
-        $replacement =
-<<<EOT
-'connections' => [
-
-        'gae' => [
-            'driver'	=> 'gae',
-            'queue'		=> 'default',
-            'url'		=> '/tasks',
-            'encrypt'	=> true,
-        ],
-EOT;
-        $modified = preg_replace($expression, $replacement, $contents);
-
-        if ($contents !== $modified) {
-            $this->myCommand->info('Added queue driver configuration in "config/queue.php".');
-        }
-
-        return $modified;
-    }
-
-    /**
-     * Adds the Cloud SQL configuration to the 'config/database.php'
-     * if it does not already exist.
-     *
-     * @param string $contents the 'config/database.php' file contents.
-     * @return string the modified file contents.
-     */
-    protected function addCloudSqlConfig($contents)
-    {
-        if (str_contains($contents, "'cloudsql'")) {
-            return $contents;
-        }
-
-        $expressions = [
-            "/'default'.*=>\s*'\b.+\b'/",
-            "/'connections'\s*=>\s*\[/"
-        ];
-
-        $replacements = [
-            "'default' => env('DB_CONNECTION', 'mysql')",
-<<<EOT
-'connections' => [
-
-        'cloudsql' => [
-            'driver'      => 'mysql',
-            'unix_socket' => env('DB_SOCKET'),
-            'host'        => env('DB_HOST'),
-            'database'    => env('DB_DATABASE'),
-            'username'    => env('DB_USERNAME'),
-            'password'    => env('DB_PASSWORD'),
-            'charset'     => 'utf8',
-            'collation'   => 'utf8_unicode_ci',
-            'prefix'      => '',
-            'strict'      => false,
-        ],
-EOT
-        ];
-
-        $modified = preg_replace($expressions, $replacements, $contents);
-
-        if ($contents !== $modified) {
-            $this->myCommand->info('Added Cloud SQL driver configuration in "config/database.php".');
         }
 
         return $modified;
@@ -380,91 +205,6 @@ EOT
         }
 
         return $modified;
-    }
-
-    /**
-     * Processor function. Pre-processes windows paths.
-     *
-     * @param string $contents the 'bootstrap/cache/config.php' file contents.
-     *
-     * @return string the modified file contents.
-     */
-    protected function preprocessWindowsPaths($contents)
-    {
-        $expression = "/'([A-Za-z]:)?((\\\\|\/)[^\\/:*?\"\'<>|\r\n]*)*'/";
-
-        $paths = array();
-        preg_match_all($expression, $contents, $paths);
-
-        $modified = $contents;
-        foreach ($paths[0] as $path) {
-            $normalizedPath = str_replace('\\\\', '/', $path);
-            $modified = str_replace($path, $normalizedPath, $modified);
-        }
-
-        if ($contents !== $modified) {
-            $this->myCommand->info('Preprocessed windows paths in "bootstrap/cache/config.php".');
-        }
-
-        return $modified;
-    }
-
-    /**
-     * Fixes the paths in the cached config file.
-     *
-     * @param string $contents the 'bootstrap/cache/config.php' file contents.
-     * @return string the modified file contents.
-     */
-    protected function fixCachedConfig($contents)
-    {
-        $app_path = app_path();
-        $storage_path = storage_path();
-        $base_path = base_path();
-        $replaceFunction = 'str_replace';
-
-        if ($this->isRunningOnWindows()) {
-            $contents = $this->preprocessWindowsPaths($contents);
-            $app_path     = str_replace('\\', '/', $app_path);
-            $storage_path = str_replace('\\', '/', $storage_path);
-            $base_path    = str_replace('\\', '/', $base_path);
-            $replaceFunction = 'str_ireplace';
-        }
-
-        $strings = [
-            "'${app_path}",
-            "'${storage_path}",
-            "'${base_path}",
-            "'REPLACE_WITH_VIEW_PATH'"
-        ];
-
-        $replacements = [
-            "app_path().'",
-            "storage_path().'",
-            "base_path().'",
-            '\A1comms\GaeFlexSupportL5\Storage\Optimizer::compiledViewsPath()'
-        ];
-
-        $modified = $replaceFunction($strings, $replacements, $contents);
-
-        if ($contents !== $modified) {
-            $this->myCommand->info('Generated "bootstrap/cache/config.php" for GAE deployment.');
-            $this->myCommand->comment('* To use "bootstrap/cache/config.php" locally please regenerate it.');
-        }
-
-        return $modified;
-    }
-
-    /**
-     * Determines whether the app is running on windows.
-     * @return boolean 'true' if running on Windows,  otherwise 'false'.
-     */
-    protected function isRunningOnWindows()
-    {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return true;
-        }
-
-        return false;
     }
 
     /**

@@ -42,7 +42,7 @@ class PrepareCommand extends Command
      */
     public function fire()
     {
-        $preparator = nep Preparator($this);
+        $preparator = new Preparator($this);
         $preparator->prepare(
             $this->argument('gae-env')
         );

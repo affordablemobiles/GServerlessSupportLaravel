@@ -129,8 +129,6 @@ class Preparator
             return;
         }
 
-        $this->backupFile($filePath);
-
         file_put_contents($filePath, $processed);
     }
 

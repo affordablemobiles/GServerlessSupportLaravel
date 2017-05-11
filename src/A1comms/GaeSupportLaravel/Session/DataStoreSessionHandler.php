@@ -6,6 +6,7 @@ use GDS;
 use Carbon\Carbon;
 use SessionHandlerInterface;
 use A1comms\GaeSupportLaravel\Storage\MemcacheContainer;
+use A1comms\GaeSupportLaravel\Datastore\DatastoreFactory;
 
 /**
  * class DataStoreSessionHandler
@@ -106,15 +107,7 @@ class DataStoreSessionHandler implements SessionHandlerInterface
         $this->lastaccess = $this->getTimeStamp();
         $this->deleteTime = Carbon::now()->subDay()->toDateTimeString();
 
-        $obj_gateway_one = false;
-        if ( is_gae_std() )
-        {
-            $obj_gateway_one = new \GDS\Gateway\ProtoBuf(null, null);
-        }
-        else
-        {
-            $obj_gateway_one = new \GDS\Gateway\RESTv1(gae_project(), null);
-        }
+        $obj_gateway_one = DatastoreFactory::make();
 
         $this->obj_schema = (new GDS\Schema('sessions'))
             ->addString('data', false)

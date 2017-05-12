@@ -30,16 +30,9 @@ class Configurator
     /**
      * Configures a Laravel app to be deployed on GAE.
      *
-     * @param string $gaeEnv the GAE environment type (std or flex).
      */
-    public function configure($gaeEnv)
+    public function configure()
     {
-        if ( ! in_array($gaeEnv, ['std', 'flex']) )
-        {
-            $this->myCommand->error('Invalid GAE Environment type, must be either "std" or "flex".');
-            return;
-        }
-
         $env_file               = app_path().'/../.env';
         $env_production_file    = app_path().'/../.env.production';
         $env_local_file         = app_path().'/../.env.local';

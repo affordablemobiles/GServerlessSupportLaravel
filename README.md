@@ -87,11 +87,27 @@ The storage on the Standard Environment is shared between all instances, but can
 
 The main one is an altered Blade compiler, with an `isExpired` function that reads the whole view cache rather than checking if the file exists, which in turn causes the modified `cachefs` driver to create a local in-memory cache of the contents using variables, so it isn't affected if memcache is cleared between the `isExpired` check and the actual view rendering, which we used to see causing quite a few fatal errors.
 
-### Persistent Sessions in DataStore
-
+## Persistent Sessions in DataStore
 We've included a session driver using DataStore for persistence, cached by memcache* for faster access times and reduced billing, giving you the best of both worlds when it comes to speed and persistence.
 
 To make use of this, set:
 - `SESSION_DRIVER=gae` in `.env`
 
 (*) memcache code is included, but since it isn't currently available on the Flexible environment, this won't function on there for now.
+
+## Helper Functions
+There are a set of helper functions included that you can use for GAE specific purposes:
+ * `gae_project()`
+   * The Google Cloud project ID.
+ * `gae_service()`
+   * The App Engine Service/Module name for the current instance.
+ * `gae_version()`
+   * The App Engine version name for the current instance.
+ * `gae_instance()`
+   * The App Engine instance name.
+ * `is_gae()`
+   * Are we running on App Engine, returns true for Standard Environment + Local SDK & Flexible Environment.
+ * `is_gae_std()`
+   * Are we running on App Engine Standard Environment, also returns true for the Local SDK.
+ * `is_gae_flex()`
+   * Are we running on App Engine Flexible Environment.

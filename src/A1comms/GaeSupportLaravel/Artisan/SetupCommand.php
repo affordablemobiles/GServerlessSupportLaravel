@@ -1,11 +1,16 @@
 <?php
 
-namespace A1comms\GaeFlexSupportL5\Setup;
+namespace A1comms\GaeSupportLaravel\Artisan;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
+/**
+ * Class SetupCommand
+ *
+ * @package A1comms\GaeSupportLaravel\Artisan
+ */
 class SetupCommand extends Command
 {
     /**
@@ -20,7 +25,7 @@ class SetupCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Add Google App Engine Flexible Environment support to the application.';
+    protected $description = 'Setup an App with the ability to run on Google App Engine (Standard or Flexible Environment).';
 
     /**
      * Create a new command instance.
@@ -39,8 +44,7 @@ class SetupCommand extends Command
     {
         $configurator = new Configurator($this);
         $configurator->configure(
-            $this->option('cache-config'),
-            $this->option('local-dev')
+            
         );
     }
 
@@ -52,6 +56,7 @@ class SetupCommand extends Command
     protected function getArguments()
     {
         return array(
+
         );
     }
 
@@ -63,10 +68,7 @@ class SetupCommand extends Command
     protected function getOptions()
     {
         return array(
-            array('cache-config', null, InputOption::VALUE_NONE,
-                'Generate cached Laravel config file for use on Google App Engine.', null),
-            array('local-dev', null, InputOption::VALUE_NONE,
-                'Revert the .env.local file back to .env for local development.', null),
+
         );
     }
 }

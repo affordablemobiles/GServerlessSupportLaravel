@@ -33,7 +33,7 @@ Then include the service provider within `config/app.php`.
 
 ```php
  'providers' => [
-     A1comms\GaeFlexSupportL5\GaeSupportServiceProvider::class
+     A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class
  ];
 ```
 

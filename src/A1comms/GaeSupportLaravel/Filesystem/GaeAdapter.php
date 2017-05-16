@@ -26,7 +26,7 @@ use League\Flysystem\Config;
  * slash which is not supported by GCS and an empty directory listing is returned.
  * In order to make the check pass the path has to be 'gs://bucket/storage/app/'.
  *
- * @package A1comms\GaeFlexSupportL5\Filesystem
+ * @package A1comms\GaeSupportLaravel\Filesystem
  */
 class GaeAdapter extends Local
 {

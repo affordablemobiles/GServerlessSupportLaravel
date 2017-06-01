@@ -72,7 +72,7 @@ class GoogleCloudTraceProvider extends ServiceProvider
                 return new PushQueueReporter();
             }
             else if ( is_gae_flex() )
-            //{
+            {
             //    return new AsyncReporter([
             //        'clientConfig' => $app['config']['services']['google'],
             //    ]);

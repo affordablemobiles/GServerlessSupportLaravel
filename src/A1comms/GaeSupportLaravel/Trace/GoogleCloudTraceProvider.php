@@ -10,12 +10,15 @@ use Google\Cloud\Trace\Reporter\SyncReporter;
 //use Google\Cloud\Trace\Reporter\AsyncReporter;
 use Google\Cloud\Trace\Reporter\NullReporter;
 use Google\Cloud\Trace\Reporter\ReporterInterface;
+use A1comms\GaeSupportLaravel\Trace\Reporter\PushQueueReporter;
 use Google\Cloud\Trace\Sampler\SamplerInterface;
 use Google\Cloud\Trace\Sampler\QpsSampler;
 use Google\Cloud\Trace\Sampler\AlwaysOffSampler;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
-use A1comms\GaeSupportLaravel\Trace\Reporter\PushQueueReporter;
+use Illuminate\Contracts\Cache\Repository;
+use Madewithlove\IlluminatePsrCacheBridge\Laravel\CacheItemPool;
+use Madewithlove\IlluminatePsrCacheBridge\Laravel\CacheItem;
 
 class GoogleCloudTraceProvider extends ServiceProvider
 {
@@ -91,6 +94,13 @@ class GoogleCloudTraceProvider extends ServiceProvider
                 $app->make(CacheItemPoolInterface::class),
                 ['cacheItemClass' => get_class($app->make(CacheItemInterface::class))]
             );
+        });
+        $this->app->bind(CacheItemPoolInterface::class, function () {
+            $repository = $this->app->make(Repository::class);
+            return new CacheItemPool($repository);
+        });
+        $this->app->bind(CacheItemInterface::class, function () {
+            return new CacheItem('_');
         });
     }
     public function provides()

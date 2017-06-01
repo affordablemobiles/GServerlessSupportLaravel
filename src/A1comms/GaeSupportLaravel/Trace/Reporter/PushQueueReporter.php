@@ -55,12 +55,12 @@ class PushQueueReporter implements ReporterInterface
 
             $t_trace = $trace;
             $t_trace += [
-                "spans"     => $s_spans;
+                "spans"     => $s_spans,
             ]
 
             if (class_exists('google\appengine\api\taskqueue\PushTask')) {
                 $tasks += [
-                    new \google\appengine\api\taskqueue\PushTask('/system/traceSubmit', ['data' => json_encode($t_trace)], ['delay_seconds' => 0, 'method' => 'POST'])
+                    new \google\appengine\api\taskqueue\PushTask('/system/traceSubmit', ['data' => json_encode($t_trace)], ['delay_seconds' => 0, 'method' => 'POST']),
                 ];
             }
 

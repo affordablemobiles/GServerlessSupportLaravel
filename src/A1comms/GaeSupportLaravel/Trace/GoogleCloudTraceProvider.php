@@ -8,6 +8,7 @@ use Google\Cloud\Trace\TraceClient;
 use Google\Cloud\Trace\RequestTracer;
 use Google\Cloud\Trace\Reporter\SyncReporter;
 //use Google\Cloud\Trace\Reporter\AsyncReporter;
+use Google\Cloud\Trace\Reporter\NullInterface;
 use Google\Cloud\Trace\Reporter\ReporterInterface;
 use Google\Cloud\Trace\Sampler\SamplerInterface;
 use Google\Cloud\Trace\Sampler\QpsSampler;
@@ -70,14 +71,15 @@ class GoogleCloudTraceProvider extends ServiceProvider
             {
                 return new PushQueueReporter();
             }
-            //else if ( is_gae_flex() )
+            else if ( is_gae_flex() )
             //{
             //    return new AsyncReporter([
             //        'clientConfig' => $app['config']['services']['google'],
             //    ]);
-            //}
+                return new SyncReporter($app->make(TraceClient::class));
+            }
 
-            return new SyncReporter($app->make(TraceClient::class));
+            return new NullReporter();
         });
         $this->app->singleton(SamplerInterface::class, function($app) {
             if ( is_gae_std() )

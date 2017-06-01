@@ -45,7 +45,7 @@ class PushQueueReporter implements ReporterInterface
         $tasks = [];
 
         $i = 0;
-        while ($i < count(self::$spans)){
+        while ($i < count($spans)){
             $s_spans = array_map(
                 function (TraceSpan $span) {
                     return $span->info();

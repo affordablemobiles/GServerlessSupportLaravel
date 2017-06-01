@@ -7,7 +7,7 @@ use Google\Cloud\ServiceBuilder;
 use Google\Cloud\Trace\TraceClient;
 use Google\Cloud\Trace\RequestTracer;
 use Google\Cloud\Trace\Reporter\SyncReporter;
-use Google\Cloud\Trace\Reporter\AsyncReporter;
+//use Google\Cloud\Trace\Reporter\AsyncReporter;
 use Google\Cloud\Trace\Reporter\ReporterInterface;
 use Google\Cloud\Trace\Sampler\SamplerInterface;
 use Google\Cloud\Trace\Sampler\QpsSampler;

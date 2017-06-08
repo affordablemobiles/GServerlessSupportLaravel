@@ -69,3 +69,9 @@ if (!function_exists('is_gae_flex')) {
         return isset( $_SERVER['GAE_INSTANCE'] );
     }
 }
+
+if (!function_exists('app_path')) {
+    function app_path() {
+        return base_path('app');
+    }
+}

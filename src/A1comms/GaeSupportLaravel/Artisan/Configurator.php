@@ -99,6 +99,11 @@ class Configurator
             'A1comms\GaeSupportLaravel\Foundation\Application',
             $contents);
 
+        $modified = str_replace(
+            'Laravel\Lumen\Application',
+            'A1comms\GaeSupportLaravel\Foundation\LumenApplication',
+            $contents);
+
         if ($contents !== $modified) {
             $this->myCommand->info('Replaced the application class in "bootstrap/app.php".');
         }

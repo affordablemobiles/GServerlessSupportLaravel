@@ -29,12 +29,26 @@ Pull in the package via Composer.
  }
 ```
 
-Then include the service provider within `config/app.php`.
+For Laravel, include the service provider within `config/app.php`:
 
 ```php
  'providers' => [
      A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class
  ];
+```
+
+For Lumen, within `bootstrap/app.php`:
+
+- Uncomment the following line in order to use the `Facades`
+
+```php
+$app->withFacades();
+```
+
+- Include the service provider
+
+```php
+$app->register(A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class);
 ```
 
 To automatically patch your configuration files ready for use with GAE, run the setup command:

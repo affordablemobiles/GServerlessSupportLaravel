@@ -33,9 +33,9 @@ class Preparator
      */
     public function prepare($gaeEnv)
     {
-        if ( ! in_array($gaeEnv, ['std', 'flex', 'local']) )
+        if ( ! in_array($gaeEnv, ['std', 'flex', 'local', 'dev']) )
         {
-            $this->myCommand->error('Invalid GAE Environment type, must be either "std", "flex" or "local".');
+            $this->myCommand->error('Invalid GAE Environment type, must be either "std", "flex", "local" or "dev".');
             return;
         }
 

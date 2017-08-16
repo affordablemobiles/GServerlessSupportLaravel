@@ -52,6 +52,16 @@ class Preparator
             Dotenv::load(dirname($env_file), basename($env_file));
 
             Artisan::call('config:cache', array());
+        } else if ($gaeEnv == 'dev') {
+            $this->moveEnvForLocal($env_file, $env_production_file, $env_local_file);
+
+            Dotenv::makeMutable();
+            Dotenv::load(dirname($env_file), basename($env_file));
+
+            $result = Artisan::call('config:cache', array());
+            if ($result === 0) {
+                $this->processFile($cached_config_php, ['fixCachedConfig']);
+            }
         } else {
             $this->moveEnvForDeploy($env_file, $env_production_file, $env_local_file);
 

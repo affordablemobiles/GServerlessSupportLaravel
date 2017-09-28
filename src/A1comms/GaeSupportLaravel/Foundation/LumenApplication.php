@@ -19,6 +19,13 @@ use A1comms\GaeSupportLaravel\Storage\Optimizer;
 class LumenApplication extends \Laravel\Lumen\Application
 {
     /**
+     * A custom callback used to configure Monolog.
+     *
+     * @var callable|null
+     */
+    protected $monologConfigurator;
+    
+    /**
      * The GAE app ID.
      *
      * @var string
@@ -238,5 +245,33 @@ class LumenApplication extends \Laravel\Lumen\Application
             return $this->gaeBucketPath;
         }
         return parent::storagePath();
+    }
+    
+    /**
+     * Register container bindings for the application.
+     *
+     * @return void
+     */
+    protected function registerLogBindings()
+    {
+        $this->singleton('Psr\Log\LoggerInterface', function () {
+            if ($this->monologConfigurator) {
+                return call_user_func($this->monologConfigurator, new Logger('lumen'));
+            } else {
+                return new Logger('lumen', [$this->getMonologHandler()]);
+            }
+        });
+    }
+    
+    /**
+     * Define a callback to be used to configure Monolog.
+     *
+     * @param  callable  $callback
+     * @return $this
+     */
+    public function configureMonologUsing(callable $callback)
+    {
+        $this->monologConfigurator = $callback;
+        return $this;
     }
 }

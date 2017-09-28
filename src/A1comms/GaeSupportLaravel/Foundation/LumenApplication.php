@@ -80,6 +80,7 @@ class LumenApplication extends \Laravel\Lumen\Application
                 $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
                 $monolog->pushHandler($handler);
             });
+        }
 
         $this->replaceDefaultSymfonyLineDumpers();
 

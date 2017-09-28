@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Artisan;
 
 use Illuminate\Console\Command;
-use Artisan;
+use Illuminate\Console\Application as Artisan;
 use Dotenv;
 
 /**

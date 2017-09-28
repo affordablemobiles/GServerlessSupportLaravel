@@ -5,5 +5,13 @@ use \A1comms\GaeSupportLaravel\Http\Controllers\SessionGarbageCollectionControll
 /**
  * Maintenance routes.
  */
-Route::get('gae/sessiongc',  array('as' => 'sessiongc',
-    'uses' => SessionGarbageCollectionController::class.'@run'));
+if (is_lumen())
+{
+    $app->get('gae/sessiongc',  array('as' => 'sessiongc',
+        'uses' => SessionGarbageCollectionController::class.'@run'));
+}
+else
+{
+    Route::get('gae/sessiongc',  array('as' => 'sessiongc',
+        'uses' => SessionGarbageCollectionController::class.'@run'));
+}

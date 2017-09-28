@@ -74,7 +74,12 @@ class LumenApplication extends \Laravel\Lumen\Application
             $this->configureMonologUsing(function ($monolog) {
                 $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
             });
-        }
+        } else {
+            $this->configureMonologUsing(function (\Monolog\Logger $monolog) {
+                $handler = new \Monolog\Handler\StreamHandler($this->storagePath('logs/lumen.log'));
+                $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+                $monolog->pushHandler($handler);
+            });
 
         $this->replaceDefaultSymfonyLineDumpers();
 

@@ -75,3 +75,9 @@ if (!function_exists('app_path')) {
         return base_path('app');
     }
 }
+
+if (!function_exists('is_lumen')) {
+    function is_lumen() {
+        return class_exists('\Laravel\Lumen\Application');
+    }
+}

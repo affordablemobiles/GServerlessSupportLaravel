@@ -238,7 +238,7 @@ class LumenApplication extends \Laravel\Lumen\Application
             return new SyslogHandler('intranet', 'user', Logger::DEBUG, false, LOG_PID);
         } else if ( is_gae_flex() ) {
             $logging = new LoggingClient();
-            return $logging->psrLogger('app', ['batchEnabled' => true]);
+            return new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true]));
         } else {
             $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
             $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));

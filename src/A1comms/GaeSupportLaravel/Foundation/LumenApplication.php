@@ -8,6 +8,7 @@ use Google\Cloud\Logging\PsrBatchLogger;
 use Monolog\Logger;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
+use Monolog\Handler\StreamHandler;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**
@@ -18,14 +19,7 @@ use A1comms\GaeSupportLaravel\Storage\Optimizer;
  * @package A1comms\GaeSupportLaravel\Foundation
  */
 class LumenApplication extends \Laravel\Lumen\Application
-{
-    /**
-     * A custom callback used to configure Monolog.
-     *
-     * @var callable|null
-     */
-    protected $monologConfigurator;
-    
+{   
     /**
      * The GAE app ID.
      *
@@ -73,22 +67,6 @@ class LumenApplication extends \Laravel\Lumen\Application
         require_once(__DIR__ . '/gae_realpath.php');
 
         $this->detectGae();
-
-        if ( is_gae_std() ) {
-            $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new SyslogHandler('laravel'));
-            });
-        } else if ( is_gae_flex() ) {
-            $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
-            });
-        } else {
-            $this->configureMonologUsing(function (\Monolog\Logger $monolog) {
-                $handler = new \Monolog\Handler\StreamHandler($this->storagePath('logs/lumen.log'));
-                $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
-                $monolog->pushHandler($handler);
-            });
-        }
 
         $this->replaceDefaultSymfonyLineDumpers();
 
@@ -249,30 +227,22 @@ class LumenApplication extends \Laravel\Lumen\Application
     }
     
     /**
-     * Register container bindings for the application.
+     * Overrides the default implementation in order to
+     * return a Syslog Monolog handler when running on GAE.
      *
-     * @return void
+     * @return \Monolog\Handler\AbstractHandler
      */
-    protected function registerLogBindings()
+    protected function getMonologHandler()
     {
-        $this->singleton('Psr\Log\LoggerInterface', function () {
-            if ($this->monologConfigurator) {
-                return call_user_func($this->monologConfigurator, new Logger('lumen'));
-            } else {
-                return new Logger('lumen', [$this->getMonologHandler()]);
-            }
-        });
-    }
-    
-    /**
-     * Define a callback to be used to configure Monolog.
-     *
-     * @param  callable  $callback
-     * @return $this
-     */
-    public function configureMonologUsing(callable $callback)
-    {
-        $this->monologConfigurator = $callback;
-        return $this;
+        if ( is_gae_std() ) {
+            return new SyslogHandler('intranet', 'user', Logger::DEBUG, false, LOG_PID);
+        } else if ( is_gae_flex() ) {
+            return new PsrHandler(new PsrBatchLogger('app'));
+        } else {
+            $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
+            $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+            return $handler;
+        }
+        return parent::getMonologHandler();
     }
 }

@@ -75,7 +75,7 @@ class Application extends IlluminateApplication
         } else if ( is_gae_flex() ) {
             $this->configureMonologUsing(function ($monolog) {
                 $logging = new LoggingClient();
-                $monolog->pushHandler($logging->psrLogger('app', ['batchEnabled' => true]));
+                $monolog->pushHandler(new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true])));
             });
         } else {
             $this->configureMonologUsing(function ($monolog) {

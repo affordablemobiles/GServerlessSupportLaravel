@@ -8,6 +8,7 @@ use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Google\Cloud\Logging\PsrBatchLogger;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
+use Monolog\Handler\StreamHandler;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**
@@ -73,7 +74,13 @@ class Application extends IlluminateApplication
             });
         } else if ( is_gae_flex() ) {
             $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
+                $monolog->pushHandler(new PsrHandler('app', ['batchEnabled' => true]));
+            });
+        } else {
+            $this->configureMonologUsing(function ($monolog) {
+                $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
+                $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+                $monolog->pushHandler($handler);
             });
         }
 

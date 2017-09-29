@@ -4,7 +4,7 @@ namespace A1comms\GaeSupportLaravel\Foundation;
 
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Google\Cloud\Logging\PsrBatchLogger;
+use Google\Cloud\Logging\LoggingClient;
 use Monolog\Logger;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
@@ -237,7 +237,8 @@ class LumenApplication extends \Laravel\Lumen\Application
         if ( is_gae_std() ) {
             return new SyslogHandler('intranet', 'user', Logger::DEBUG, false, LOG_PID);
         } else if ( is_gae_flex() ) {
-            return new PsrHandler('app', ['batchEnabled' => true]);
+            $logging = new LoggingClient();
+            return $logging->psrLogger('app', ['batchEnabled' => true]);
         } else {
             $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
             $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));

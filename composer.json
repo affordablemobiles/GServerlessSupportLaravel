@@ -14,7 +14,7 @@
         "illuminate/session": "~5.1",
         "league/flysystem": "~1.0",
         "tomwalder/php-gds": "~3.0",
-        "google/cloud": "0.*",
+        "google/cloud": "^0.33",
         "madewithlove/illuminate-psr-cache-bridge": "^1.0"
     },
     "require-dev": {

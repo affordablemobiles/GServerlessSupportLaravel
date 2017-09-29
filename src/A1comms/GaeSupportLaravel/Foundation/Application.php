@@ -5,7 +5,7 @@ namespace A1comms\GaeSupportLaravel\Foundation;
 use Illuminate\Foundation\Application as IlluminateApplication;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Google\Cloud\Logging\PsrBatchLogger;
+use Google\Cloud\Logging\LoggingClient;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Handler\StreamHandler;
@@ -74,7 +74,8 @@ class Application extends IlluminateApplication
             });
         } else if ( is_gae_flex() ) {
             $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new PsrHandler('app', ['batchEnabled' => true]));
+                $logging = new LoggingClient();
+                $monolog->pushHandler($logging->psrLogger('app', ['batchEnabled' => true]));
             });
         } else {
             $this->configureMonologUsing(function ($monolog) {

@@ -225,11 +225,11 @@ class Application extends IlluminateApplication
      *
      * @return string Storage path URL
      */
-    public function storagePath()
+    public function storagePath($path = null)
     {
         if ($this->runningOnGae) {
             if (! is_null($this->gaeBucketPath)) {
-                return $this->gaeBucketPath;
+                return $this->gaeBucketPath.($path ? '/'.$path : $path);
             }
             $this->gaeBucketPath = Optimizer::getTemporaryPath();
             if (! file_exists($this->gaeBucketPath)) {
@@ -238,8 +238,8 @@ class Application extends IlluminateApplication
                 mkdir($this->gaeBucketPath.'/framework', 0755, true);
                 mkdir($this->gaeBucketPath.'/framework/views', 0755, true);
             }
-            return $this->gaeBucketPath;
+            return $this->gaeBucketPath.($path ? '/'.$path : $path);
         }
-        return parent::storagePath();
+        return parent::storagePath().($path ? '/'.$path : $path);
     }
 }

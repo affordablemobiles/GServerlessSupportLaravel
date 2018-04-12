@@ -22,6 +22,12 @@ class BladeCompiler extends \Illuminate\View\Compilers\BladeCompiler implements 
      */
     public function isExpired($path)
     {
+        // if not production envirionment
+        // we want to load a new view on each page request
+        if (!is_production()) {
+            return true;
+        }
+
         $compiled = $this->getCompiledPath($path);
 
         // On App Engine, we expect to be using the cachefs filesystem,

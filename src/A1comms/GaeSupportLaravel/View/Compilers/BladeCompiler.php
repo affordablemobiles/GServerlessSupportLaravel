@@ -24,7 +24,7 @@ class BladeCompiler extends \Illuminate\View\Compilers\BladeCompiler implements 
     {
         // if not production envirionment
         // we want to load a new view on each page request
-        if (!is_production()) {
+        if (!is_gae_production()) {
             return true;
         }
 

@@ -125,3 +125,6 @@ There are a set of helper functions included that you can use for GAE specific p
    * Are we running on App Engine Standard Environment, also returns true for the Local SDK.
  * `is_gae_flex()`
    * Are we running on App Engine Flexible Environment.
+ * `is_gae_production()`
+   * Are we running on App Engine, returns true for Standard Environment + Flexible Environment.
+   * Designed to return false for development environments.

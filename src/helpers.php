@@ -82,8 +82,8 @@ if (!function_exists('is_lumen')) {
     }
 }
 
-if (!function_exists('is_production')) {
-    function is_production() {
+if (!function_exists('is_gae_production')) {
+    function is_gae_production() {
         return ( is_gae() && (strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false) );
     }
 }

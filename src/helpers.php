@@ -84,7 +84,7 @@ if (!function_exists('is_lumen')) {
 
 if (!function_exists('is_production')) {
     function is_production() {
-        return strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false;
+        return ( is_gae() && (strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false) );
     }
 }
 

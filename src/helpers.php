@@ -75,3 +75,9 @@ if (!function_exists('app_path')) {
         return base_path('app');
     }
 }
+
+if (!function_exists('is_production')) {
+    function is_production() {
+        return strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false;
+    }
+}

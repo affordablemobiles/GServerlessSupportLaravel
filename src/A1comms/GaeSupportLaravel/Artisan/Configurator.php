@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Artisan;
 
 use Illuminate\Console\Command;
-use Artisan;
+use Illuminate\Console\Application as Artisan;
 use Dotenv;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
@@ -33,9 +33,9 @@ class Configurator
      */
     public function configure()
     {
-        $env_file               = app_path().'/../.env';
-        $env_production_file    = app_path().'/../.env.production';
-        $env_local_file         = app_path().'/../.env.local';
+        $env_file               = app_path().'/../env';
+        $env_production_file    = app_path().'/../env.production';
+        $env_local_file         = app_path().'/../env.local';
         $bootstrap_app_php      = app_path().'/../bootstrap/app.php';
         $config_app_php         = app_path().'/../config/app.php';
         $config_view_php        = app_path().'/../config/view.php';

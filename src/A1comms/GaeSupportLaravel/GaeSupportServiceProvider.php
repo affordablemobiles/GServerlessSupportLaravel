@@ -49,6 +49,9 @@ class GaeSupportServiceProvider extends ServiceProvider
         Storage::extend('gae', function ($app, $config) {
             return new Flysystem(new GaeFilesystemAdapter($config['root']));
         });
+
+        // register the package's routes
+        require __DIR__.'/Http/routes.php';
     }
 
     /**

@@ -76,8 +76,15 @@ if (!function_exists('app_path')) {
     }
 }
 
+if (!function_exists('is_lumen')) {
+    function is_lumen() {
+        return class_exists('\Laravel\Lumen\Application');
+    }
+}
+
 if (!function_exists('is_production')) {
     function is_production() {
         return strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false;
     }
 }
+

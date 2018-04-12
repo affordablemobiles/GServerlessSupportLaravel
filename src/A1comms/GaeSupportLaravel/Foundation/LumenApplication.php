@@ -4,9 +4,11 @@ namespace A1comms\GaeSupportLaravel\Foundation;
 
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Google\Cloud\Logging\PsrBatchLogger;
+use Google\Cloud\Logging\LoggingClient;
+use Monolog\Logger;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
+use Monolog\Handler\StreamHandler;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**
@@ -17,7 +19,7 @@ use A1comms\GaeSupportLaravel\Storage\Optimizer;
  * @package A1comms\GaeSupportLaravel\Foundation
  */
 class LumenApplication extends \Laravel\Lumen\Application
-{
+{   
     /**
      * The GAE app ID.
      *
@@ -65,16 +67,6 @@ class LumenApplication extends \Laravel\Lumen\Application
         require_once(__DIR__ . '/gae_realpath.php');
 
         $this->detectGae();
-
-        if ( is_gae_std() ) {
-            $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new SyslogHandler('laravel'));
-            });
-        } else if ( is_gae_flex() ) {
-            $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
-            });
-        }
 
         $this->replaceDefaultSymfonyLineDumpers();
 
@@ -216,11 +208,11 @@ class LumenApplication extends \Laravel\Lumen\Application
      *
      * @return string Storage path URL
      */
-    public function storagePath()
+    public function storagePath($path = null)
     {
         if ($this->runningOnGae) {
             if (! is_null($this->gaeBucketPath)) {
-                return $this->gaeBucketPath;
+                return $this->gaeBucketPath.($path ? '/'.$path : $path);
             }
             $this->gaeBucketPath = Optimizer::getTemporaryPath();
             if (! file_exists($this->gaeBucketPath)) {
@@ -229,8 +221,29 @@ class LumenApplication extends \Laravel\Lumen\Application
                 mkdir($this->gaeBucketPath.'/framework', 0755, true);
                 mkdir($this->gaeBucketPath.'/framework/views', 0755, true);
             }
-            return $this->gaeBucketPath;
+            return $this->gaeBucketPath.($path ? '/'.$path : $path);
         }
-        return parent::storagePath();
+        return parent::storagePath($path);
+    }
+    
+    /**
+     * Overrides the default implementation in order to
+     * return a Syslog Monolog handler when running on GAE.
+     *
+     * @return \Monolog\Handler\AbstractHandler
+     */
+    protected function getMonologHandler()
+    {
+        if ( is_gae_std() ) {
+            return new SyslogHandler('intranet', 'user', Logger::DEBUG, false, LOG_PID);
+        } else if ( is_gae_flex() ) {
+            $logging = new LoggingClient();
+            return new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true]));
+        } else {
+            $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
+            $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+            return $handler;
+        }
+        return parent::getMonologHandler();
     }
 }

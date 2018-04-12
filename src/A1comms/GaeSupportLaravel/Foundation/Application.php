@@ -5,9 +5,10 @@ namespace A1comms\GaeSupportLaravel\Foundation;
 use Illuminate\Foundation\Application as IlluminateApplication;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Google\Cloud\Logging\PsrBatchLogger;
+use Google\Cloud\Logging\LoggingClient;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
+use Monolog\Handler\StreamHandler;
 use A1comms\GaeSupportLaravel\Storage\Optimizer;
 
 /**
@@ -73,7 +74,14 @@ class Application extends IlluminateApplication
             });
         } else if ( is_gae_flex() ) {
             $this->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new PsrHandler(new PsrBatchLogger('app')));
+                $logging = new LoggingClient();
+                $monolog->pushHandler(new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true])));
+            });
+        } else {
+            $this->configureMonologUsing(function ($monolog) {
+                $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
+                $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+                $monolog->pushHandler($handler);
             });
         }
 
@@ -217,11 +225,11 @@ class Application extends IlluminateApplication
      *
      * @return string Storage path URL
      */
-    public function storagePath()
+    public function storagePath($path = null)
     {
         if ($this->runningOnGae) {
             if (! is_null($this->gaeBucketPath)) {
-                return $this->gaeBucketPath;
+                return $this->gaeBucketPath.($path ? '/'.$path : $path);
             }
             $this->gaeBucketPath = Optimizer::getTemporaryPath();
             if (! file_exists($this->gaeBucketPath)) {
@@ -230,8 +238,8 @@ class Application extends IlluminateApplication
                 mkdir($this->gaeBucketPath.'/framework', 0755, true);
                 mkdir($this->gaeBucketPath.'/framework/views', 0755, true);
             }
-            return $this->gaeBucketPath;
+            return $this->gaeBucketPath.($path ? '/'.$path : $path);
         }
-        return parent::storagePath();
+        return parent::storagePath().($path ? '/'.$path : $path);
     }
 }

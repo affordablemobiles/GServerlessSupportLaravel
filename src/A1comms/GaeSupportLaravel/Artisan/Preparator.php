@@ -39,9 +39,9 @@ class Preparator
             return;
         }
 
-        $env_file               = app_path().'/../.env';
-        $env_production_file    = app_path().'/../.env.production';
-        $env_local_file         = app_path().'/../.env.local';
+        $env_file               = app_path().'/../env';
+        $env_production_file    = app_path().'/../env.production';
+        $env_local_file         = app_path().'/../env.local';
 
         $cached_config_php      = base_path().'/bootstrap/cache/config.php';
 

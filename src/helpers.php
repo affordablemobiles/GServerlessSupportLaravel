@@ -71,8 +71,9 @@ if (!function_exists('is_gae_flex')) {
 }
 
 if (!function_exists('app_path')) {
-    function app_path() {
-        return base_path('app');
+    function app_path($path = '') {
+        $extra = empty($path) ? '' : ('/' . $path);
+        return base_path('app').$extra;
     }
 }
 

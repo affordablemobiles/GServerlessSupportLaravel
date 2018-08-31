@@ -2,13 +2,14 @@
 
 namespace A1comms\GaeSupportLaravel\Trace;
 
+use OpenCensus\Trace\Tracer;
 use Illuminate\Support\ServiceProvider;
 
 class TraceServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        if (php_sapi_name() == 'cli') {
+        if ((!is_gae()) || (php_sapi_name() == 'cli')) {
             return;
         }
 

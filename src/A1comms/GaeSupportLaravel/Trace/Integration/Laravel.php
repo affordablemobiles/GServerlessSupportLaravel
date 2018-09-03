@@ -10,7 +10,7 @@ use Illuminate\Http\Response as LaravelResponse;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Routing\Router as LaravelRouter;
-use Illuminate\Routing\Pipeline as LaravelRoutePipeline;
+use Illuminate\Pipeline\Pipeline as LaravelPipeline;
 
 class LaravelExtended implements IntegrationInterface
 {
@@ -34,7 +34,7 @@ class LaravelExtended implements IntegrationInterface
         opencensus_trace_method(LaravelKernel::class, 'terminate', [self::class, 'handleKernelRequestTerminate']);
 
         // Trace routing, middleware & controller.
-        opencensus_trace_method(LaravelRoutePipeline::class, 'through', [self::class, 'handleRoutePipeline']);
+        opencensus_trace_method(LaravelPipeline::class, 'through', [self::class, 'handlePipeline']);
 
         opencensus_trace_method(LaravelRouter::class, 'dispatch', [self::class, 'handleRouterDispatch']);
 
@@ -89,10 +89,10 @@ class LaravelExtended implements IntegrationInterface
         ];
     }
 
-    public static function handleRoutePipeline($scope, $pipes)
+    public static function handlePipeline($scope, $pipes)
     {
         return [
-            'name' => 'laravel/router/run',
+            'name' => 'laravel/pipeline/register',
             'attributes' => [
                 'pipes' => var_export($pipes, true),
             ]

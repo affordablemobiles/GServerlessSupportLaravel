@@ -1,0 +1,1 @@
+## Async Batch Daemon Support on App Engine Standard

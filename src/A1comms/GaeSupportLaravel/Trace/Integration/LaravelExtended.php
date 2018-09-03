@@ -100,7 +100,7 @@ class LaravelExtended implements IntegrationInterface
             } elseif (! is_object($p)) {
                 list($name, $parameters) = self::parsePipeString($p);
                 $tracedMiddleware[] = $name;
-                opencensus_trace_method($name, 'handle', []);
+                opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun'];
             } else {
                 // Can't handle already objects yet.
             }
@@ -109,6 +109,16 @@ class LaravelExtended implements IntegrationInterface
         return [
             'name' => 'laravel/pipeline/register',
             'attributes' => $tracedMiddleware
+        ];
+    }
+
+    public static function handleMiddlewareRun($scope)
+    {
+        return [
+            'name' => 'laravel/controller/run',
+            'attributes' => [
+                'name' => get_class($scope),
+            ]
         ];
     }
 

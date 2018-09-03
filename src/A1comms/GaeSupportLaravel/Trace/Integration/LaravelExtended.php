@@ -100,7 +100,7 @@ class LaravelExtended implements IntegrationInterface
             } elseif (! is_object($p)) {
                 list($name, $parameters) = self::parsePipeString($p);
                 $tracedMiddleware[] = $name;
-                opencensus_trace_method($name, 'handle', function() { return [] });
+                opencensus_trace_method($name, 'handle', function() { return []; });
             } else {
                 // Can't handle already objects yet.
             }

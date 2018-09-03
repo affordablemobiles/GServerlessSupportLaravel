@@ -4,9 +4,10 @@ namespace A1comms\GaeSupportLaravel\Trace\Integration;
 
 use OpenCensus\Trace\Integrations\IntegrationInterface;
 use Illuminate\Foundation\Application as LaravelApplication;
-use Illuminate\Contracts\Http\Kernel as LaravelKernel;
+use Illuminate\Foundation\Http as LaravelKernel;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response as LaravelResponse;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class LaravelExtended implements IntegrationInterface
 {
@@ -24,6 +25,7 @@ class LaravelExtended implements IntegrationInterface
         opencensus_trace_method(LaravelRequest::class, 'capture', [self::class, 'handleRequestCapture']);
 
         opencensus_trace_method(LaravelResponse::class, 'send', [self::class, 'handleResponseSend']);
+        opencensus_trace_method(BaseResponse::class, 'send', [self::class, 'handleResponseSend']);
 
         opencensus_trace_method(LaravelKernel::class, 'terminate', [self::class, 'handleKernelRequestTerminate']);
     }
@@ -44,7 +46,7 @@ class LaravelExtended implements IntegrationInterface
         ];
     }
 
-    public static function handleRequestCapture($scope)
+    public static function handleRequestCapture()
     {
         return [
             'name' => 'laravel/request/capture',

@@ -27,6 +27,6 @@ if (is_gae() && (php_sapi_name() != 'cli')){
     ];
 
     foreach ($traceProviders as $p) {
-        $p::start();
+        $p::load();
     }
 }

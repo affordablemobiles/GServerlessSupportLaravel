@@ -14,6 +14,6 @@ class TraceServiceProvider extends ServiceProvider
         }
 
         // Create a span that starts from when Laravel first boots (public/index.php)
-        Tracer::inSpan(['name' => 'bootstrap', 'startTime' => LARAVEL_START], function () {});
+        Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function () {});
     }
 }

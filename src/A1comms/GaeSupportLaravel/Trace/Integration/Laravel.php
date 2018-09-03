@@ -4,7 +4,7 @@ namespace A1comms\GaeSupportLaravel\Trace\Integration;
 
 use OpenCensus\Trace\Integrations\IntegrationInterface;
 use Illuminate\Foundation\Application as LaravelApplication;
-use Illuminate\Foundation\Http as LaravelKernel;
+use Illuminate\Foundation\Http\Kernel as LaravelKernel;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response as LaravelResponse;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;

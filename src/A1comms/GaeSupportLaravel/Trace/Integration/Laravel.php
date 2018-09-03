@@ -93,11 +93,13 @@ class LaravelExtended implements IntegrationInterface
     {
         // Grab the middleware array in this event,
         // then force a trace on all children.
+        $tracedMiddleware = [];
         foreach ($pipes as $p) {
-            if (is_callable($pipe)) {
+            if (is_callable($p)) {
                 // Can't handle closures yet.
-            } elseif (! is_object($pipe)) {
+            } elseif (! is_object($p)) {
                 list($name, $parameters) = self::parsePipeString($p);
+                $tracedMiddleware[] = $name;
                 opencensus_trace_method($name, 'handle');
             } else {
                 // Can't handle already objects yet.
@@ -106,7 +108,7 @@ class LaravelExtended implements IntegrationInterface
 
         return [
             'name' => 'laravel/pipeline/register',
-            'attributes' => []
+            'attributes' => $tracedMiddleware
         ];
     }
 

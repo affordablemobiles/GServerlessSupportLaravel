@@ -91,11 +91,22 @@ class LaravelExtended implements IntegrationInterface
 
     public static function handlePipeline($scope, $pipes)
     {
+        // Grab the middleware array in this event,
+        // then force a trace on all children.
+        foreach ($pipes as $p) {
+            if (is_callable($pipe)) {
+                // Can't handle closures yet.
+            } elseif (! is_object($pipe)) {
+                list($name, $parameters) = self::parsePipeString($p);
+                opencensus_trace_method($name, 'handle');
+            } else {
+                // Can't handle already objects yet.
+            }
+        }
+
         return [
             'name' => 'laravel/pipeline/register',
-            'attributes' => [
-                'pipes' => var_export($pipes, true),
-            ]
+            'attributes' => []
         ];
     }
 
@@ -105,5 +116,16 @@ class LaravelExtended implements IntegrationInterface
             'name' => 'laravel/controller/run',
             'attributes' => []
         ];
+    }
+
+    public static function parsePipeString($pipe)
+    {
+        list($name, $parameters) = array_pad(explode(':', $pipe, 2), 2, []);
+
+        if (is_string($parameters)) {
+            $parameters = explode(',', $parameters);
+        }
+
+        return [$name, $parameters];
     }
 }

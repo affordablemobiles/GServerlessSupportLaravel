@@ -2,6 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Log;
 
+use Google\Cloud\Logging\LoggingClient;
+use Monolog\Handler\PsrHandler;
+
 class Logger
 {
     public static function setup($app)

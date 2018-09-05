@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is an array of classes to register for the StackDriver Trace integration,
-    | defining runtime trace hooks via the opensensus PECL module,
+    | defining runtime trace hooks via the OpenCensus PECL module,
     | so code changes inside the application aren't required.
     |
     | These should implement OpenCensus\Trace\Integrations\IntegrationInterface

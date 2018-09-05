@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Trace\Integration;
+namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
 use OpenCensus\Trace\Integrations\IntegrationInterface;
 use Illuminate\Foundation\Application as LaravelApplication;
@@ -35,7 +35,7 @@ class LaravelExtended implements IntegrationInterface
         opencensus_trace_method(LaravelResponse::class, 'send', [self::class, 'handleResponseSend']);
         // TODO: Eventually we want to be able to remove this,
         //       the "send" method in "LaravelResponse" is inherited from "BaseResponse"
-        //       but unfortunately the opensensus extension doesn't trigger for inherited methods.
+        //       but unfortunately the OpenCensus extension doesn't trigger for inherited methods.
         //       https://github.com/census-instrumentation/opencensus-php/issues/201
         opencensus_trace_method(BaseResponse::class, 'send', [self::class, 'handleResponseSend']);
 

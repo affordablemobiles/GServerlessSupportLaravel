@@ -15,7 +15,7 @@ class TraceServiceProvider extends ServiceProvider
 
         // Create a span that starts from when Laravel first boots (public/index.php)
         // ---
-        // TODO: Set parentSpanId to the rootSpan->spanId() from OpenSensus,
+        // TODO: Set parentSpanId to the rootSpan->spanId() from OpenCensus,
         //       to help it merge properly in the tree view.
         //       Need to wait for rootSpan visibility to be changed to public.
         //       https://github.com/census-instrumentation/opencensus-php/issues/199

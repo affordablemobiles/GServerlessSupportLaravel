@@ -13,18 +13,13 @@ if (is_gae() && (php_sapi_name() != 'cli')){
         Tracer::start(new StackdriverExporter());
     }
 
-    // TODO: Different arrays for Laravel vs Lumen?
-    $traceProviders = [
-        // OpenSensus provides a basic Laravel trace adapter,
-        // which covered Eloquent and view compilation.
-        OpenCensus\Trace\Integrations\Laravel::class,
-        // Also load our own extended Laravel trace set.
-        A1comms\GaeSupportLaravel\Trace\Integration\LaravelExtended::class,
-        // Trace our other basic functions...
-        OpenCensus\Trace\Integrations\Mysql::class,
-        OpenCensus\Trace\Integrations\PDO::class,
-        OpenCensus\Trace\Integrations\Memcached::class,
-    ];
+    $loaderInterface = 'App\\Trace\\LowLevelLoader';
+    if (!class_exists($loaderInterface))
+    {
+        // TODO: Different default arrays for Laravel vs Lumen?
+        $loaderInterface = A1comms\GaeSupportLaravel\Trace\LowLevelLoader::class;
+    }
+    $traceProviders = $loaderInterface::getList();
 
     foreach ($traceProviders as $p) {
         $p::load();

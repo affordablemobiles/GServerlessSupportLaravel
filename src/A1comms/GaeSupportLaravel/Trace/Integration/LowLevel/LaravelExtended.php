@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Routing\Router as LaravelRouter;
 use Illuminate\Pipeline\Pipeline as LaravelPipeline;
+use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
 
 class LaravelExtended implements IntegrationInterface
 {
@@ -56,6 +57,11 @@ class LaravelExtended implements IntegrationInterface
 
         // Trace the controller run, where we'd expect the bit of exeuction we care about to happen.
         opencensus_trace_method(LaravelRoute::class, 'run', [self::class, 'handleControllerRun']);
+
+        // ---
+        // Alternative View Compiler for Pre-Compiled Views
+        // ---
+        opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
     }
 
     public static function handleApplicationConstruct($scope, $basePath = null)
@@ -148,6 +154,17 @@ class LaravelExtended implements IntegrationInterface
         return [
             'name' => 'laravel/controller/run',
             'attributes' => []
+        ];
+    }
+
+    public static function handleView($scope, $path, $data)
+    {
+        return [
+            'name' => 'laravel/view',
+            'attributes' => [
+                'path' => $path,
+                'pre-compiled' => true,
+            ]
         ];
     }
 

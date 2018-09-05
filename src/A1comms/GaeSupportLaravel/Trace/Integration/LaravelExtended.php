@@ -100,7 +100,11 @@ class LaravelExtended implements IntegrationInterface
             } elseif (! is_object($p)) {
                 list($name, $parameters) = self::parsePipeString($p);
                 $tracedMiddleware[] = $name;
-                opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
+                // ---
+                // Disable this as it's causing segfaults, see:
+                // https://github.com/census-instrumentation/opencensus-php/issues/200
+                // ---
+                //opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
             } else {
                 // Can't handle already objects yet.
             }

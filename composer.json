@@ -26,6 +26,7 @@
     "extra": {
         "laravel": {
             "providers": [
+                "A1comms\\GaeSupportLaravel\\GaeSupportServiceProvider",
                 "A1comms\\GaeSupportLaravel\\Trace\\TraceServiceProvider"
             ]
         }

@@ -19,6 +19,6 @@ class TraceServiceProvider extends ServiceProvider
         //       to help it merge properly in the tree view.
         //       Need to wait for rootSpan visibility to be changed to public.
         //       https://github.com/census-instrumentation/opencensus-php/issues/199
-        Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START, 'parentSpanId' => null], function () {});
+        Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function () {});
     }
 }

@@ -10,7 +10,8 @@
     ],
     "require": {
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0",
-        "google/cloud-logging": "^1.12"
+        "google/cloud-logging": "^1.12",
+        "guzzlehttp/guzzle": "~6"
     },
     "require-dev": {
     },

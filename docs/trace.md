@@ -23,7 +23,7 @@ By default, this includes:
   * PDO
   * Eloquent (Laravel)
   * (soon) Datastore
-  * (soon) Guzzle (HTTP(s))
+  * Guzzle (HTTP(s))
 
 It also allows you to register your own trace providers to be registered as the application boots, via the config file for this package (`trace_providers` in `gaesupport.php`).
 
@@ -123,3 +123,8 @@ Next, update your `gaesupport.php` configuration file to include that trace prov
 Since the low level trace setup is done as part of the composer autoloader initialisation, most of the installation is taken care of once you've installed the package, although for the higher level & custom trace providers, you'll need to make sure the `GaeSupportServiceProvider` and `TraceServiceProvider` are both loaded into Laravel.
 
 In Laravel 5.5, service providers are automatically discovered by default, so unless you've disabled this functionality, you shouldn't need to do anything else either.
+
+## Guzzle Sub-Request Trace Merging
+StackDriver Trace has the ability to show trace points from sub-requests within the same project (although it can be to other App Engine services) into the same trace entry in the GUI, allowing you to view the aggregate impact of a whole request in a micro-service environment.
+
+To take advantage of this, replace your `GuzzleHttp\Client` with `A1comms\GaeSupportLaravel\Integration\Guzzle\Client`.

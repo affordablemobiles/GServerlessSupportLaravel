@@ -14,6 +14,11 @@ class TraceServiceProvider extends ServiceProvider
         }
 
         // Create a span that starts from when Laravel first boots (public/index.php)
-        Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function () {});
+        // ---
+        // TODO: Set parentSpanId to the rootSpan->spanId() from OpenSensus,
+        //       to help it merge properly in the tree view.
+        //       Need to wait for rootSpan visibility to be changed to public.
+        //       https://github.com/census-instrumentation/opencensus-php/issues/199
+        Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START, 'parentSpanId' => null], function () {});
     }
 }

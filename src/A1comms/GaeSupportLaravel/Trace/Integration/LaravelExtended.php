@@ -21,7 +21,11 @@ class LaravelExtended implements IntegrationInterface
             return;
         }
 
+        // ---
         // Base functionality from bootstrap/app.php and public/index.php.
+        // ---
+        // We feel this helps to get a feel of the control flow and weight of the framework,
+        // or simply rule out a problem there, before you jump in to analysing your own work.
         opencensus_trace_method(LaravelApplication::class, '__construct', [self::class, 'handleApplicationConstruct']);
 
         opencensus_trace_method(LaravelKernel::class, 'handle', [self::class, 'handleKernelRequestHandle']);
@@ -29,15 +33,28 @@ class LaravelExtended implements IntegrationInterface
         opencensus_trace_method(LaravelRequest::class, 'capture', [self::class, 'handleRequestCapture']);
 
         opencensus_trace_method(LaravelResponse::class, 'send', [self::class, 'handleResponseSend']);
+        // TODO: Eventually we want to be able to remove this,
+        //       the "send" method in "LaravelResponse" is inherited from "BaseResponse"
+        //       but unfortunately the opensensus extension doesn't trigger for inherited methods.
+        //       https://github.com/census-instrumentation/opencensus-php/issues/201
         opencensus_trace_method(BaseResponse::class, 'send', [self::class, 'handleResponseSend']);
 
         opencensus_trace_method(LaravelKernel::class, 'terminate', [self::class, 'handleKernelRequestTerminate']);
 
+        // ---
         // Trace routing, middleware & controller.
+        // ---
+
+        // Use a trace on the pipeline through method to intercept the array of middleware in use,
+        // by receiving it in the scope we are passed.
         opencensus_trace_method(LaravelPipeline::class, 'through', [self::class, 'handlePipeline']);
 
+        // Trace when routing begins,
+        // making it possible to infer how long the routing took by looking at when
+        // the middleware or the controller execution begin.
         opencensus_trace_method(LaravelRouter::class, 'dispatch', [self::class, 'handleRouterDispatch']);
 
+        // Trace the controller run, where we'd expect the bit of exeuction we care about to happen.
         opencensus_trace_method(LaravelRoute::class, 'run', [self::class, 'handleControllerRun']);
     }
 
@@ -134,6 +151,10 @@ class LaravelExtended implements IntegrationInterface
         ];
     }
 
+    /*
+    | Taken from Illuminate\Pipeline\Pipeline
+    | as the visibility was set to protected
+    */
     public static function parsePipeString($pipe)
     {
         list($name, $parameters) = array_pad(explode(':', $pipe, 2), 2, []);

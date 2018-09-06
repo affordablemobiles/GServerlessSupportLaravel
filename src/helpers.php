@@ -74,12 +74,12 @@ if (!function_exists('gae_version')) {
 if (!function_exists('gae_storage_path')) {
     function gae_storage_path($path = '')
     {
-        if (is_gae()){
+        if (is_gae() || defined('IS_GAE')){
             $ret = '/tmp/laravel/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
             @mkdir($ret, 0755, true);
             return $ret;
         } else {
-            storage_path($path);
+            return storage_path($path);
         }
     }
 }

@@ -4,8 +4,9 @@ namespace A1comms\GaeSupportLaravel\View\Compilers;
 
 use InvalidArgumentException;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Compilers\CompilerInterface;
 
-class FakeCompiler
+class FakeCompiler implements CompilerInterface
 {
 
     /**
@@ -40,6 +41,12 @@ class FakeCompiler
      */
     public function getCompiledPath($path)
     {
+        /**
+         * Note: $path is the relative path passed through from
+         *       what we returned in our custom FileViewFinder,
+         *       so the SHA1 hash will be different than when
+         *       outside of GAE.
+         */
         return $this->cachePath.'/'.sha1($path).'.php';
     }
 
@@ -50,6 +57,15 @@ class FakeCompiler
      * @return bool
      */
     public function isExpired($path)
+    {
+        return false;
+    }
+
+    /**
+     * Don't actually compile,
+     * we're a fake!
+     */
+    public function compile($path)
     {
         return false;
     }

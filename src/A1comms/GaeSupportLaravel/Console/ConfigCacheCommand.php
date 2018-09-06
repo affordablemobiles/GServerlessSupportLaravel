@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Commands;
+namespace A1comms\GaeSupportLaravel\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;

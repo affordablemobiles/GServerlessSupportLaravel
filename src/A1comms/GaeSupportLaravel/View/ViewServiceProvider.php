@@ -3,6 +3,7 @@
 namespace A1comms\GaeSupportLaravel\View;
 
 use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
+use Illuminate\View\Engines\EngineResolver;
 use A1comms\GaeSupportLaravel\View\Compilers\FakeCompiler;
 use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
 

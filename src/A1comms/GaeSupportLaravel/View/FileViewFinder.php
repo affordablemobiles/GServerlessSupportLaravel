@@ -8,10 +8,6 @@ use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
 /**
  * Search for views in a static manifest instead of on disk,
  * hopefully resulting in less costly disk I/O.
- *
- * TODO: This may need to be re-factored to search the array
- *       from the manifest, rather than a straight key lookup,
- *       depending on how this actually works in production.
  */
 class FileViewFinder extends LaravelFileViewFinder
 {
@@ -47,8 +43,14 @@ class FileViewFinder extends LaravelFileViewFinder
     {
         foreach ((array) $paths as $path) {
             foreach ($this->getPossibleViewFiles($name) as $file) {
+                /**
+                 * Use relative path translation here,
+                 * as our path on production will probably
+                 * be different to the path in build where
+                 * the templates and manifest were compiled.
+                 */
                 $viewPath = self::getRelativePath(base_path(), $path.'/'.$file);
-                \Log::info("Searching view path: " . $viewPath);
+                \Log::info($viewPath . " vs " . \A1comms\GaeSupportLaravel\View\FileViewFinder::getRelativePath(base_path(), $path.'/'.$file));
                 if (!empty($this->manifest[$viewPath])) {
                     return $viewPath;
                 }
@@ -58,14 +60,8 @@ class FileViewFinder extends LaravelFileViewFinder
         throw new InvalidArgumentException("View [$name] not found.");
     }
 
-    public static function getRelativePath($from, $to)
+    public static function getRelativePath($from, $to, $dot = true)
     {
-        // some compatibility fixes for Windows paths
-        $from = is_dir($from) ? rtrim($from, '\/') . '/' : $from;
-        $to   = is_dir($to)   ? rtrim($to, '\/') . '/'   : $to;
-        $from = str_replace('\\', '/', $from);
-        $to   = str_replace('\\', '/', $to);
-
         $from     = explode('/', $from);
         $to       = explode('/', $to);
         $relPath  = $to;
@@ -84,10 +80,13 @@ class FileViewFinder extends LaravelFileViewFinder
                     $relPath = array_pad($relPath, $padLength, '..');
                     break;
                 } else {
-                    $relPath[0] = './' . $relPath[0];
+                    if ($dot) {
+                        $relPath[0] = './' . $relPath[0];
+                    }
                 }
             }
         }
+
         return implode('/', $relPath);
     }
 }

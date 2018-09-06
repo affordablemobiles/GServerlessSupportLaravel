@@ -41,6 +41,12 @@ class GaeSupportServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../../config/gaesupport.php' => config_path('gaesupport.php'),
         ]);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\ConfigCacheCommand::class,
+            ]);
+        }
     }
 
     /**

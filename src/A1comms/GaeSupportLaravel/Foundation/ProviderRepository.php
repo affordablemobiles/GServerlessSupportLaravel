@@ -28,6 +28,6 @@ class ProviderRepository extends LaravelProviderRepository
 
         $providers->splice(1, 0, [$this->app->make(PackageManifest::class)->providers()]);
 
-        $this->compileManifest($providers);
+        $this->compileManifest($providers->collapse()->toArray());
     }
 }

@@ -44,7 +44,7 @@ class GaeSupportServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\ConfigCacheCommand::class,
+                Console\GaePrepareCommand::class,
             ]);
         }
     }

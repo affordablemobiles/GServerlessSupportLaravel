@@ -6,6 +6,7 @@ use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
 use Illuminate\View\Engines\EngineResolver;
 use A1comms\GaeSupportLaravel\View\Compilers\FakeCompiler;
 use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
+use A1comms\GaeSupportLaravel\Console;
 
 class ViewServiceProvider extends LaravelViewServiceProvider
 {
@@ -24,6 +25,18 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             $this->registerGaeEngineResolver();
         } else {
             parent::register();
+        }
+    }
+
+    /**
+     * Register the console commands.
+     */
+    public function boot()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\GaeViewCompileCommand::class,
+            ]);
         }
     }
 

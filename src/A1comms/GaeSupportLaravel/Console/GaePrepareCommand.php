@@ -4,6 +4,7 @@ namespace A1comms\GaeSupportLaravel\Console;
 
 use Illuminate\Console\Command;
 use A1comms\GaeSupportLaravel\View\ViewServiceProvider;
+use A1comms\GaeSupportLaravel\Foundation\ProviderRepository;
 
 /**
  * Deployment command for running on GAE.
@@ -55,6 +56,8 @@ class GaePrepareCommand extends Command
 
         $this->runViewCompiler();
 
+        $this->runRefreshManifest();
+
         $this->info($this->logPrefix . "Ready to Deploy!");
     }
 
@@ -66,5 +69,12 @@ class GaePrepareCommand extends Command
             $this->call('gae:viewcompile');
             $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...done");
         }
+    }
+
+    public function runRefreshManifest()
+    {
+        $this->info($this->logPrefix . "Generating provider manifest...");
+        new ProviderRepository()->preCompileManifest();
+        $this->info($this->logPrefix . "Generating provider manifest...done");
     }
 }

@@ -74,7 +74,7 @@ class GaePrepareCommand extends Command
     public function runRefreshManifest()
     {
         $this->info($this->logPrefix . "Generating provider manifest...");
-        new ProviderRepository()->preCompileManifest();
+        (new ProviderRepository())->preCompileManifest();
         $this->info($this->logPrefix . "Generating provider manifest...done");
     }
 }

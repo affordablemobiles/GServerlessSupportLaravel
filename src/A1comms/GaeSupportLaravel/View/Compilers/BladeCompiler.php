@@ -31,6 +31,23 @@ class BladeCompiler extends LaravelBladeCompiler
     }
 
     /**
+     * Get the path to the compiled version of a view.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function getCompiledPath($path)
+    {
+        /**
+         * Note: $path is the relative path passed through from
+         *       what we returned in our custom FileViewFinder,
+         *       so the SHA1 hash will be different than when
+         *       outside of GAE.
+         */
+        return $this->cachePath.'/'.sha1($path).'.php';
+    }
+
+    /**
      * Get the path currently being compiled.
      *
      * @return string

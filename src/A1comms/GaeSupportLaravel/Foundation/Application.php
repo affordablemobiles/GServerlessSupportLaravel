@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Foundation;
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Foundation\ProviderRepository as LaravelProviderRepository;
 

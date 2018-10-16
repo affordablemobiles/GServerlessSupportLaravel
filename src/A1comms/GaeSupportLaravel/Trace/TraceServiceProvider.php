@@ -7,6 +7,21 @@ use Illuminate\Support\ServiceProvider;
 
 class TraceServiceProvider extends ServiceProvider
 {
+    /**
+     * Register bindings in the container.
+     *
+     * @return void
+     */
+    public function register()
+    {
+
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
     public function boot()
     {
         if ((!is_gae()) || (php_sapi_name() == 'cli')) {

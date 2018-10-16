@@ -24,4 +24,8 @@ if (is_gae() && (php_sapi_name() != 'cli')){
     foreach ($traceProviders as $p) {
         $p::load();
     }
+
+    if (in_array('HTTP_X_APPENGINE_HTTPS', $_SERVER)) {
+        $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
+    }
 }

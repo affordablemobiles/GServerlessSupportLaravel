@@ -19,8 +19,23 @@ class ProviderRepository extends LaravelProviderRepository
         parent::__construct(app(), app('files'), app()->getCachedServicesPath());
     }
 
+    /**
+     * Pre-compile the manifest, so it doesn't happen in production.
+     */
     public function preCompileManifest()
     {
         $this->compileManifest($this->app->config['app.providers']);
+    }
+
+    /**
+     * Determine if the manifest should be compiled.
+     *
+     * @param  array  $manifest
+     * @param  array  $providers
+     * @return bool
+     */
+    public function shouldRecompile($manifest, $providers)
+    {
+        return false;
     }
 }

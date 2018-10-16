@@ -9,6 +9,17 @@ use Illuminate\Foundation\ProviderRepository as LaravelProviderRepository;
 class Application extends LaravelApplication
 {
     /**
+     * Create a new Illuminate application instance.
+     *
+     * @param  string|null  $basePath
+     * @return void
+     */
+    public function __construct($basePath = null)
+    {
+        return parent::__construct($basePath);
+    }
+
+    /**
      * Register all of the configured providers.
      *
      * @return void

@@ -23,13 +23,5 @@
             "src/preload.php"
         ]
     },
-    "minimum-stability": "stable",
-    "extra": {
-        "laravel": {
-            "providers": [
-                "A1comms\\GaeSupportLaravel\\GaeSupportServiceProvider",
-                "A1comms\\GaeSupportLaravel\\Trace\\TraceServiceProvider"
-            ]
-        }
-    }
+    "minimum-stability": "stable"
 }

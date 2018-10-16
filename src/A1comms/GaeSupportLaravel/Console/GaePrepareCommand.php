@@ -4,7 +4,6 @@ namespace A1comms\GaeSupportLaravel\Console;
 
 use Illuminate\Console\Command;
 use A1comms\GaeSupportLaravel\View\ViewServiceProvider;
-use A1comms\GaeSupportLaravel\Foundation\ProviderRepository;
 
 /**
  * Deployment command for running on GAE.
@@ -74,7 +73,7 @@ class GaePrepareCommand extends Command
     public function runRefreshManifest()
     {
         $this->info($this->logPrefix . "Generating provider manifest...");
-        (new ProviderRepository())->preCompileManifest();
+        // TODO: generate services.json here...
         $this->info($this->logPrefix . "Generating provider manifest...done");
     }
 }

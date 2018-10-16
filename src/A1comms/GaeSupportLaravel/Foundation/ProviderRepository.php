@@ -2,9 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Foundation;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
-use Illuminate\Foundation\PackageManifest;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\ProviderRepository as LaravelProviderRepository;
 
 class ProviderRepository extends LaravelProviderRepository
@@ -16,7 +14,7 @@ class ProviderRepository extends LaravelProviderRepository
      */
     public function __construct()
     {
-        parent::__construct(app(), app('files'), app()->getCachedServicesPath());
+        parent::__construct(app(), new Filesystem, app()->getCachedServicesPath());
     }
 
     /**

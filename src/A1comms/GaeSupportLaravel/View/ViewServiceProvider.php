@@ -66,7 +66,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             // Next, we will register the various view engines with the resolver so that the
             // environment will resolve the engines needed for various views based on the
             // extension of view file. We call a method for each of the view's engines.
-            foreach (['file', 'php'] as $engine) {
+            foreach (['php'] as $engine) {
                 $this->{'register'.ucfirst($engine).'Engine'}($resolver);
             }
 

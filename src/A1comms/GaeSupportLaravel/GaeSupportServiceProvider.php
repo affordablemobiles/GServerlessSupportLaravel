@@ -3,6 +3,8 @@
 namespace A1comms\GaeSupportLaravel;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Session;
+use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
 
 /**
  * Class GaeSupportServiceProvider
@@ -47,6 +49,11 @@ class GaeSupportServiceProvider extends ServiceProvider
                 Console\GaePrepareCommand::class,
             ]);
         }
+
+        // Register the DatastoreSessionHandler
+        Session::extend('gae', function($app) {
+            return new DatastoreSessionHandler;
+        });
     }
 
     /**

@@ -1,8 +1,9 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Interface\Tasks;
+namespace A1comms\GaeSupportLaravel\Interface\TaskQueue;
 
-class PushQueue {
+class PushQueue
+{
     private $name;
 
     public function __construct($name = 'default') {

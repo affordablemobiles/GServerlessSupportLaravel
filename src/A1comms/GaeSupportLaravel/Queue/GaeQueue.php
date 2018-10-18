@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Queue\Queue;
 use Illuminate\Contracts\Queue\Queue as QueueContract;
-use google\appengine\api\taskqueue\PushTask;
+use A1comms\GaeSupportLaravel\Interface\TaskQueue\PushTask;
 use Log;
 
 class GaeQueue extends Queue implements QueueContract
@@ -190,7 +190,7 @@ class GaeQueue extends Queue implements QueueContract
      * Create a new GaeJob for a pushed job.
      *
      * @param  object  $job
-     * @return \Shpasser\GaeSupportL5\Queue\GaeJob
+     * @return \A1comms\GaeSupportLaravel\Queue\GaeJob
      */
     protected function createPushedGaeJob($job)
     {

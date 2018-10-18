@@ -11,7 +11,7 @@ class GaeJob extends Job implements JobContract
     /**
      * The Gae queue instance.
      *
-     * @var \Shpasser\GaeSupportL5\Queue\GaeQueue
+     * @var \A1comms\GaeSupportLaravel\Queue\GaeQueue
      */
     protected $gaeQueue;
 
@@ -33,7 +33,7 @@ class GaeJob extends Job implements JobContract
      * Create a new job instance.
      *
      * @param  \Illuminate\Container\Container  $container
-     * @param  \Shpasser\GaeSupportL5\Queue\GaeQueue  $gaeQueue
+     * @param  \A1comms\GaeSupportLaravel\Queue\GaeQueue  $gaeQueue
      * @param  object  $job
      * @param  bool    $pushed
      */
@@ -145,7 +145,7 @@ class GaeJob extends Job implements JobContract
     /**
      * Get the underlying Gae queue instance.
      *
-     * @return \Shpasser\GaeSupportL5\Queue\GaeQueue
+     * @return \A1comms\GaeSupportLaravel\Queue\GaeQueue
      */
     public function getGaeQueue()
     {

@@ -5,9 +5,9 @@ namespace A1comms\GaeSupportLaravel\Queue;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Queue\Queue;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Queue\Queue as QueueContract;
 use A1comms\GaeSupportLaravel\Interface\TaskQueue\PushTask;
-use Log;
 
 class GaeQueue extends Queue implements QueueContract
 {

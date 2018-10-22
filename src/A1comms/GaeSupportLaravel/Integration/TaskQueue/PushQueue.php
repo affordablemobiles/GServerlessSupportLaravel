@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Interface\TaskQueue;
+namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 class PushQueue
 {

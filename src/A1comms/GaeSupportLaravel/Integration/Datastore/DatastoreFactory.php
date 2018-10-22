@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Interface\Datastore;
+namespace A1comms\GaeSupportLaravel\Integration\Datastore;
 
 use GDS;
 

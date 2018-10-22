@@ -5,7 +5,7 @@ namespace A1comms\GaeSupportLaravel\Session;
 use GDS;
 use Carbon\Carbon;
 use SessionHandlerInterface;
-use A1comms\GaeSupportLaravel\Interface\Datastore\DatastoreFactory;
+use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
 
 /**
  * class DataStoreSessionHandler

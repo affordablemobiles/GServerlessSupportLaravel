@@ -1,6 +1,6 @@
 <?php
 
-namespace A1comms\GaeSupportLaravel\Interface\TaskQueue;
+namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 use Google\Cloud\Tasks\V2beta2\Task;
 use Google\Cloud\Tasks\V2beta2\AppEngineHttpRequest;

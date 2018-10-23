@@ -12,7 +12,8 @@
         "guzzlehttp/guzzle": "~6",
         "tomwalder/php-gds": "^4.1",
         "google/cloud": "^0.83.0",
-        "symfony/filesystem": "^4.1"
+        "paragonie/random_compat": "^2.0",
+        "symfony/filesystem": "^3.4"
     },
     "suggest": {
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0"
@@ -26,6 +27,12 @@
         "files": [
             "src/preload.php"
         ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "platform": {
+            "php": "5.5.34"
+        }
     },
     "minimum-stability": "stable"
 }

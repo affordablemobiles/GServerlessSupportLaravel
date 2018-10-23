@@ -13,7 +13,7 @@ class FileViewFinder extends LaravelFileViewFinder
 {
     private $manifest = [];
 
-    public function __construct(Filesystem $files, array $paths, array $extensions = null, string $cachePath = null)
+    public function __construct(Filesystem $files, $paths, $extensions = null, $cachePath = null)
     {
         $this->files = $files;
         $this->paths = $paths;

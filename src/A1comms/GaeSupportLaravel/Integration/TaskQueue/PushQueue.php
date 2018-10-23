@@ -2,35 +2,39 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
-class PushQueue
-{
-    private $name;
-    private $full_name;
+if (GAE_LEGACY) {
+    class PushQueue extends \google\appengine\api\taskqueue\PushQueue{}
+} else {
+    class PushQueue
+    {
+        private $name;
+        private $full_name;
 
-    public function __construct($name = 'default') {
-        $this->name = $name;
-        $this->full_name = Client::instance()->getQueueName($name);
-    }
-
-    public function getName() {
-        return $this->name;
-    }
-
-    public function addTasks($tasks) {
-        if (!is_array($tasks)) {
-            throw new \InvalidArgumentException('$tasks must be an array. Actual type: ' . gettype($tasks));
+        public function __construct($name = 'default') {
+            $this->name = $name;
+            $this->full_name = Client::instance()->getQueueName($name);
         }
 
-        if (empty($tasks)) {
-            return [];
+        public function getName() {
+            return $this->name;
         }
 
-        $result = [];
+        public function addTasks($tasks) {
+            if (!is_array($tasks)) {
+                throw new \InvalidArgumentException('$tasks must be an array. Actual type: ' . gettype($tasks));
+            }
 
-        foreach ($tasks as $task) {
-            $result[] = Client::instance()->getClient()->createTask($this->full_name, $task->getTask());
+            if (empty($tasks)) {
+                return [];
+            }
+
+            $result = [];
+
+            foreach ($tasks as $task) {
+                $result[] = Client::instance()->getClient()->createTask($this->full_name, $task->getTask());
+            }
+
+            return $result;
         }
-
-        return $result;
     }
 }

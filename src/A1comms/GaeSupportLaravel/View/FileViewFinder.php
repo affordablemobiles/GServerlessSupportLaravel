@@ -5,6 +5,8 @@ namespace A1comms\GaeSupportLaravel\View;
 use InvalidArgumentException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
+use Symfony\Component\Filesystem\Filesystem;
+
 /**
  * Search for views in a static manifest instead of on disk,
  * hopefully resulting in less costly disk I/O.
@@ -50,6 +52,7 @@ class FileViewFinder extends LaravelFileViewFinder
                  * the templates and manifest were compiled.
                  */
                 $viewPath = self::getRelativePath(base_path(), $path.'/'.$file);
+                \Log::info("Looking for view path: " . $viewPath);
                 if (!empty($this->manifest[$viewPath])) {
                     return $viewPath;
                 }
@@ -61,31 +64,6 @@ class FileViewFinder extends LaravelFileViewFinder
 
     public static function getRelativePath($from, $to, $dot = true)
     {
-        $from     = explode('/', $from);
-        $to       = explode('/', $to);
-        $relPath  = $to;
-
-        foreach($from as $depth => $dir) {
-            // find first non-matching dir
-            if($dir === $to[$depth]) {
-                // ignore this directory
-                array_shift($relPath);
-            } else {
-                // get number of remaining dirs to $from
-                $remaining = count($from) - $depth;
-                if($remaining > 1) {
-                    // add traversals up to first matching dir
-                    $padLength = (count($relPath) + $remaining - 1) * -1;
-                    $relPath = array_pad($relPath, $padLength, '..');
-                    break;
-                } else {
-                    if ($dot) {
-                        $relPath[0] = './' . $relPath[0];
-                    }
-                }
-            }
-        }
-
-        return implode('/', $relPath);
+        return (new Filesystem())->makePathRelative($to, $from);
     }
 }

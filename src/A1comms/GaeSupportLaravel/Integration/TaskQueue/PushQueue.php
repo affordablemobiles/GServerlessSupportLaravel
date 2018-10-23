@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 if (GAE_LEGACY) {
-    class PushQueue extends \google\appengine\api\taskqueue\PushQueue{}
+    class_alias('google\appengine\api\taskqueue\PushQueue', 'A1comms\GaeSupportLaravel\Integration\TaskQueue\PushQueue');
 } else {
     class PushQueue
     {

@@ -6,7 +6,7 @@ use Google\Cloud\Tasks\V2beta2\Task;
 use Google\Cloud\Tasks\V2beta2\AppEngineHttpRequest;
 
 if (GAE_LEGACY) {
-    class PushTask extends \google\appengine\api\taskqueue\PushTask{}
+    class_alias('google\appengine\api\taskqueue\PushTask', 'A1comms\GaeSupportLaravel\Integration\TaskQueue\PushTask');
 } else {
     class PushTask
     {

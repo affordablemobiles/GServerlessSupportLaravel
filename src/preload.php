@@ -6,6 +6,12 @@ use OpenCensus\Trace\Exporter\StackdriverExporter;
 require __DIR__ . '/helpers.php';
 
 if ( is_gae_std_legacy() ) {
+    define('GAE_LEGACY', true);
+} else {
+    define('GAE_LEGACY', false);
+}
+
+if ( GAE_LEGACY ) {
     $_SERVER['GOOGLE_CLOUD_PROJECT'] = explode("~", $_SERVER['APPLICATION_ID'])[1];
     $_SERVER['GAE_ENV'] = "standard";
     $_SERVER['GAE_VERSION'] = $_SERVER['CURRENT_VERSION_ID'];

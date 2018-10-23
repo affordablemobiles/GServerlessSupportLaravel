@@ -16,7 +16,7 @@ class Logger
             return;
         }
 
-        if (is_gae_std_legacy())
+        if (GAE_LEGACY)
         {
             $app->configureMonologUsing(function ($monolog) {
                 $monolog->pushHandler(new SyslogHandler('laravel'));

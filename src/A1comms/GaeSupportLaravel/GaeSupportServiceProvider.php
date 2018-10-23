@@ -55,7 +55,7 @@ class GaeSupportServiceProvider extends ServiceProvider
             ]);
         }
 
-        if (!is_gae_std_legacy()) {
+        if (!GAE_LEGACY) {
             $storage = new GCSStorageClient();
             GCSStreamWrapper::register($storage);
         }

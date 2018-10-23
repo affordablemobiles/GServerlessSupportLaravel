@@ -12,7 +12,8 @@
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0",
         "google/cloud-logging": "^1.12",
         "guzzlehttp/guzzle": "~6",
-        "tomwalder/php-gds": "^4.1"
+        "tomwalder/php-gds": "^4.1",
+        "google/cloud-storage": "^1.9"
     },
     "require-dev": {
     },

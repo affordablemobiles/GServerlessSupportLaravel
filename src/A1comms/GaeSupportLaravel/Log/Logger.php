@@ -4,6 +4,7 @@ namespace A1comms\GaeSupportLaravel\Log;
 
 use Google\Cloud\Logging\LoggingClient;
 use Monolog\Handler\PsrHandler;
+use Monolog\Handler\SyslogHandler;
 use Monolog\Handler\ErrorLogHandler;
 
 class Logger
@@ -15,7 +16,13 @@ class Logger
             return;
         }
 
-        if (is_gae_flex())
+        if (is_gae_std_legacy())
+        {
+            $app->configureMonologUsing(function ($monolog) {
+                $monolog->pushHandler(new SyslogHandler('laravel'));
+            });
+        }
+        else if (is_gae_flex())
         {
             $app->configureMonologUsing(function ($monolog) {
                 $logging = new LoggingClient();

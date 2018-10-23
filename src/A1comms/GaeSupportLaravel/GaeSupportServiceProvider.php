@@ -3,8 +3,13 @@
 namespace A1comms\GaeSupportLaravel;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
+use League\Flysystem\Filesystem as Flysystem;
+use Google\Cloud\Storage\StorageClient as GCSStorageClient;
+use Google\Cloud\Storage\StreamWrapper as GCSStreamWrapper;
 use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
+use A1comms\GaeSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
 
 /**
  * Class GaeSupportServiceProvider
@@ -50,10 +55,22 @@ class GaeSupportServiceProvider extends ServiceProvider
             ]);
         }
 
+        if (!is_gae_std_legacy()) {
+            $storage = new GCSStorageClient();
+            GCSStreamWrapper::register($storage);
+        }
+
         // Register the DatastoreSessionHandler
         Session::extend('gae', function($app) {
             return new DatastoreSessionHandler;
         });
+
+        Storage::extend('gae', function ($app, $config) {
+            return new Flysystem(new GaeFilesystemAdapter($config['root']));
+        });
+
+        // register the package's routes
+        require __DIR__.'/Http/routes.php';
     }
 
     /**

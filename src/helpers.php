@@ -19,6 +19,22 @@ if (!function_exists('is_gae_std')) {
     }
 }
 
+if (!function_exists('is_gae_std_legacy')) {
+    function is_gae_std_legacy() {
+        return (
+            isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false
+        ||
+            isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === 0
+        );
+    }
+}
+
+if (!function_exists('is_gae_production')) {
+    function is_gae_production() {
+        return ( is_gae() && (strpos( $_SERVER['SERVER_SOFTWARE'], 'Development/' ) === false) );
+    }
+}
+
 if (!function_exists('is_gae_flex')) {
     function is_gae_flex() {
         if (isset($_SERVER['GOOGLE_CLOUD_PROJECT']))
@@ -81,5 +97,18 @@ if (!function_exists('gae_storage_path')) {
         } else {
             return storage_path($path);
         }
+    }
+}
+
+if (!function_exists('app_path')) {
+    function app_path($path = '') {
+        $extra = empty($path) ? '' : ('/' . $path);
+        return base_path('app').$extra;
+    }
+}
+
+if (!function_exists('is_lumen')) {
+    function is_lumen() {
+        return class_exists('\Laravel\Lumen\Application');
     }
 }

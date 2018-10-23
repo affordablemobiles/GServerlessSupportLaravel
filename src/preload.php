@@ -5,7 +5,13 @@ use OpenCensus\Trace\Exporter\StackdriverExporter;
 
 require __DIR__ . '/helpers.php';
 
-if (is_gae() && (php_sapi_name() != 'cli')){
+if ( is_gae_std_legacy() ) {
+    $_SERVER['GOOGLE_CLOUD_PROJECT'] = explode("~", $_SERVER['APPLICATION_ID'])[1];
+    $_SERVER['GAE_ENV'] = "standard";
+    $_SERVER['GAE_VERSION'] = $_SERVER['CURRENT_VERSION_ID'];
+    $_SERVER['GAE_SERVICE'] = $_SERVER['CURRENT_MODULE_ID'];
+    $_SERVER['GAE_INSTANCE'] = $_SERVER['INSTANCE_ID'];
+} else if (is_gae() && (php_sapi_name() != 'cli')) {
     if (is_gae_flex()){
         Tracer::start(new StackdriverExporter(['async' => true]));
     } else {

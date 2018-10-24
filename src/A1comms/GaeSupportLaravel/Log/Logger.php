@@ -4,6 +4,7 @@ namespace A1comms\GaeSupportLaravel\Log;
 
 use Google\Cloud\Logging\LoggingClient;
 use Monolog\Handler\PsrHandler;
+use Monolog\Handler\ErrorLogHandler;
 
 class Logger
 {
@@ -23,9 +24,16 @@ class Logger
         }
         else
         {
-            $app->configureMonologUsing(function ($monolog) {
+            /*$app->configureMonologUsing(function ($monolog) {
                 $logging = new LoggingClient();
                 $monolog->pushHandler(new PsrHandler($logging->psrLogger('app')));
+            });*/
+
+            // Proper logging isn't yet supported on App Engine 7.2 runtime.
+            // Just log here using PHP, so it goes via stderr, until structured logging
+            // via /var/log files is available.
+            $app->configureMonologUsing(function ($monolog) {
+                $monolog->pushHandler(new ErrorLogHandler());
             });
         }
     }

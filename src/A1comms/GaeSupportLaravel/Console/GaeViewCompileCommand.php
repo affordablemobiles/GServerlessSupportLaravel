@@ -66,6 +66,11 @@ class GaeViewCompileCommand extends Command
         $compiledDirectory = config('view.compiled', null);
         $viewPaths = config('view.paths', []);
 
+        $hints = app('view')->getFinder()->getHints();
+        foreach( $hints as $namespace => $paths ) {
+            $viewPaths = array_merge($paths, $viewPaths);
+        }
+
         $this->info("Blade Compiler: Cleaning view storage directory (" . $compiledDirectory . ")...");
         $this->files->cleanDirectory($compiledDirectory);
         $this->info("Blade Compiler: Cleaning view storage directory...done");

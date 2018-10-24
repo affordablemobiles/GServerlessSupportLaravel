@@ -83,3 +83,16 @@ if (!function_exists('gae_storage_path')) {
         }
     }
 }
+
+if (!function_exists('app_path')) {
+    function app_path($path = '') {
+        $extra = empty($path) ? '' : ('/' . $path);
+        return base_path('app').$extra;
+    }
+}
+
+if (!function_exists('is_lumen')) {
+    function is_lumen() {
+        return class_exists('\Laravel\Lumen\Application');
+    }
+}

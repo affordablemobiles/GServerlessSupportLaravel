@@ -107,7 +107,7 @@ class FileViewFinder extends LaravelFileViewFinder
         $traverser = str_repeat('../', $depth);
         $endPathRemainder = implode('/', \array_slice($endPathArr, $index));
         // Construct $endPath from traversing to the common path, then to the remaining $endPath
-        $relativePath = $traverser.('' !== $endPathRemainder ? $endPathRemainder.'/' : '');
+        $relativePath = $traverser.('' !== $endPathRemainder ? $endPathRemainder/*.'/'*/ : '');
         return '' === $relativePath ? './' : $relativePath;
     }
 

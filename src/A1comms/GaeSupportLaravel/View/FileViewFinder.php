@@ -62,8 +62,64 @@ class FileViewFinder extends LaravelFileViewFinder
         throw new InvalidArgumentException("View [$name] not found.");
     }
 
-    public static function getRelativePath($from, $to, $dot = true)
+    public static function getRelativePath($startPath, $endPath, $dot = true)
     {
-        return (new Filesystem())->makePathRelative($to, $from);
+        // Normalize separators on Windows
+        if ('\\' === \DIRECTORY_SEPARATOR) {
+            $endPath = str_replace('\\', '/', $endPath);
+            $startPath = str_replace('\\', '/', $startPath);
+        }
+        $stripDriveLetter = function ($path) {
+            if (\strlen($path) > 2 && ':' === $path[1] && '/' === $path[2] && ctype_alpha($path[0])) {
+                return substr($path, 2);
+            }
+            return $path;
+        };
+        $endPath = $stripDriveLetter($endPath);
+        $startPath = $stripDriveLetter($startPath);
+        // Split the paths into arrays
+        $startPathArr = explode('/', trim($startPath, '/'));
+        $endPathArr = explode('/', trim($endPath, '/'));
+        $normalizePathArray = function ($pathSegments, $absolute) {
+            $result = array();
+            foreach ($pathSegments as $segment) {
+                if ('..' === $segment && ($absolute || \count($result))) {
+                    array_pop($result);
+                } elseif ('.' !== $segment) {
+                    $result[] = $segment;
+                }
+            }
+            return $result;
+        };
+        $startPathArr = $normalizePathArray($startPathArr, self::isAbsolutePath($startPath));
+        $endPathArr = $normalizePathArray($endPathArr, self::isAbsolutePath($endPath));
+        // Find for which directory the common path stops
+        $index = 0;
+        while (isset($startPathArr[$index]) && isset($endPathArr[$index]) && $startPathArr[$index] === $endPathArr[$index]) {
+            ++$index;
+        }
+        // Determine how deep the start path is relative to the common path (ie, "web/bundles" = 2 levels)
+        if (1 === \count($startPathArr) && '' === $startPathArr[0]) {
+            $depth = 0;
+        } else {
+            $depth = \count($startPathArr) - $index;
+        }
+        // Repeated "../" for each level need to reach the common path
+        $traverser = str_repeat('../', $depth);
+        $endPathRemainder = implode('/', \array_slice($endPathArr, $index));
+        // Construct $endPath from traversing to the common path, then to the remaining $endPath
+        $relativePath = $traverser.('' !== $endPathRemainder ? $endPathRemainder.'/' : '');
+        return '' === $relativePath ? './' : $relativePath;
+    }
+
+    public static function isAbsolutePath($file)
+    {
+        return strspn($file, '/\\', 0, 1)
+            || (\strlen($file) > 3 && ctype_alpha($file[0])
+                && ':' === $file[1]
+                && strspn($file, '/\\', 2, 1)
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME)
+        ;
     }
 }

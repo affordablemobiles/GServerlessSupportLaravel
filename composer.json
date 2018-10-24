@@ -11,9 +11,7 @@
     "require": {
         "guzzlehttp/guzzle": "~6",
         "tomwalder/php-gds": "^4.1",
-        "google/cloud": "^0.83.0",
-        "paragonie/random_compat": "^2.0",
-        "symfony/filesystem": "^3.4"
+        "google/cloud": "^0.83.0"
     },
     "suggest": {
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0"

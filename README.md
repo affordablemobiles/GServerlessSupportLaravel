@@ -1,6 +1,6 @@
 # GaeSupportLaravel
 
-Google App Engine (GAE) Standard and Flexible Environment support package for Laravel 5.1 (on PHP 7.2 runtime).
+Google App Engine (GAE) Standard and Flexible Environment support package for Laravel 5.1 (on PHP 5.5 runtime).
 
 [![Latest Stable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/stable)](https://packagist.org/packages/a1comms/gae-support-laravel)
 [![Monthly Downloads](https://poser.pugx.org/a1comms/gae-support-laravel/d/monthly)](https://packagist.org/packages/a1comms/gae-support-laravel)
@@ -10,7 +10,7 @@ Google App Engine (GAE) Standard and Flexible Environment support package for La
 
 Based on original work for App Engine Standard by @shpasser https://github.com/shpasser/GaeSupportL5
 
-This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
+This version provides compatibility with PHP 5.5 and Laravel 5.1, while having the same interface as the PHP 7.2 / Laravel 5.5 version, to allow for easy migration.
 
 ## Functionality
 * StackDriver Logging integration
@@ -28,16 +28,55 @@ Pull in the package via Composer.
 }
 ```
 
-For Laravel, include the service provider within `config/app.php`:
+For Laravel, modify `bootstrap/app.php` and change this:
+
+```php
+$app = new Illuminate\Foundation\Application(
+    realpath(__DIR__.'/../')
+);
+```
+
+To this:
+
+```php
+$app = new A1comms\GaeSupportLaravel\Foundation\Application(
+    realpath(__DIR__.'/../')
+);
+
+/*
+|--------------------------------------------------------------------------
+| Setup Early Logging
+|--------------------------------------------------------------------------
+*/
+A1comms\GaeSupportLaravel\Log\Logger::setup($app);
+```
+
+Then include these service providers within `config/app.php`:
 
 ```php
 'providers' => [
     A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
+    A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
+    A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
 ];
 ```
 
-To automatically patch your application and configuration files to complete the rest of the installation, run the setup command:
+`A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class` should replace `Illuminate\Queue\QueueServiceProvider::class` in that array.
 
-```bash
- php artisan gae:setup
+`A1comms\GaeSupportLaravel\View\ViewServiceProvider::class` provides blade view pre-complication, so we no longer have to rely on cachefs as in the previous version.
+
+To prepare for deployment to App Engine, which includes pre-compiling the blade templates, run this command:
+
+`php artisan gae:prepare`
+
+We recommend adding this to `composer.json` as:
+
+```json
+    "scripts": {
+        "post-autoload-dump": [
+            "php artisan gae:prepare"
+        ]
+    },
 ```
+
+This is the recommended method for the new PHP 7.2 runtime builder (although you need to use `--no-cache` on `gcloud app deploy`)

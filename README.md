@@ -14,7 +14,7 @@ This version provides compatibility with PHP 5.5 and Laravel 5.1, while having t
 
 ## Functionality
 * StackDriver Logging integration
-* StackDriver Trace integration (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md))
+* StackDriver Trace integration (**not on PHP 5.5**) (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md))
 * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/blade-pre-compile.md))
 * Guzzle integration (optional, see [docs/guzzle.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/guzzle.md))
 
@@ -58,12 +58,15 @@ Then include these service providers within `config/app.php`:
     A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
     A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
     A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
+    A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
 ];
 ```
 
 `A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class` should replace `Illuminate\Queue\QueueServiceProvider::class` in that array.
 
 `A1comms\GaeSupportLaravel\View\ViewServiceProvider::class` provides blade view pre-complication, so we no longer have to rely on cachefs as in the previous version.
+
+`A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class` provides automatic tracing to Stackdriver Trace in the PHP 7.2 version, but is mainly a placeholder in this version.
 
 To prepare for deployment to App Engine, which includes pre-compiling the blade templates, run this command:
 

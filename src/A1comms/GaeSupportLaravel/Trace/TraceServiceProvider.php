@@ -24,7 +24,7 @@ class TraceServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if ((!is_gae()) || (php_sapi_name() == 'cli')) {
+        if ((!is_gae()) || (php_sapi_name() == 'cli') || GAE_LEGACY) {
             return;
         }
 

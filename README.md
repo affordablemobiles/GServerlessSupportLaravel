@@ -12,12 +12,26 @@ Based on original work for App Engine Standard by @shpasser https://github.com/s
 
 This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
 
+## Functionality
+* StackDriver Logging integration
+* StackDriver Trace integration (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md))
+* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/blade-pre-compile.md))
+* Guzzle integration (optional, see [docs/guzzle.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/guzzle.md))
+
 ## Installation
 
 Pull in the package via Composer.
 
 ```js
- "require": {
-     "a1comms/gae-support-laravel": "~5.5"
- }
+"require": {
+    "a1comms/gae-support-laravel": "~5.5"
+}
+```
+
+For Laravel, include the service provider within `config/app.php`:
+
+```php
+'providers' => [
+    A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
+];
 ```

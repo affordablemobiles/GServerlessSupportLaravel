@@ -47,6 +47,11 @@ class GaeSupportServiceProvider extends ServiceProvider
                 Console\GaePrepareCommand::class,
             ]);
         }
+
+        // Register the DatastoreSessionHandler
+        Session::extend('gae', function($app) {
+            return new DatastoreSessionHandler;
+        });
     }
 
     /**

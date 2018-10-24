@@ -5,7 +5,6 @@ namespace A1comms\GaeSupportLaravel\View;
 use InvalidArgumentException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Search for views in a static manifest instead of on disk,

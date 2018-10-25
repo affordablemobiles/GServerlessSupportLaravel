@@ -66,6 +66,10 @@ class GaeViewCompileCommand extends Command
         $compiledDirectory = config('view.compiled', null);
         $viewPaths = config('view.paths', []);
 
+        if (!$this->files->isDirectory($compiledDirectory)) {
+            $this->files->makeDirectory($compiledDirectory, 0755, true);
+        }
+
         $hints = app('view')->getFinder()->getHints();
         foreach( $hints as $namespace => $paths ) {
             $viewPaths = array_merge($paths, $viewPaths);

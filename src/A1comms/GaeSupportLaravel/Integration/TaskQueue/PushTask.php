@@ -3,6 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 use Google\Cloud\Tasks\V2beta2\Task;
+use Google\Cloud\Tasks\V2beta2\AppEngineRouting;
 use Google\Cloud\Tasks\V2beta2\AppEngineHttpRequest;
 
 class PushTask
@@ -15,6 +16,13 @@ class PushTask
 
         $this->pushTask->setRelativeUrl($url_path);
         $this->pushTask->setPayload($query_data);
+
+        if (gae_service() != "default") {
+            $routing = new AppEngineRouting();
+            $routing->setService(gae_service());
+
+            $this->pushTask->setAppEngineRouting($routing);
+        }
 
         if (in_array('method', $options)) {
             $this->pushTask->setMethod($options['method']);

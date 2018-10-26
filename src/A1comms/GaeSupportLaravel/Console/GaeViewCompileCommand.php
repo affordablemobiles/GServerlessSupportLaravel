@@ -66,10 +66,6 @@ class GaeViewCompileCommand extends Command
         $compiledDirectory = config('view.compiled', null);
         $viewPaths = config('view.paths', []);
 
-        if (!$this->files->isDirectory($compiledDirectory)) {
-            $this->files->makeDirectory($compiledDirectory, 0755, true);
-        }
-
         $hints = app('view')->getFinder()->getHints();
         foreach( $hints as $namespace => $paths ) {
             $viewPaths = array_merge($paths, $viewPaths);
@@ -77,6 +73,7 @@ class GaeViewCompileCommand extends Command
 
         $this->info("Blade Compiler: Cleaning view storage directory (" . $compiledDirectory . ")...");
         $this->files->cleanDirectory($compiledDirectory);
+        $this->files->put($compiledDirectory . "/.gitkeep", " ");
         $this->info("Blade Compiler: Cleaning view storage directory...done");
 
         for ($i = 0; $i < count($viewPaths); $i++) {

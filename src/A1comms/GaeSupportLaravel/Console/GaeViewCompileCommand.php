@@ -73,6 +73,7 @@ class GaeViewCompileCommand extends Command
 
         $this->info("Blade Compiler: Cleaning view storage directory (" . $compiledDirectory . ")...");
         $this->files->cleanDirectory($compiledDirectory);
+        $this->files->put($compiledDirectory . "/.gitkeep", " ");
         $this->info("Blade Compiler: Cleaning view storage directory...done");
 
         for ($i = 0; $i < count($viewPaths); $i++) {

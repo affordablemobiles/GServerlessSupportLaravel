@@ -19,6 +19,18 @@ if (!function_exists('is_gae_std')) {
     }
 }
 
+if (!function_exists('is_gae_std_legacy')) {
+    function is_gae_std_legacy() {
+        return false;
+    }
+}
+
+if (!function_exists('is_gae_production')) {
+    function is_gae_production() {
+        return is_gae();
+    }
+}
+
 if (!function_exists('is_gae_flex')) {
     function is_gae_flex() {
         if (isset($_SERVER['GOOGLE_CLOUD_PROJECT']))

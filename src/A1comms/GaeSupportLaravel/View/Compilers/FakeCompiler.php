@@ -69,4 +69,26 @@ class FakeCompiler implements CompilerInterface
     {
         return false;
     }
+
+    /**
+     * Register a handler for custom directives.
+     *
+     * @param  string  $name
+     * @param  callable  $handler
+     * @return void
+     */
+    public function directive($name, callable $handler)
+    {
+
+    }
+
+    /**
+     * Get the list of custom directives.
+     *
+     * @return array
+     */
+    public function getCustomDirectives()
+    {
+        return [];
+    }
 }

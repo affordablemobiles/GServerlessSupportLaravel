@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Log;
 
 use Google\Cloud\Logging\LoggingClient;
-use Monolog\Logger;
+use Monolog\Logger as MonologLogger;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\ErrorLogHandler;
@@ -35,7 +35,7 @@ class Logger
             // Just log here using PHP, so it goes via stderr, until structured logging
             // via /var/log files is available.
             $app->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new StreamHandler('/var/log/app.log', Logger::INFO));
+                $monolog->pushHandler(new StreamHandler('/var/log/app.log', MonologLogger::INFO));
             });
         }
     }

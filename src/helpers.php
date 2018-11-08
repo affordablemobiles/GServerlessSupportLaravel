@@ -108,3 +108,16 @@ if (!function_exists('is_lumen')) {
         return class_exists('\Laravel\Lumen\Application');
     }
 }
+
+if (!function_exists('gae_basic_log')) {
+    function gae_basic_log($logName = 'app', $severity, $message) {
+        $record = [
+            "severity" => $severity,
+            'message' => $message,
+            'logging.googleapis.com/trace' = 'projects/'.gae_project().'/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'time' = (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
+        ];
+
+        @file_put_contents('/var/log/' .$logName . '.log', json_encode($record) . "\n", FILE_APPEND);
+    }
+}

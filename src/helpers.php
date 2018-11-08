@@ -114,8 +114,8 @@ if (!function_exists('gae_basic_log')) {
         $record = [
             "severity" => $severity,
             'message' => $message,
-            'logging.googleapis.com/trace' = 'projects/'.gae_project().'/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
-            'time' = (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
+            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'time' => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 
         @file_put_contents('/var/log/' .$logName . '.log', json_encode($record) . "\n", FILE_APPEND);

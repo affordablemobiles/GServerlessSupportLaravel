@@ -14,7 +14,11 @@ class Logger
     {
         if ((!is_gae()) || (php_sapi_name() == 'cli'))
         {
-            return;
+            $app->configureMonologUsing(function ($monolog) {
+                $handler = new StreamHandler(storage_path('logs/json.log'), MonologLogger::INFO);
+                $handler->setFormatter(new JsonFormatter());
+                $monolog->pushHandler($handler);
+            });
         }
 
         if (is_gae_flex())
@@ -35,7 +39,9 @@ class Logger
             // Just log here using PHP, so it goes via stderr, until structured logging
             // via /var/log files is available.
             $app->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new StreamHandler('/var/log/app.log', MonologLogger::INFO));
+                $handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
+                $handler->setFormatter(new JsonFormatter());
+                $monolog->pushHandler($handler);
             });
         }
     }

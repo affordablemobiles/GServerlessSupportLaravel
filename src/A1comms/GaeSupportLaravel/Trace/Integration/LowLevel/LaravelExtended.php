@@ -61,7 +61,7 @@ class LaravelExtended implements IntegrationInterface
         // ---
         // Alternative View Compiler for Pre-Compiled Views
         // ---
-        opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
+        //opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
     }
 
     public static function handleApplicationConstruct($scope, $basePath = null)

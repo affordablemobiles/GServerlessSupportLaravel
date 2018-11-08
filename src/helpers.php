@@ -114,7 +114,7 @@ if (!function_exists('gae_basic_log')) {
         $record = [
             "severity" => $severity,
             'message' => $message,
-            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
             'time' => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 

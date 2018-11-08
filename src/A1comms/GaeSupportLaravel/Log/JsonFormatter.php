@@ -12,8 +12,10 @@
 namespace A1comms\GaeSupportLaravel\Log;
 
 use Throwable;
+use DateTimeInterface;
 use Monolog\Utils;
 use Monolog\Formatter\NormalizerFormatter;
+use OpenCensus\Trace\Tracer;
 
 class JsonFormatter extends NormalizerFormatter
 {
@@ -22,6 +24,8 @@ class JsonFormatter extends NormalizerFormatter
 
     protected $batchMode;
     protected $appendNewline;
+
+    protected $message;
 
     protected $maxNormalizeDepth = 9;
     protected $maxNormalizeItemCount = 1000;
@@ -64,6 +68,8 @@ class JsonFormatter extends NormalizerFormatter
      */
     public function format(array $record): string
     {
+        $this->message = $record['message'];
+
         $normalized = $this->normalize($record);
         if (isset($normalized['context']) && $normalized['context'] === []) {
             $normalized['context'] = new \stdClass;
@@ -71,6 +77,17 @@ class JsonFormatter extends NormalizerFormatter
         if (isset($normalized['extra']) && $normalized['extra'] === []) {
             $normalized['extra'] = new \stdClass;
         }
+
+        $normalized['message'] = $this->normalize($this->message);
+        $normalized['severity'] = $normalized['level_name'];
+        $normalized['logging.googleapis.com/trace'] = 'projects/'.gae_project().'/'.Tracer::spanContext()->traceId();
+        $normalized['time'] = $normalized['datetime']->format(DateTimeInterface::RFC3339_EXTENDED);
+
+        unset($normalized['level']);
+        unset($normalized['level_name']);
+        unset($normalized['datetime']);
+
+        $this->message = null;
 
         return $this->toJson($normalized, true) . ($this->appendNewline ? "\n" : '');
     }
@@ -151,7 +168,7 @@ class JsonFormatter extends NormalizerFormatter
         }
 
         if ($data instanceof Throwable) {
-            return $this->normalizeException($data, $depth);
+            return $this->normalizeException($data, 0);
         }
 
         return $data;
@@ -171,20 +188,22 @@ class JsonFormatter extends NormalizerFormatter
         ];
 
         if ($this->includeStacktraces) {
-            $trace = $e->getTrace();
-            foreach ($trace as $frame) {
-                if (isset($frame['file'])) {
-                    $data['trace'][] = $frame['file'].':'.$frame['line'];
-                } elseif (isset($frame['function']) && $frame['function'] === '{closure}') {
-                    // We should again normalize the frames, because it might contain invalid items
-                    $data['trace'][] = $frame['function'];
-                } else {
-                    // We should again normalize the frames, because it might contain invalid items
-                    $data['trace'][] = $this->normalize($frame);
+            if ($depth > 0) {
+                $trace = $e->getTrace();
+                foreach ($trace as $frame) {
+                    if (isset($frame['file'])) {
+                        $data['trace'][] = $frame['file'].':'.$frame['line'];
+                    } elseif (isset($frame['function']) && $frame['function'] === '{closure}') {
+                        // We should again normalize the frames, because it might contain invalid items
+                        $data['trace'][] = $frame['function'];
+                    } else {
+                        // We should again normalize the frames, because it might contain invalid items
+                        $data['trace'][] = $this->normalize($frame);
+                    }
                 }
+            } else {
+                $this->message = 'EXCEPTION: (' . $data['code'] . ') ' . $data['message'] . "\n\n" . $e->getTraceAsString();
             }
-
-            $data['message'] = 'EXCEPTION: (' . $data['code'] . ') ' . $data['message'] . "\n\n" . implode("\n", $data['trace']);
         }
 
         if ($previous = $e->getPrevious()) {

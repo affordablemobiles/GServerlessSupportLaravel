@@ -14,11 +14,7 @@ class Logger
     {
         if ((!is_gae()) || (php_sapi_name() == 'cli'))
         {
-            $app->configureMonologUsing(function ($monolog) {
-                $handler = new StreamHandler(storage_path('logs/json.log'), MonologLogger::INFO);
-                $handler->setFormatter(new JsonFormatter());
-                $monolog->pushHandler($handler);
-            });
+            return;
         }
 
         if (is_gae_flex())

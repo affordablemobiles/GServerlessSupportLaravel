@@ -41,6 +41,13 @@ class GaeQueue extends Queue implements QueueContract
     protected $shouldEncrypt;
 
     /**
+     * The encrypter implementation.
+     *
+     * @var \Illuminate\Contracts\Encryption\Encrypter
+     */
+    protected $encrypter;
+
+    /**
      * Create a new Gae queue instance.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -53,6 +60,8 @@ class GaeQueue extends Queue implements QueueContract
         $this->url = $url;
         $this->default = $default;
         $this->shouldEncrypt = $shouldEncrypt;
+
+        $this->encrypter = app('encrypter');
     }
 
     /**
@@ -65,7 +74,7 @@ class GaeQueue extends Queue implements QueueContract
      */
     public function push($job, $data = '', $queue = null)
     {
-        return $this->pushRaw($this->createPayload($job, $data, $queue), $queue);
+        return $this->pushRaw($this->createPayload($job, $data), $queue);
     }
 
     /**
@@ -116,7 +125,7 @@ class GaeQueue extends Queue implements QueueContract
     {
         $delay_seconds = $this->getSeconds($delay);
 
-        $payload = $this->createPayload($job, $data, $queue);
+        $payload = $this->createPayload($job, $data);
 
         return $this->pushRaw($payload, $queue, compact('delay_seconds'));
     }

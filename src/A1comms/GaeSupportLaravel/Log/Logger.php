@@ -35,8 +35,9 @@ class Logger
             // Just log here using PHP, so it goes via stderr, until structured logging
             // via /var/log files is available.
             $app->configureMonologUsing(function ($monolog) {
-                $handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
+                //$handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
                 //$handler->setFormatter(new JsonFormatter());
+                $handler = new ErrorLogHandler();
                 $monolog->pushHandler($handler);
             });
         }

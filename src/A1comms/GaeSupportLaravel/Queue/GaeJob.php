@@ -49,16 +49,6 @@ class GaeJob extends Job implements JobContract
     }
 
     /**
-     * Fire the job.
-     *
-     * @return void
-     */
-    public function fire()
-    {
-        $this->resolveAndFire(json_decode($this->getRawBody(), true));
-    }
-
-    /**
      * Get the raw body string for the job.
      *
      * @return string
@@ -105,11 +95,7 @@ class GaeJob extends Job implements JobContract
      */
     protected function recreateJob($delay)
     {
-        $payload = json_decode($this->job->body, true);
-
-        array_set($payload, 'attempts', array_get($payload, 'attempts', 1) + 1);
-
-        $this->gaeQueue->recreate(json_encode($payload), $this->getQueue(), $delay);
+        $this->gaeQueue->recreate($this->getRawBody(), $this->getQueue(), $delay);
     }
 
     /**
@@ -119,7 +105,7 @@ class GaeJob extends Job implements JobContract
      */
     public function attempts()
     {
-        return array_get(json_decode($this->job->body, true), 'attempts', 1);
+        return 0;
     }
 
     /**
@@ -160,15 +146,5 @@ class GaeJob extends Job implements JobContract
     public function getGaeJob()
     {
         return $this->job;
-    }
-
-    /**
-     * Get the name of the queue the job belongs to.
-     *
-     * @return string
-     */
-    public function getQueue()
-    {
-        return array_get(json_decode($this->job->body, true), 'queue');
     }
 }

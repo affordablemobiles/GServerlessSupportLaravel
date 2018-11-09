@@ -216,12 +216,12 @@ class GaeQueue extends Queue implements QueueContract
      * @param  string  $queue
      * @return string
      */
-    protected function createPayload($job, $data = '', $queue = null)
-    {
-        $payload = $this->setMeta(parent::createPayload($job, $data), 'attempts', 1);
+    //protected function createPayload($job, $data = '', $queue = null)
+    //{
+    //    $payload = $this->setMeta(parent::createPayload($job, $data), 'attempts', 1);
 
-        return $this->setMeta($payload, 'queue', $this->getQueue($queue));
-    }
+    //    return $this->setMeta($payload, 'queue', $this->getQueue($queue));
+    //}
 
     /**
      * Parse the job body for firing.

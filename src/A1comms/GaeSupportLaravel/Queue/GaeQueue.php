@@ -121,6 +121,16 @@ class GaeQueue extends Queue implements QueueContract
         return $this->pushRaw($payload, $queue, compact('delay_seconds'));
     }
 
+    /**
+     * Pop the next job off of the queue.
+     *
+     * @param  string  $queue
+     * @return \Illuminate\Queue\Jobs\Job|null
+     */
+    public function pop($queue = null)
+    {
+        throw new \RuntimeException("Pop is not supported by GaeQueue.");
+    }
 
     /**
      * Get the size of the queue.
@@ -131,6 +141,18 @@ class GaeQueue extends Queue implements QueueContract
     public function size($queue = null)
     {
         return 0;
+    }
+
+    /**
+     * Delete a message from the Gae queue.
+     *
+     * @param  string  $queue
+     * @param  string  $id
+     * @return void
+     */
+    public function deleteMessage($queue, $id)
+    {
+        throw new \RuntimeException("Delete is not supported by GaeQueue.");
     }
 
     /**

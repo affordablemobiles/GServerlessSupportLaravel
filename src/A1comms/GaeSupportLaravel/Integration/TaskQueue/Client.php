@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
+use Illuminate\Support\Facades\Log;
 use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Tasks\V2beta2\CloudTasksClient;
 
@@ -38,12 +39,18 @@ class Client
     private function fetchLocation() {
         $metadata = new Metadata();
         $zone = $metadata->get('instance/zone');
+        Log::info($zone);
         $zone = explode("/", $zone);
+        Log::info($zone);
         $zone = array_pop($zone);
+        Log::info($zone);
 
         $region = explode("-", $zone);
+        Log::info($region);
         array_pop($region);
+        Log::info($region);
         $region = implode("-", $region);
+        Log::info($region);
 
         return $region;
     }

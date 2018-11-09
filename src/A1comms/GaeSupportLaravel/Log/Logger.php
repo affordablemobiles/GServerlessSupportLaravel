@@ -36,7 +36,7 @@ class Logger
             // via /var/log files is available.
             $app->configureMonologUsing(function ($monolog) {
                 $handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
-                $handler->setFormatter(new JsonFormatter());
+                //$handler->setFormatter(new JsonFormatter());
                 $monolog->pushHandler($handler);
             });
         }

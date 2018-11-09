@@ -15,7 +15,7 @@ class PushTask
         $this->pushTask = new AppEngineHttpRequest();
 
         $this->pushTask->setRelativeUrl($url_path);
-        $this->pushTask->setPayload($query_data);
+        $this->pushTask->setPayload(http_build_query($query_data));
 
         if (gae_service() != "default") {
             $routing = new AppEngineRouting();

@@ -19,6 +19,10 @@ if ( GAE_LEGACY ) {
     $_SERVER['GAE_VERSION'] = $_SERVER['CURRENT_VERSION_ID'];
     $_SERVER['GAE_SERVICE'] = $_SERVER['CURRENT_MODULE_ID'];
     $_SERVER['GAE_INSTANCE'] = $_SERVER['INSTANCE_ID'];
+
+    // Set up exception logging properly...
+    $logging = new LoggingClient();
+    ErrorBootstrap::init($logging->psrLogger('exception'));
 } else if (is_gae() && (php_sapi_name() != 'cli')) {
     // Set up exception logging properly...
     $logging = new LoggingClient();

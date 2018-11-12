@@ -2,13 +2,23 @@
 
 use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
+use Google\Cloud\Logging\LoggingClient;
+use Google\Cloud\ErrorReporting\Bootstrap as ErrorBootstrap;
 
 require __DIR__ . '/helpers.php';
 
 if (is_gae() && (php_sapi_name() != 'cli')){
+    // Set up exception logging properly...
+    $logging = new LoggingClient();
+    ErrorBootstrap::init($logging->psrLogger('exception'));
+
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
+    }
+    if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {
+        // Turn HTTPS on for Laravel
+        $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
     }
 
     if (is_gae_flex()){
@@ -28,10 +38,5 @@ if (is_gae() && (php_sapi_name() != 'cli')){
 
     foreach ($traceProviders as $p) {
         $p::load();
-    }
-
-    if (in_array('HTTP_X_APPENGINE_HTTPS', $_SERVER)) {
-        // Turn HTTPS on for Laravel
-        $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
     }
 }

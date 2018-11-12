@@ -16,6 +16,9 @@ class PushTask
 
         $this->pushTask->setRelativeUri($url_path);
         $this->pushTask->setBody(http_build_query($query_data));
+        $this->pushTask->setHeaders([
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ]);
 
         if (gae_service() != "default") {
             $routing = new AppEngineRouting();

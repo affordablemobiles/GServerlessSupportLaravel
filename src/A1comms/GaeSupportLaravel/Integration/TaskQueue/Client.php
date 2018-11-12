@@ -4,7 +4,7 @@ namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 use Illuminate\Support\Facades\Log;
 use Google\Cloud\Core\Compute\Metadata;
-use Google\Cloud\Tasks\V2beta2\CloudTasksClient;
+use Google\Cloud\Tasks\V2beta3\CloudTasksClient;
 
 class Client
 {

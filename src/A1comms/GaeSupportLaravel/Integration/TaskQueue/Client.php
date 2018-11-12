@@ -28,6 +28,10 @@ class Client
         $this->location = $this->fetchLocation();
     }
 
+    public function getClient() {
+        return $this->client;
+    }
+
     public function getQueueName($queue) {
         return $this->client->queueName($this->project, $this->location, $queue);
     }

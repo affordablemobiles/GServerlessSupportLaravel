@@ -177,7 +177,7 @@ class GaeQueue extends Queue implements QueueContract
             // Ignore for security reasons!
             // So if we are being hacked
             // the hacker would think it went OK.
-            Log::warning('Marshalling Queue Request: Invalid job.');
+            Log::warning('Marshalling Queue Request: Invalid job. ' . $e->getMessage());
             return new Response('OK');
         }
 

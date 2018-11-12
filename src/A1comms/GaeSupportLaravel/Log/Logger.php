@@ -6,6 +6,7 @@ use Google\Cloud\Logging\LoggingClient;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Handler\ErrorLogHandler;
+use Monolog\Formatter\LineFormatter;
 
 class Logger
 {
@@ -19,7 +20,9 @@ class Logger
         if (GAE_LEGACY)
         {
             $app->configureMonologUsing(function ($monolog) {
-                $monolog->pushHandler(new SyslogHandler('laravel'));
+                $handler = new SyslogHandler('laravel');
+                $handler->setFormatter(new LineFormatter('%message% %context% %extra%'));
+                $monolog->pushHandler($handler);
             });
         }
         else if (is_gae_flex())

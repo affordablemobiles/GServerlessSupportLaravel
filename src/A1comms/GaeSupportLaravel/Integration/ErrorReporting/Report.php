@@ -85,7 +85,7 @@ if (GAE_LEGACY) {
             $content = [
                 'connect_timeout' => 2,
                 'timeout' => 10,
-                'json' => json_encode($data),
+                'json' => $data,
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'Authorization' => "Bearer {$accessToken}",

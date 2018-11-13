@@ -32,12 +32,12 @@ if (GAE_LEGACY) {
                             self::getFunctionNameForReport($ex->getTrace()),
                     ],
                     'httpRequest' => [
-                        'method'                => $_SERVER['REQUEST_METHOD'],
-                        'url'                   => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-                        'userAgent'             => $_SERVER['HTTP_USER_AGENT'],
-                        'referrer'              => $_SERVER['HTTP_REFERER'],
+                        'method'                => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                        'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                        'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                        'referrer'              => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
                         "responseStatusCode"    => $status_code,
-                        "remoteIp"              => $_SERVER['REMOTE_ADDR'],
+                        "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
                 ],
                 'serviceContext' => [
@@ -84,7 +84,7 @@ if (GAE_LEGACY) {
             $path = sprintf('https://clouderrorreporting.googleapis.com/v1beta1/projects/%s/events:report', gae_project());
             $content = [
                 'connect_timeout' => 2,
-                'timeout' => 10,
+                'timeout' => 2,
                 'json' => $data,
                 'headers' => [
                     'Content-Type' => 'application/json',
@@ -220,12 +220,12 @@ if (GAE_LEGACY) {
                                 self::getFunctionNameForReport($ex->getTrace()),
                         ],
                         'httpRequest' => [
-                            'method'                => $_SERVER['REQUEST_METHOD'],
-                            'url'                   => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-                            'userAgent'             => $_SERVER['HTTP_USER_AGENT'],
-                            'referrer'              => $_SERVER['HTTP_REFERER'],
+                            'method'                => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                            'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                            'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                            'referrer'              => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
                             "responseStatusCode"    => $status_code,
-                            "remoteIp"              => $_SERVER['REMOTE_ADDR'],
+                            "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                         ],
                     ],
                     'serviceContext' => [
@@ -270,12 +270,12 @@ if (GAE_LEGACY) {
                             self::getFunctionNameForReport(),
                     ],
                     'httpRequest' => [
-                        'method'                => $_SERVER['REQUEST_METHOD'],
-                        'url'                   => $_SERVER['REQUEST_URI'],
-                        'userAgent'             => $_SERVER['HTTP_USER_AGENT'],
-                        'referrer'              => $_SERVER['HTTP_REFERER'],
+                        'method'                => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                        'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                        'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                        'referrer'              => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
                         "responseStatusCode"    => $status_code,
-                        "remoteIp"              => $_SERVER['REMOTE_ADDR'],
+                        "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
                 ],
                 'serviceContext' => [

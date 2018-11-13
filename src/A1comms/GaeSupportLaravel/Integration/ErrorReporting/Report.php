@@ -79,7 +79,8 @@ if (GAE_LEGACY) {
                 'Content-Type' => 'application/json',
             ];
             $client = new \GuzzleHttp\Client($clientParams);
-            $accessToken = self::getToken();
+            $authData = self::getToken();
+            $accessToken = $authData['access_token'];
             $path = sprintf('https://clouderrorreporting.googleapis.com/v1beta1/projects/%s/events:report', gae_project());
             $content = [
                 'connect_timeout' => 2,

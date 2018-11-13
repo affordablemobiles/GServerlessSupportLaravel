@@ -33,7 +33,7 @@ if (GAE_LEGACY) {
                     ],
                     'httpRequest' => [
                         'method'                => $_SERVER['REQUEST_METHOD'],
-                        'url'                   => $_SERVER['REQUEST_URI'],
+                        'url'                   => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
                         'userAgent'             => $_SERVER['HTTP_USER_AGENT'],
                         'referrer'              => $_SERVER['HTTP_REFERER'],
                         "responseStatusCode"    => $status_code,
@@ -41,8 +41,8 @@ if (GAE_LEGACY) {
                     ],
                 ],
                 'serviceContext' => [
-                    'service' => $service,
-                    'version' => $version,
+                    'service' => gae_service(),
+                    'version' => gae_version(),
                 ]
             ]);
         }
@@ -220,7 +220,7 @@ if (GAE_LEGACY) {
                         ],
                         'httpRequest' => [
                             'method'                => $_SERVER['REQUEST_METHOD'],
-                            'url'                   => $_SERVER['REQUEST_URI'],
+                            'url'                   => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
                             'userAgent'             => $_SERVER['HTTP_USER_AGENT'],
                             'referrer'              => $_SERVER['HTTP_REFERER'],
                             "responseStatusCode"    => $status_code,
@@ -233,7 +233,7 @@ if (GAE_LEGACY) {
                     ]
                 ]);
             } else {
-                //fwrite(STDERR, $message . PHP_EOL);
+                fwrite(STDERR, $message . PHP_EOL);
             }
         }
 

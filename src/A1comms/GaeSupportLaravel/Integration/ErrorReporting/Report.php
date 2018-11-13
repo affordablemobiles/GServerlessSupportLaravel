@@ -233,7 +233,7 @@ if (GAE_LEGACY) {
                     ]
                 ]);
             } else {
-                fwrite(STDERR, $message . PHP_EOL);
+                //fwrite(STDERR, $message . PHP_EOL);
             }
         }
 

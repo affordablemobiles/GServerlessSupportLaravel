@@ -138,7 +138,7 @@ class Report
                 ]
             ]);
         } else {
-            fwrite(STDERR, $message . PHP_EOL);
+            //fwrite(STDERR, $message . PHP_EOL);
         }
     }
 

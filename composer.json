@@ -24,7 +24,6 @@
             "src/preload.php"
         ]
     },
-    "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [

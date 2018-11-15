@@ -94,7 +94,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         $this->lastaccess = $this->getTimeStamp();
         $this->deleteTime = Carbon::now()->subSeconds($this->expire)->toDateTimeString();
 
-        $obj_gateway = DatastoreFactory::make();
+        $obj_gateway = DatastoreFactory::make(null, 'rest');
 
         $this->obj_schema = (new GDS\Schema('sessions'))
             ->addString('data', false)

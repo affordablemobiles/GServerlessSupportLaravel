@@ -147,11 +147,11 @@ class DatastoreSessionHandler implements SessionHandlerInterface
             $this->orig_id = $id;
             $this->orig_data = $obj_sess->data;
 
-            Log::info("Got session data for ID (" . $id . ")", [$obj_sess->data]);
+            //Log::info("Got session data for ID (" . $id . ")", [$obj_sess->data]);
             return $obj_sess->data;
         }
 
-        Log::info("No data returned for session ID (" . $id . ")", [var_export($obj_sess, true)]);
+        //Log::info("No data returned for session ID (" . $id . ")", [var_export($obj_sess, true)]);
         return "";
     }
 
@@ -173,7 +173,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         ])->setKeyName($id);
 
         if ( ($this->orig_id != $id) || ($this->orig_data != $data) ){
-            Log::info("Writing session data for ID (" . $id . ")");
+            //Log::info("Writing session data for ID (" . $id . ")");
             $this->obj_store->upsert($obj_sess);
         }
 
@@ -194,7 +194,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         $obj_sess = $this->obj_store->fetchByName($id);
 
         if($obj_sess instanceof GDS\Entity) {
-            Log::info("Deleting session data for ID (" . $id . ")");
+            //Log::info("Deleting session data for ID (" . $id . ")");
             $this->obj_store->delete($obj_sess);
         }
 

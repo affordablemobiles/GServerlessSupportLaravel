@@ -18,6 +18,7 @@
 namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
 use Grpc\BaseStub;
+use Grpc\UnaryCall;
 use OpenCensus\Trace\Span;
 use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Integrations\IntegrationInterface;
@@ -54,6 +55,16 @@ class Grpc implements IntegrationInterface
                     'host' => $stub->getTarget(),
                     'uri' => $method,
                     'type' => 'simpleRequest'
+                ],
+                'kind' => Span::KIND_CLIENT
+            ];
+        });
+
+        opencensus_trace_method(UnaryCall::class, 'wait', function ($scope) {
+            return [
+                'name' => 'gRPC::wait',
+                'attributes' => [
+                    'type' => 'UnaryCall'
                 ],
                 'kind' => Span::KIND_CLIENT
             ];

@@ -52,11 +52,13 @@ class GaePrepareCommand extends Command
     {
         $this->info($this->logPrefix . "Starting...");
 
-        $this->call('config:clear');
+        if (!is_lumen()) {
+            $this->call('config:clear');
+
+            $this->runRefreshManifest();
+        }
 
         $this->runViewCompiler();
-
-        $this->runRefreshManifest();
 
         $this->info($this->logPrefix . "Ready to Deploy!");
     }

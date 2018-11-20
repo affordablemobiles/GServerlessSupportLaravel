@@ -11,7 +11,7 @@
     "require": {
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0",
         "guzzlehttp/guzzle": "~6",
-        "tomwalder/php-gds": "dev-master",
+        "tomwalder/php-gds": "dev-grpc",
         "google/cloud": "^0.86.0"
     },
     "require-dev": {

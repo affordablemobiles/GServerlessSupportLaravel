@@ -2,9 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Foundation;
 
-use Laravel\Lumen\Application as LumenApplication;
+use Laravel\Lumen\Application as LumenApp;
 
-class LumenApplication extends LumenApplication
+class LumenApplication extends LumenApp
 {
     /**
      * Create a new Illuminate application instance.

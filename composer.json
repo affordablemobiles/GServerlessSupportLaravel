@@ -10,7 +10,7 @@
     ],
     "require": {
         "guzzlehttp/guzzle": "~6",
-        "tomwalder/php-gds": "^4.1",
+        "tomwalder/php-gds": "dev-grpc",
         "google/cloud": "^0.83.0"
     },
     "suggest": {

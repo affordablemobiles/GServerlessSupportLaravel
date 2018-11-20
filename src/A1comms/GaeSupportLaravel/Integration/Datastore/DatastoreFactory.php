@@ -9,9 +9,9 @@ class DatastoreFactory
     public static function make()
     {
         if (GAE_LEGACY) {
-            return new GDS\Gateway\ProtoBuf(null, null);
+            return new GDS\Gateway\ProtoBuf(null, $namespace);
         }
 
-        return new GDS\Gateway\RESTv1(gae_project(), null);
+        return new GDS\Gateway\GRPCv1(gae_project(), $namespace);
     }
 }

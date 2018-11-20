@@ -107,6 +107,13 @@ if (!function_exists('app_path')) {
     }
 }
 
+if (!function_exists('config_path')) {
+    function config_path($path = '')
+    {
+        return base_path('config').($path ? DIRECTORY_SEPARATOR.$path : $path);
+    }
+}
+
 if (!function_exists('is_lumen')) {
     function is_lumen() {
         return class_exists('\Laravel\Lumen\Application');

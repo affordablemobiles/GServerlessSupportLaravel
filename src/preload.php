@@ -2,7 +2,7 @@
 
 use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
-use A1comms\GaeSupportLaravel\Integration\ErrorReporting as ErrorBootstrap;
+use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 
 require __DIR__ . '/helpers.php';
 

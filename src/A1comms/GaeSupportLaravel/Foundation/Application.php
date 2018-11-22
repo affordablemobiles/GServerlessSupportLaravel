@@ -5,6 +5,7 @@ namespace A1comms\GaeSupportLaravel\Foundation;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Foundation\ProviderRepository as LaravelProviderRepository;
+use A1comms\GaeSupportLaravel\Log\Logger;
 
 class Application extends LaravelApplication
 {
@@ -16,6 +17,14 @@ class Application extends LaravelApplication
      */
     public function __construct($basePath = null)
     {
+        $handler = Logger::getHandler();
+
+        if (!is_null($handler)) {
+            $this->configureMonologUsing(function ($monolog) use ($handler) {
+                $monolog->pushHandler($handler);
+            });
+        }
+
         return parent::__construct($basePath);
     }
 

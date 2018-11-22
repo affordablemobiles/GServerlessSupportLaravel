@@ -43,7 +43,7 @@ class Logger
         }
         else
         {
-            return new ErrorLogHandler()
+            return new ErrorLogHandler();
         }
     }
 }

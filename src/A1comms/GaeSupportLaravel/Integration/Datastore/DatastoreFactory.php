@@ -6,7 +6,7 @@ use GDS;
 
 class DatastoreFactory
 {
-    public static function make()
+    public static function make($namespace = null)
     {
         if (GAE_LEGACY) {
             return new GDS\Gateway\ProtoBuf(null, $namespace);

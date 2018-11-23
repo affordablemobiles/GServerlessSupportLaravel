@@ -15,7 +15,12 @@ if ( is_gae_std_legacy() ) {
 if ( GAE_LEGACY ) {
     $_SERVER['GOOGLE_CLOUD_PROJECT'] = explode("~", $_SERVER['APPLICATION_ID'])[1];
     $_SERVER['GAE_ENV'] = "standard";
-    $_SERVER['GAE_VERSION'] = $_SERVER['CURRENT_VERSION_ID'];
+    try {
+        $current_version = explode('.', $_SERVER['CURRENT_VERSION_ID']);
+        $_SERVER['GAE_VERSION'] = $current_version[0];
+    } catch (Exception $e) {
+        $_SERVER['GAE_VERSION'] = $_SERVER['CURRENT_VERSION_ID'];
+    }
     $_SERVER['GAE_SERVICE'] = $_SERVER['CURRENT_MODULE_ID'];
     $_SERVER['GAE_INSTANCE'] = $_SERVER['INSTANCE_ID'];
 } else if (is_gae() && (php_sapi_name() != 'cli')) {

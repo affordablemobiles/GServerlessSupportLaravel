@@ -72,7 +72,7 @@ class Lumen implements IntegrationInterface
         ];
     }
 
-    public static function handleApplicationRequestRun($scope, $request)
+    public static function handleApplicationRequestRun($scope)
     {
         return [
             'name' => 'lumen/app/run',

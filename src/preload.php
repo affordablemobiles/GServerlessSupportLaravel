@@ -32,7 +32,7 @@ if ( GAE_LEGACY ) {
     if (is_gae_flex()){
         $cache = new ApcuCachePool();
 
-        Tracer::start(new StackdriverExporter(), [
+        Tracer::start(new StackdriverExporter(['async' => true]), [
             'sampler' => (new QpsSampler($cache, ['rate' => 0.1]))
         ]);
     } else {

@@ -11,7 +11,8 @@
     "require": {
         "guzzlehttp/guzzle": "~6",
         "tomwalder/php-gds": "dev-grpc",
-        "google/cloud": "^0.83.0"
+        "google/cloud": "^0.83.0",
+        "cache/apcu-adapter": "~1"
     },
     "suggest": {
         "opencensus/opencensus-exporter-stackdriver": "^0.1.0"

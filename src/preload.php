@@ -1,7 +1,9 @@
 <?php
 
 use OpenCensus\Trace\Tracer;
+use OpenCensus\Trace\Sampler\QpsSampler;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
+use Cache\Adapter\Apcu\ApcuCachePool;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 
 require __DIR__ . '/helpers.php';
@@ -28,7 +30,11 @@ if ( GAE_LEGACY ) {
     ErrorBootstrap::init();
 
     if (is_gae_flex()){
-        Tracer::start(new StackdriverExporter(['async' => true]));
+        $cache = new ApcuCachePool();
+
+        Tracer::start(new StackdriverExporter(['async' => true]), [
+            'sampler' => (new QpsSampler($cache, ['rate' => 0.1]))
+        ]);
     } else {
         // TODO: Async on Standard Environment too!
         Tracer::start(new StackdriverExporter());

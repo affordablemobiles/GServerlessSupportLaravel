@@ -19,11 +19,13 @@ if (is_gae() && (php_sapi_name() != 'cli')){
         $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
     }
 
-    if (is_gae_flex()){
-        Tracer::start(new StackdriverExporter(['async' => true]));
-    } else {
-        // TODO: Async on Standard Environment too!
-        Tracer::start(new StackdriverExporter());
+    if (!defined('GAE_TRACE_STOP')) {
+        if (is_gae_flex()){
+            Tracer::start(new StackdriverExporter(['async' => true]));
+        } else {
+            // TODO: Async on Standard Environment too!
+            Tracer::start(new StackdriverExporter());
+        }
     }
 
     $loaderInterface = 'App\\Trace\\LowLevelLoader';

@@ -9,10 +9,10 @@
         }
     ],
     "require": {
-        "opencensus/opencensus-exporter-stackdriver": "^0.1.0",
+        "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "~6",
         "tomwalder/php-gds": "dev-grpc",
-        "google/cloud": "^0.86.0"
+        "google/cloud": "~0"
     },
     "require-dev": {
     },

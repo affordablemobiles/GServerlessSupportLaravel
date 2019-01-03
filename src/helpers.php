@@ -96,6 +96,21 @@ if (!function_exists('gae_storage_path')) {
     }
 }
 
+if (!function_exists('gae_realpath')) {
+    function gae_realpath($path)
+    {
+        $result = realpath($path);
+        if ($result == false)
+        {
+            if (file_exists($path))
+            {
+                $result = $path;
+            }
+        }
+        return $result;
+    }
+}
+
 if (!function_exists('app_path')) {
     function app_path($path = '') {
         $extra = empty($path) ? '' : ('/' . $path);

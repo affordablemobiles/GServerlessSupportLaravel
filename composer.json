@@ -11,7 +11,7 @@
     "require": {
         "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "~6",
-        "tomwalder/php-gds": "dev-grpc",
+        "a1comms/php-gds": "~4.2",
         "google/cloud": "~0"
     },
     "require-dev": {
@@ -31,11 +31,5 @@
                 "A1comms\\GaeSupportLaravel\\Trace\\TraceServiceProvider"
             ]
         }
-    },
-    "repositories": [
-        {
-          "type": "git",
-          "url": "https://github.com/a1comms/php-gds.git"
-        }
-    ]
+    }
 }

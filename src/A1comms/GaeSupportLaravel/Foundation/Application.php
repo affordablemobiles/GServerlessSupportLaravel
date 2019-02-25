@@ -78,11 +78,18 @@ class Application extends IlluminateApplication
                 $monolog->pushHandler(new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true])));
             });
         } else {
-            $this->configureMonologUsing(function ($monolog) {
-                $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
-                $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
-                $monolog->pushHandler($handler);
-            });
+            // write errors to command line when running command line commands
+            if ($this->runningInConsole()) {
+                $this->configureMonologUsing(function($monolog) {
+                    $monolog->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::INFO, false)); // false value as third argument to disable bubbling up the stack
+                });
+            } else {
+                $this->configureMonologUsing(function ($monolog) {
+                    $handler = new StreamHandler($this->storagePath('logs/lumen.log'));
+                    $handler->setFormatter(new \Monolog\Formatter\LineFormatter(null, null, true, true));
+                    $monolog->pushHandler($handler);
+                });
+            }
         }
 
         $this->replaceDefaultSymfonyLineDumpers();

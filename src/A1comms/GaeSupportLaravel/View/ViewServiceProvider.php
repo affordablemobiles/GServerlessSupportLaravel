@@ -17,7 +17,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function register()
     {
-        if (is_gae()){
+        if (is_gae() && (env('APP_ENV', 'production') == 'production')){
             $this->registerFactory();
 
             $this->registerGaeViewFinder();

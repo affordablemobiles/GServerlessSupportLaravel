@@ -28,10 +28,47 @@ Pull in the package via Composer.
 }
 ```
 
+### Laravel Specific (Not Lumen)
 For Laravel, include the service provider within `config/app.php`:
 
 ```php
 'providers' => [
     A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
 ];
+```
+
+Also, for added functionality, include the optional service providers:
+
+```php
+'providers' => [
+    A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
+    A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
+    A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
+];
+```
+
+Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+|
+| The first thing we will do is create a new Laravel application instance
+| which serves as the "glue" for all the components of Laravel, and is
+| the IoC container for the system binding all of the various parts.
+|
+*/
+
+$app = new A1comms\GaeSupportLaravel\Foundation\Application(
+    realpath(__DIR__.'/../')
+);
+
+/*
+|--------------------------------------------------------------------------
+| Setup Early Logging
+|--------------------------------------------------------------------------
+*/
+A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```

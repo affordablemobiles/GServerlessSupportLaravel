@@ -55,17 +55,19 @@ class GaeSupportServiceProvider extends ServiceProvider
             ]);
         }
 
-        $storage = new GCSStorageClient();
-        GCSStreamWrapper::register($storage);
+        if (is_gae()) {
+            $storage = new GCSStorageClient();
+            GCSStreamWrapper::register($storage);
 
-        // Register the DatastoreSessionHandler
-        Session::extend('gae', function($app) {
-            return new DatastoreSessionHandler;
-        });
+            // Register the DatastoreSessionHandler
+            Session::extend('gae', function($app) {
+                return new DatastoreSessionHandler;
+            });
 
-        Storage::extend('gae', function ($app, $config) {
-            return new Flysystem(new GaeFilesystemAdapter($config['root']));
-        });
+            Storage::extend('gae', function ($app, $config) {
+                return new Flysystem(new GaeFilesystemAdapter($config['root']));
+            });
+        }
 
         // register the package's routes
         require __DIR__.'/Http/routes.php';

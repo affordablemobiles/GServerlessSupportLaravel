@@ -24,7 +24,7 @@ class Report
      */
     public static function init(PsrLogger $psrLogger = null)
     {
-        $options = [];
+        $options = ['batchEnabled' => false];
 
         self::$psrLogger = $psrLogger ?: (new LoggingClient())
             ->psrLogger(self::DEFAULT_LOGNAME, $options);

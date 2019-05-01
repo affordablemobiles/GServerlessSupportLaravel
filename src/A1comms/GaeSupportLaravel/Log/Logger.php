@@ -43,6 +43,7 @@ class Logger
                 $app->configureMonologUsing(function ($monolog) {
                     $handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
                     $handler->setFormatter(new JsonFormatter());
+                    $monolog->pushHandler($handler);
                 });
             }
         }

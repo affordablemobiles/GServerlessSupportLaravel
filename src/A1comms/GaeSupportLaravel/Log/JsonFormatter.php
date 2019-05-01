@@ -145,7 +145,7 @@ class JsonFormatter extends NormalizerFormatter
      *
      * @return mixed
      */
-    protected function normalize($data, int $depth = 0)
+    protected function normalize($data, $depth = 0)
     {
         if ($depth > $this->maxNormalizeDepth) {
             return 'Over '.$this->maxNormalizeDepth.' levels deep, aborting normalization';
@@ -178,7 +178,7 @@ class JsonFormatter extends NormalizerFormatter
      * Normalizes given exception with or without its own stack trace based on
      * `includeStacktraces` property.
      */
-    protected function normalizeException(Throwable $e, int $depth = 0): array
+    protected function normalizeException($e, $depth = 0)
     {
         $data = [
             'class' => Utils::getClass($e),

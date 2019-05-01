@@ -29,22 +29,33 @@ Pull in the package via Composer.
 ```
 
 ### Laravel Specific (Not Lumen)
+
+Add the following to `composer.json`:
+
+```json
+    "scripts": {
+        "post-autoload-dump": [
+            "php artisan gae:prepare"
+        ]
+    },
+```
+
 For Laravel, include the service provider within `config/app.php`:
 
 ```php
-'providers' => [
-    A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
-];
+    'providers' => [
+        A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
+    ];
 ```
 
 Also, for added functionality, include the optional service providers:
 
 ```php
-'providers' => [
-    A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
-    A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
-    A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
-];
+    'providers' => [
+        A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
+        A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
+        A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
+    ];
 ```
 
 Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
@@ -71,4 +82,26 @@ $app = new A1comms\GaeSupportLaravel\Foundation\Application(
 |--------------------------------------------------------------------------
 */
 A1comms\GaeSupportLaravel\Log\Logger::setup($app);
+```
+
+Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
+
+Change the following `use` statement:
+
+```php
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+```
+
+To our class, that'll inject the required logging hook:
+
+```php
+use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
+```
+
+In `.env`, set the following:
+
+```
+QUEUE_DRIVER=gae
+CACHE_DRIVER=array
+SESSION_DRIVER=gae
 ```

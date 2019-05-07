@@ -30,7 +30,7 @@ Pull in the package via Composer.
 
 ### Laravel Specific (Not Lumen)
 
-Add the following to `composer.json`:
+**1.** Add the following to `composer.json`:
 
 ```json
     "scripts": {
@@ -40,7 +40,7 @@ Add the following to `composer.json`:
     },
 ```
 
-For Laravel, include the service provider within `config/app.php`:
+**2.** For Laravel, include the service provider within `config/app.php`:
 
 ```php
     'providers' => [
@@ -48,7 +48,7 @@ For Laravel, include the service provider within `config/app.php`:
     ];
 ```
 
-Also, for added functionality, include the optional service providers:
+**3.** Also, for added functionality, include the optional service providers:
 
 ```php
     'providers' => [
@@ -67,7 +67,7 @@ And remove the relevant Laravel service providers that these replace:
     ];
 ```
 
-Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
+**4.** Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
 
 ```php
 /*
@@ -93,7 +93,7 @@ $app = new A1comms\GaeSupportLaravel\Foundation\Application(
 A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```
 
-Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
+**5.** Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
 
 Change the following `use` statement:
 
@@ -107,7 +107,7 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 ```
 
-In `.env`, set the following:
+**6.** In `.env`, set the following:
 
 ```
 QUEUE_DRIVER=gae

@@ -124,7 +124,12 @@ Since the low level trace setup is done as part of the composer autoloader initi
 
 In Laravel 5.5, service providers are automatically discovered by default, so unless you've disabled this functionality, you shouldn't need to do anything else either.
 
-## Guzzle Sub-Request Trace Merging
-StackDriver Trace has the ability to show trace points from sub-requests within the same project (although it can be to other App Engine services) into the same trace entry in the GUI, allowing you to view the aggregate impact of a whole request in a micro-service environment.
+## Guzzle
+By default, the Low Level tracing component attaches to Guzzle's request handler.
+
+This means you should automatically see external calls made with Guzzle as trace spans.
+
+### Guzzle Sub-Request Trace Merging
+StackDriver Trace has the ability to show trace points from sub-requests within the same organization (to other App Engine microservices, either in the same project, or outside of it, as long as they are part of the organization container) into the same trace entry in the GUI, allowing you to view the aggregate impact of a whole request in a micro-service environment.
 
 To take advantage of this, replace your `GuzzleHttp\Client` with `A1comms\GaeSupportLaravel\Integration\Guzzle\Client`.

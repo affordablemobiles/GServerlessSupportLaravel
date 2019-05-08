@@ -29,15 +29,15 @@ It was our view that the main design consideration for compiling the views at ru
 
 The need to expect these kind of changes actually incurs an overhead, as even though the compiled views are cached, we have to check the source files on every request to see if they have changed, to trigger a re-compile if they have, so there is no manual intervention required by the site owner.
 
-It also became clear, that hadn't occured to us before: the "compilation" was a simple translation that didn't take any input from the actual request, so would be the same every time given the same source files.
+It also became clear, that hadn't occurred to us before: the "compilation" was a simple translation that didn't take any input from the actual request, so would be the same every time given the same source files.
 
-Plus, the other bit we thought that might be part of the compliation process, including sub-views, was actually handled outside of the compilation process. It keeps everything seporate and calls back to the view handlers from the translated PHP, massively reducing the complexity of our problem.
+Plus, the other bit we thought that might be part of the compilation process, including sub-views, was actually handled outside of the compilation process. It keeps everything separate and calls back to the view handlers from the translated PHP, massively reducing the complexity of our problem.
 
 ### Our Solution
 
 For an environment like App Engine, one we deploy the code and it becomes a read-only image that is shipped to the containers for runtime, we don't have to worry about a lot of these considerations required for the traditional LAMP environment.
 
-Infact, it is better for us if to have re-producible builds that do as much work as possible before shipping to production, to not only save us resources, but also to aid with debugging and auditing, as we've got a clear view of exactly what code is running (we can drill down to post-compilation view files in Stackdriver Debugger using location information from a stacktrace).
+In fact, it is better for us to have re-producible builds that do as much work as possible before shipping to production, to not only save us resources, but also to aid with debugging and auditing, as we've got a clear view of exactly what code is running (we can drill down to post-compilation view files in StackDriver Debugger using location information from a stacktrace).
 
 So with this in mind, we chose to pre-compile all of our views at deploy time (using the same Blade compiler as before) and store the resulting PHP files & a map to their location in a folder to be shipped along with the rest of the app.
 
@@ -52,9 +52,9 @@ To enable, you'll first need to include our `ViewServiceProvider` in `config/app
     ];
 ```
 
-This will enable the functionality only when running on App Engine, plus when `APP_ENV=production` is set in `.env`, making sure you always use the default templating system during development, so you don't need to worry about seeing out of date views.
+This will enable the functionality only when running on App Engine, plus when `APP_ENV=production` is set in `.env`, making sure you always use the default templating system during development, so you don't need to worry about seeing out-of-date views.
 
-Compiling the views is handled by the command `artisan gae:viewcompile`, however, if you've already added `artisan gae:prepare` to your composer scripts, it will auto-detect when the `ViewServiceProvider` is in your config and auto compile all of the views every time composer runs.
+Compiling the views is handled by the command `php artisan gae:viewcompile`, however, if you've already added `php artisan gae:prepare` to your composer scripts, it will auto-detect when our `ViewServiceProvider` is enabled and auto compile all of the views every time composer runs.
 
 ### How it works
 

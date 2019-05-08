@@ -17,7 +17,7 @@ This library is designed for homogeneous operation between the Standard Environm
 * StackDriver Trace integration (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md))
 * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/blade-pre-compile.md))
 * Guzzle integration (optional, see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md#guzzle))
-* Laravel Auth Integration for IAP (see [docs/iap-auth-verify.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/iap-auth-verify.md))
+* Laravel Auth Integration for IAP (optional, see [docs/iap-auth-verify.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/iap-auth-verify.md))
 
 
 ## Installation

@@ -8,7 +8,7 @@ Google App Engine (GAE) Standard and Flexible Environment support package for La
 [![Latest Unstable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/unstable)](https://packagist.org/packages/a1comms/gae-support-laravel)
 [![License](https://poser.pugx.org/a1comms/gae-support-laravel/license)](https://packagist.org/packages/a1comms/gae-support-laravel)
 
-Based on original work for App Engine Standard by @shpasser https://github.com/shpasser/GaeSupportL5
+Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpasser https://github.com/shpasser/GaeSupportL5
 
 This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
 
@@ -17,6 +17,7 @@ This library is designed for homogeneous operation between the Standard Environm
 * StackDriver Trace integration (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md))
 * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/blade-pre-compile.md))
 * Guzzle integration (optional, see [docs/guzzle.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/guzzle.md))
+* Laravel Auth Integration for IAP (see [docs/iap-auth-verify.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/iap-auth-verify.md))
 
 ## Installation
 
@@ -52,6 +53,7 @@ Pull in the package via Composer.
 
 ```php
     'providers' => [
+        A1comms\GaeSupportLaravel\Auth\AuthServiceProvider::class,
         A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
         A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
         A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,

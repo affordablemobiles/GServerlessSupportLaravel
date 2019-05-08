@@ -22,7 +22,7 @@ By default, this includes:
   * MySQL
   * PDO
   * Eloquent (Laravel)
-  * (soon) Datastore
+  * Datastore (GDS aka php-gds)
   * Guzzle (HTTP(s))
 
 It also allows you to register your own trace providers to be registered as the application boots, via the config file for this package (`trace_providers` in `gaesupport.php`).

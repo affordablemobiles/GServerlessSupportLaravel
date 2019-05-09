@@ -3,8 +3,9 @@
 namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
 use Illuminate\Http\Request;
+use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Model\IAPUser;
-use A1comms\GaeSupportLaravel\Auth\Guard\Contracts\StatelessValidator;
+use A1comms\GaeSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 
 class UsersAPIGuard implements StatelessValidator
 {
@@ -15,7 +16,7 @@ class UsersAPIGuard implements StatelessValidator
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    public static function validate(Request $request)
+    public static function validate(Request $request, UserProvider $provider = null)
     {
         $email = $request->header('X-AppEngine-User-Email');
 
@@ -24,5 +25,20 @@ class UsersAPIGuard implements StatelessValidator
         }
 
         return null;
+    }
+
+    protected static function returnUser(UserProvider $provider = null, string $email)
+    {
+        if (empty($provider)){
+            $user = new IAPUser();
+
+            $user->fill([
+                $user->getAuthIdentifierName() => $email,
+            ]);
+
+            return $user;
+        } else {
+            return $provider->retrieveById($email);
+        }
     }
 }

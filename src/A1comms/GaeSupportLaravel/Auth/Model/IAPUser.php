@@ -2,9 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Auth\Model;
 
-use Illuminate\Contracts\Auth\Authenticatable;
+use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
 
-class IAPUser implements Authenticatable
+class IAPUser implements NullUserModel
 {
     /**
      * User's Email
@@ -14,14 +14,18 @@ class IAPUser implements Authenticatable
     protected $email;
 
     /**
-     * Create instance of IAPUser
+     * Fill the model with an array of attributes.
      *
-     * @param   string  $email
-     * @return  void
+     * @param  array  $attributes
+     * @return $this
      */
-    public function __construct($email)
+    public function fill(array $attributes)
     {
-        $this->email = $email;
+        foreach($attributes as $k => $v) {
+            $this->{$k} = $v;
+        }
+
+        return $this;
     }
 
     /**

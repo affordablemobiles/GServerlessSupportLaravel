@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Auth;
 
 use Illuminate\Contracts\Auth\UserProvider;
-use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 class NullUserProvider implements UserProvider
 {
@@ -71,7 +71,7 @@ class NullUserProvider implements UserProvider
      * @param  string  $token
      * @return void
      */
-    public function updateRememberToken(NullUserModel $user, $token)
+    public function updateRememberToken(Authenticatable $user, $token)
     {
 
     }
@@ -84,7 +84,7 @@ class NullUserProvider implements UserProvider
      */
     public function retrieveByCredentials(array $credentials)
     {
-        return null
+        return null;
     }
 
     /**
@@ -94,7 +94,7 @@ class NullUserProvider implements UserProvider
      * @param  array  $credentials
      * @return bool
      */
-    public function validateCredentials(NullUserModel $user, array $credentials)
+    public function validateCredentials(Authenticatable $user, array $credentials)
     {
         return false;
     }

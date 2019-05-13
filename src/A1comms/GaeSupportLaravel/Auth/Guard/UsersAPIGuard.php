@@ -21,7 +21,7 @@ class UsersAPIGuard implements StatelessValidator
         $email = $request->header('X-AppEngine-User-Email');
 
         if (!empty($email)) {
-            return new IAPUser($email);
+            return static::returnUser($provider, $email);
         }
 
         return null;

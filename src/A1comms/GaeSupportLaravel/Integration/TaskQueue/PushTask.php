@@ -27,14 +27,14 @@ class PushTask
             $this->pushTask->setAppEngineRouting($routing);
         }
 
-        if (in_array('method', $options)) {
+        if (!empty($options['method'])) {
             $this->pushTask->setHttpMethod($options['method']);
         }
 
         $this->task = new Task();
         $this->task->setAppEngineHttpRequest($this->pushTask);
 
-        if (in_array('delay_seconds', $options)) {
+        if (!empty($options['delay_seconds'])) {
             $secondsString = sprintf('+%s seconds', $options['delay_seconds']);
             $futureTime = date(\DateTime::RFC3339, strtotime($secondsString));
             $this->task->setScheduleTime($futureTime);

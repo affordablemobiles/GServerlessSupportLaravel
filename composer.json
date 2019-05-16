@@ -12,7 +12,7 @@
         "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "~6",
         "a1comms/php-gds": "~4.2",
-        "google/cloud": "~0"
+        "google/cloud": ">=0.100.0 <1.0.0"
     },
     "require-dev": {
     },

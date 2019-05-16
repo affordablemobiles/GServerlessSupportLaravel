@@ -20,7 +20,23 @@ class PushTask
             'Content-Type' => 'application/x-www-form-urlencoded',
         ]);
 
-        if (gae_service() != "default") {
+        if (strpos(gae_version(), 'dev-') === 0) {
+            /**
+             * Support our development environment,
+             * which runs working copies on live
+             * App Engine containers via rsync to /tmp.
+             *
+             * Our chosen naming convention is versions
+             * starting with "dev-", so if we spot that
+             * in the version name, send tasks back
+             * to that specific version.
+             */
+            $routing = new AppEngineRouting();
+            $routing->setService(gae_service());
+            $routing->setVersion(gae_version());
+
+            $this->pushTask->setAppEngineRouting($routing);
+        } else if (gae_service() != "default") {
             $routing = new AppEngineRouting();
             $routing->setService(gae_service());
 

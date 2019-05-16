@@ -9,6 +9,7 @@
         }
     ],
     "require": {
+        "php": ">=7.2.0",
         "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "~6",
         "a1comms/php-gds": "~4.2",

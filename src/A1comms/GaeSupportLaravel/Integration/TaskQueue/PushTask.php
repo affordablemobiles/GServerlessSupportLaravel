@@ -5,6 +5,7 @@ namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 use Google\Cloud\Tasks\V2\Task;
 use Google\Cloud\Tasks\V2\AppEngineRouting;
 use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
+use Illuminate\Support\Facades\Log;
 
 class PushTask
 {
@@ -31,6 +32,8 @@ class PushTask
              * in the version name, send tasks back
              * to that specific version.
              */
+            Log::info('Detected development environment, routing to ' . gae_service() . ':' . gae_version());
+
             $routing = new AppEngineRouting();
             $routing->setService(gae_service());
             $routing->setVersion(gae_version());

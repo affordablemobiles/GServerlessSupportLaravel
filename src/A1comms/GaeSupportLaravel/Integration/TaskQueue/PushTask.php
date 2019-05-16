@@ -2,9 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
-use Google\Cloud\Tasks\V2beta3\Task;
-use Google\Cloud\Tasks\V2beta3\AppEngineRouting;
-use Google\Cloud\Tasks\V2beta3\AppEngineHttpRequest;
+use Google\Cloud\Tasks\V2\Task;
+use Google\Cloud\Tasks\V2\AppEngineRouting;
+use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
 
 class PushTask
 {
@@ -28,7 +28,7 @@ class PushTask
         }
 
         if (in_array('method', $options)) {
-            $this->pushTask->setMethod($options['method']);
+            $this->pushTask->setHttpMethod($options['method']);
         }
 
         $this->task = new Task();

@@ -28,7 +28,11 @@ class PushQueue
         $result = [];
 
         foreach ($tasks as $task) {
-            $result[] = Client::instance()->getClient()->createTask($this->full_name, $task->getTask());
+            $tresult = Client::instance()->getClient()->createTask($this->full_name, $task->getTask());
+
+            $tdetails = PushTask::parseTaskName($tresult);
+
+            $result[] = $tdetails['task_id'];
         }
 
         return $result;

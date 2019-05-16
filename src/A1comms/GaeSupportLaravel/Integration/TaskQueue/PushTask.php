@@ -49,4 +49,18 @@ class PushTask
         $queue = new PushQueue($queue_name);
         return $queue->addTasks([$this])[0];
     }
+
+    public static function parseTaskName(Task $task) {
+        // In Format: `projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID`
+        $taskName = $task->getName();
+
+        $taskDetails = explode('/', $taskName);
+
+        return [
+            'project_id' => $taskDetails[1],
+            'location_id' => $taskDetails[3],
+            'queue_id' => $taskDetails[5],
+            'task_id' => $taskDetails[7],
+        ];
+    }
 }

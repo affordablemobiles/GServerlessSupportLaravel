@@ -52,7 +52,7 @@ class PushTask
 
             $this->pushTask->setAppEngineRouting($routing);
         } else if (gae_service() != "default") {
-            $routing = new AppEngineRouting();
+            $routing = new AppEngineRouting()
                 ->setService(gae_service());
 
             $this->pushTask->setAppEngineRouting($routing);

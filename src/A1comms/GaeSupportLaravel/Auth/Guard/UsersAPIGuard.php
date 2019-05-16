@@ -19,9 +19,15 @@ class UsersAPIGuard implements StatelessValidator
     public static function validate(Request $request, UserProvider $provider = null)
     {
         $email = $request->header('X-AppEngine-User-Email');
+        $queueName = $request->header('X-AppEngine-QueueName');
+        $cron = $request->header('X-AppEngine-Cron');
 
         if (!empty($email)) {
             return static::returnUser($provider, $email);
+        } else if (!empty($queueName)) {
+            return static::returnUser($provider, $queueName . '@appengine.google.internal');
+        } else if (!empty($cron)) {
+            return static::returnUser($provider, 'cron@appengine.google.internal');
         }
 
         return null;

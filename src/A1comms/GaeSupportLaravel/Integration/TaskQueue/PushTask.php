@@ -46,13 +46,13 @@ class PushTask
              */
             Log::info('Detected development environment, routing to ' . gae_service() . ':' . gae_version());
 
-            $routing = new AppEngineRouting()
+            $routing = (new AppEngineRouting())
                 ->setService(gae_service())
                 ->setVersion(gae_version());
 
             $this->pushTask->setAppEngineRouting($routing);
         } else if (gae_service() != "default") {
-            $routing = new AppEngineRouting()
+            $routing = (new AppEngineRouting())
                 ->setService(gae_service());
 
             $this->pushTask->setAppEngineRouting($routing);

@@ -21,7 +21,19 @@ class PushTask
             'Content-Type' => 'application/x-www-form-urlencoded',
         ]);
 
-        if (strpos(gae_version(), 'dev-') === 0) {
+        if (!empty($options['target'])) {
+            $routing = new AppEngineRouting();
+
+            if (!empty($options['target']['service'])) {
+                $routing->setService($options['target']['service']);
+            }
+
+            if (!empty($options['target']['version'])) {
+                $routing->setVersion($options['target']['version']);
+            }
+
+            $this->pushTask->setAppEngineRouting($routing);
+        } else if (strpos(gae_version(), 'dev-') === 0) {
             /**
              * Support our development environment,
              * which runs working copies on live
@@ -34,14 +46,14 @@ class PushTask
              */
             Log::info('Detected development environment, routing to ' . gae_service() . ':' . gae_version());
 
-            $routing = new AppEngineRouting();
-            $routing->setService(gae_service());
-            $routing->setVersion(gae_version());
+            $routing = new AppEngineRouting()
+                ->setService(gae_service())
+                ->setVersion(gae_version());
 
             $this->pushTask->setAppEngineRouting($routing);
         } else if (gae_service() != "default") {
             $routing = new AppEngineRouting();
-            $routing->setService(gae_service());
+                ->setService(gae_service());
 
             $this->pushTask->setAppEngineRouting($routing);
         }

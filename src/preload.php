@@ -23,7 +23,7 @@ if (is_gae() && (php_sapi_name() != 'cli')){
         $options = [
             'propagator' => (
                 new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
-                    (new A1comms\GaeSupportLaravel\Trace\Propagator\TraceContextFormatter())
+                    (new A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter())
                 )
             ),
         ];

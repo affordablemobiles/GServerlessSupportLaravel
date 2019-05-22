@@ -2,9 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Trace\Propagator;
 
-use OpenCensus\Trace\Propagator\TraceContextFormatter as BaseTraceContextFormatter;
+use OpenCensus\Trace\Propagator\CloudTraceFormatter as BaseCloudTraceFormatter;
 
-class TraceContextFormatter extends BaseTraceContextFormatter
+class CloudTraceFormatter extends BaseCloudTraceFormatter
 {
     /**
      * Generate a SpanContext object from the Trace Context header

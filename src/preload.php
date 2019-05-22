@@ -20,11 +20,19 @@ if (is_gae() && (php_sapi_name() != 'cli')){
     }
 
     if (!defined('GAE_TRACE_STOP')) {
+        $options = [
+            'propagator' => (
+                new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
+                    (new A1comms\GaeSupportLaravel\Trace\Propagator\TraceContextFormatter())
+                )
+            ),
+        ];
+
         if (is_gae_flex()){
-            Tracer::start(new StackdriverExporter(['async' => true]));
+            Tracer::start(new StackdriverExporter(['async' => true]), $options);
         } else {
             // TODO: Async on Standard Environment too!
-            Tracer::start(new StackdriverExporter());
+            Tracer::start(new StackdriverExporter(), $options);
         }
     }
 

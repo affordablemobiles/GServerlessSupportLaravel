@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\Guzzle;
 
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client as GuzzleClient;
 use A1comms\GaeSupportLaravel\Trace\Integration\Guzzle\Middleware as TraceMiddleware;
 use Illuminate\Support\Facades\Log;

@@ -16,7 +16,7 @@ class CloudTraceFormatter extends BaseCloudTraceFormatter
     {
         $return = parent::deserialize($header);
 
-        if (is_gae() && (env('APP_ENV', 'production') != 'production'))
+        if (is_gae() && (env('GAE_DEVELOPMENT', false)))
         {
             // Force a trace of everything in development.
 

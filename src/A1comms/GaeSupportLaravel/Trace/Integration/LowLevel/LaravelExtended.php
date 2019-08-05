@@ -12,6 +12,8 @@ use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Routing\Router as LaravelRouter;
 use Illuminate\Pipeline\Pipeline as LaravelPipeline;
 use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
+use Laravel\Lumen\Application as LumenApplication;
+use Laravel\Lumen\Routing\Pipeline as LumenPipeline;
 
 class LaravelExtended implements IntegrationInterface
 {
@@ -62,6 +64,20 @@ class LaravelExtended implements IntegrationInterface
         // Alternative View Compiler for Pre-Compiled Views
         // ---
         //opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
+        
+        // ---
+        // Lumen compatiility...
+        // ---
+        opencensus_trace_method(LumenApplication::class, '__construct', [self::class, 'handleApplicationConstruct']);
+
+        opencensus_trace_method(LumenApplication::class, 'handle', [self::class, 'handleKernelRequestHandle']);
+        opencensus_trace_method(LumenApplication::class, 'run', [self::class, 'handleKernelRequestHandle']);
+
+        opencensus_trace_method(LumenApplication::class, 'dispatch', [self::class, 'handleRouterDispatch']);
+
+        opencensus_trace_method(LumenApplication::class, 'callActionOnArrayBasedRoute', [self::class, 'handleControllerRun']);
+
+        opencensus_trace_method(LumenPipeline::class, 'through', [self::class, 'handlePipeline']);
     }
 
     public static function handleApplicationConstruct($scope, $basePath = null)

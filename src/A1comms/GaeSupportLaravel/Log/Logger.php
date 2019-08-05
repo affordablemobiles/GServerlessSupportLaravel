@@ -22,6 +22,8 @@ class Logger
             $app->configureMonologUsing(function ($monolog) {
                 $logging = new LoggingClient();
                 $monolog->pushHandler(new PsrHandler($logging->psrLogger('app', ['batchEnabled' => true])));
+                
+                return $monolog;
             });
         }
         else
@@ -30,6 +32,8 @@ class Logger
                 $app->configureMonologUsing(function ($monolog) {
                     $logging = new LoggingClient();
                     $monolog->pushHandler(new PsrHandler($logging->psrLogger('app')));
+                    
+                    return $monolog;
                 });
             } else {
                 // Log via structured logs in /var/log, which get dumped async into StackDriver by the runtime.
@@ -44,6 +48,8 @@ class Logger
                     $handler = new StreamHandler('/var/log/app.log', MonologLogger::INFO);
                     $handler->setFormatter(new JsonFormatter());
                     $monolog->pushHandler($handler);
+                    
+                    return $monolog;
                 });
             }
         }

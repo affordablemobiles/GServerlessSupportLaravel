@@ -117,3 +117,38 @@ QUEUE_DRIVER=gae
 CACHE_DRIVER=array
 SESSION_DRIVER=gae
 ```
+
+### Lumen Specific (Not Laravel)
+
+**1.** Update `bootstrap/app.php` to load the overridden application class
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+|
+| Here we will load the environment and create the application instance
+| that serves as the central piece of this framework. We'll use this
+| application as an "IoC" container and router for this framework.
+|
+*/
+
+$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
+    realpath(__DIR__.'/../')
+);
+```
+
+**2.** Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
+
+Change the following `use` statement:
+
+```php
+use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
+```
+
+To our class, that'll inject the required logging hook:
+
+```php
+use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
+```

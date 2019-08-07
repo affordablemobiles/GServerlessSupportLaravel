@@ -19,6 +19,8 @@ class LowLevelLoader implements LowLevelLoaderInterface
             \OpenCensus\Trace\Integrations\Laravel::class,
             // Also load our own extended Laravel trace set.
             \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelExtended::class,
+            // Authentication Guards...
+            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelAuth::class,
             // Trace our other basic functions...
             \OpenCensus\Trace\Integrations\Mysql::class,
             \OpenCensus\Trace\Integrations\PDO::class,

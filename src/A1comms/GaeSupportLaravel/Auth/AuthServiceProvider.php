@@ -6,7 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use A1comms\GaeSupportLaravel\Auth\Model\IAPUser;
-use A1comms\GaeSupportLaravel\Auth\Guard\UsersAPIGuard;
+use A1comms\GaeSupportLaravel\Auth\Guard;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -27,6 +27,13 @@ class AuthServiceProvider extends ServiceProvider
             return new NullUserProvider(IAPUser::class);
         });
 
-        Auth::viaRequest('gae-users-api', [UsersAPIGuard::class, 'validate']);
+        Auth::viaRequest('gae-internal',                [Guard\AppEngine_Guard::class, 'validate']);
+        Auth::viaRequest('gae-iap',                     [Guard\IAP_Guard::class, 'validate']);
+        Auth::viaRequest('gae-oidc',                    [Guard\OIDC_Guard::class, 'validate']);
+        Auth::viaRequest('gae-oauth2',                  [Guard\OAuth2_Guard::class, 'validate']);
+
+        Auth::viaRequest('gae-combined-iap',            [Guard\Combined\IAP_Guard::class, 'validate']);
+        Auth::viaRequest('gae-combined-iap-oidc',       [Guard\Combined\IAP_OIDC_Guard::class, 'validate']);
+        Auth::viaRequest('gae-combined-iap-oidc-oauth2',[Guard\Combined\IAP_OIDC_OAuth2_Guard::class, 'validate']);
     }
 }

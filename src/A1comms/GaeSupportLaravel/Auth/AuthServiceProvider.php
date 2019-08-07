@@ -27,6 +27,18 @@ class AuthServiceProvider extends ServiceProvider
             return new NullUserProvider(IAPUser::class);
         });
 
+        Auth::provider('list', function(Application $app, array $config) {
+            if (empty($config['list'])) {
+                $config['list'] = [];
+            }
+
+            if (!empty($config['model'])){
+                return new NullUserProvider($config['model'], $config['list']);
+            }
+
+            return new NullUserProvider(IAPUser::class, $config['list']);
+        });
+
         Auth::viaRequest('gae-internal',                [Guard\AppEngine_Guard::class, 'validate']);
         Auth::viaRequest('gae-iap',                     [Guard\IAP_Guard::class, 'validate']);
         Auth::viaRequest('gae-oidc',                    [Guard\OIDC_Guard::class, 'validate']);

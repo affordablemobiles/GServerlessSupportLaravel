@@ -1,6 +1,6 @@
 # GaeSupportLaravel
 
-Google App Engine (GAE) Standard and Flexible Environment support package for Laravel 5.5.
+Google App Engine (GAE) Standard and Flexible Environment support package for **Laravel 5.5 LTS**.
 
 [![Latest Stable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/stable)](https://packagist.org/packages/a1comms/gae-support-laravel)
 [![Monthly Downloads](https://poser.pugx.org/a1comms/gae-support-laravel/d/monthly)](https://packagist.org/packages/a1comms/gae-support-laravel)
@@ -11,6 +11,8 @@ Google App Engine (GAE) Standard and Flexible Environment support package for La
 Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpasser https://github.com/shpasser/GaeSupportL5
 
 This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
+
+*Note: we only intent to support Laravel LTS releases, with this version targeted specifically at **Laravel 5.5 LTS***
 
 ## Functionality
 * StackDriver Logging integration

@@ -23,11 +23,11 @@ Switch to our handler in `config/auth.php`:
 ```php
     'guards' => [
         'web' => [
-            'driver' => 'gae-users-api',
+            'driver' => 'gae-combined-iap',
         ],
 
         'api' => [
-            'driver' => 'gae-users-api',
+            'driver' => 'gae-combined-iap',
         ],
     ],
 ```

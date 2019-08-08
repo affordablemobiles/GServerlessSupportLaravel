@@ -28,7 +28,9 @@ For this, we validate each request statelessly, using the request headers (from 
     ],
 ```
 
-**3.** Add the expected audience (from "Signed Header JWT Audience" in Cloud Console, under IAP) to the environment, via `.env`, e.g. :
+**3.** Add the expected audience (from "Signed Header JWT Audience" in Cloud Console, under IAP) to the environment.
+
+Usually done via a line in `.env`, e.g. :
 
 ```bash
 IAP_AUDIENCE="/projects/<project_id>/apps/<project_name>"

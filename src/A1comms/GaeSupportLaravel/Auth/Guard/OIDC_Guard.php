@@ -2,11 +2,11 @@
 
 namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
-use SimpleJWT\InvalidTokenException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
 class OIDC_Guard extends BaseGuard
 {

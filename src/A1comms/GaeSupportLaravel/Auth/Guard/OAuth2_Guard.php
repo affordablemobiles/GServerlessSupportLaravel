@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
 class OAuth2_Guard extends BaseGuard
 {
@@ -25,7 +26,7 @@ class OAuth2_Guard extends BaseGuard
         
         try {
             $return = OAuth2::validateToken($token);
-        } catch (Exception $e) {
+        } catch (InvalidTokenException $e) {
             Log::warning('OAuth2 Authentication Guard: ' . $e->getMessage());
             
             return null;

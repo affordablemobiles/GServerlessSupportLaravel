@@ -5,6 +5,7 @@ namespace A1comms\GaeSupportLaravel\Auth\Token;
 use Exception;
 use GuzzleHttp\Client;
 use Google\Auth\Credentials\GCECredentials;
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
 class OAuth2
 {
@@ -43,7 +44,7 @@ class OAuth2
      * 
      * @param string The access_token to validate.
      * 
-     * @throws Exception if the token is invalid.
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
      * 
      * @return array Returns decoded token information from the tokeninfo endpoint.
      */
@@ -68,7 +69,7 @@ class OAuth2
 
             $response = json_decode($response->getBody(), true);
         } catch (Exception $e) {
-            throw new Exception("Access Token Validation Exception: Remote Token Check Failed");
+            throw new InvalidTokenException("Access Token Validation Exception: Remote Token Check Failed");
         }
 
         return $response;

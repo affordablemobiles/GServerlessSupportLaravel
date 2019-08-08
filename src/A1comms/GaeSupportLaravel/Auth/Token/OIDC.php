@@ -5,7 +5,8 @@ namespace A1comms\GaeSupportLaravel\Auth\Token;
 use GuzzleHttp\Client;
 use SimpleJWT\JWT;
 use SimpleJWT\Keys\KeySet;
-use SimpleJWT\InvalidTokenException;
+use SimpleJWT\InvalidTokenException as JWTInvalidTokenException;
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 
 class OIDC
@@ -69,7 +70,11 @@ class OIDC
         $jwkset = self::get_jwk_set();
 
         // Validate the signature using the key set and RS256 algorithm.
-        $jwt = JWT::decode($oidc_jwt, $jwkset, 'RS256');
+        try {
+            $jwt = JWT::decode($oidc_jwt, $jwkset, 'RS256');
+        } catch (JWTInvalidTokenException $e) {
+            throw new InvalidTokenException($e->getMessage(), $e->getCode(), $e);
+        }
 
         // Validate token by checking issuer and audience fields.
         switch ($jwt->getClaim('iss')) {

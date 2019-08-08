@@ -3,7 +3,10 @@
 namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
+use A1comms\GaeSupportLaravel\Auth\Token\IAP;
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
 class IAP_Guard extends BaseGuard
 {
@@ -16,11 +19,24 @@ class IAP_Guard extends BaseGuard
      */
     public static function validate(Request $request, UserProvider $provider = null)
     {
-        $email = $request->header('X-AppEngine-User-Email');
-        if (!empty($email)) {
-            return static::returnUser($provider, $email);
+        $expected_audience = env('IAP_AUDIENCE');
+        if (empty($expected_audience)) {
+            throw new Exception("IAP Authentication Guard: Audience (env IAP_AUDIENCE) not defined");
         }
 
-        return null;
+        $jwt = $request->header('X-Goog-IAP-JWT-Assertion');
+        if (empty($jwt)) {
+            return null;
+        }
+
+        try {
+            $return = IAP::validateToken($jwt, $expected_audience);
+        } catch (InvalidTokenException $e) {
+            Log::warning('IAP Authentication Guard: ' . $e->getMessage());
+            
+            return null;
+        }
+
+        return static::returnUser($provider, $return['email']);
     }
 }

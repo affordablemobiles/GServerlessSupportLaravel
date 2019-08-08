@@ -3,9 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Auth\Token;
 
 use GuzzleHttp\Client;
-use SimpleJWT\JWT;
-use SimpleJWT\Keys\KeySet;
-use SimpleJWT\InvalidTokenException as JWTInvalidTokenException;
+use A1comms\GaeSupportLaravel\Auth\Token\Type\JWT;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 
@@ -42,6 +40,19 @@ class OIDC
     const OPENID_CONFIGURATION_URI = 'https://accounts.google.com/.well-known/openid-configuration';
 
     /**
+     * JWT Signature Algorithm
+     */
+    const JWT_SIG_ALG = 'RS256';
+
+    /**
+     * List of acceptable JWT issuers
+     */
+    const JWT_ISSUERS = [
+        'https://accounts.google.com',
+        'accounts.google.com'
+    ];
+
+    /**
      * Fetch an OIDC ID token.
      *
      * @param string $target_audience The target audience of the generated JWT.
@@ -61,74 +72,15 @@ class OIDC
      * @param string $oidc_jwt The JWT token to be validated.
      * @param string $expected_audience The expected audience of the provided JWT.
      * 
-     * @throws \SimpleJWT\InvalidTokenException if the token is invalid.
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
      * 
      * @return array Returns array containing "sub" and "email" if token is valid.
      */
     public static function validateToken($oidc_jwt, $expected_audience)
     {
-        $jwkset = self::get_jwk_set();
+        $jwk_url = self::get_jwk_url();
 
-        // Validate the signature using the key set and RS256 algorithm.
-        try {
-            $jwt = JWT::decode($oidc_jwt, $jwkset, 'RS256');
-        } catch (JWTInvalidTokenException $e) {
-            throw new InvalidTokenException($e->getMessage(), $e->getCode(), $e);
-        }
-
-        // Validate token by checking issuer and audience fields.
-        switch ($jwt->getClaim('iss')) {
-            case 'https://accounts.google.com':
-            case 'accounts.google.com':
-                break;
-            default:
-                throw new InvalidTokenException("Invalid Issuer Claim (iss)");
-        }
-        if ($jwt->getClaim('aud') != $expected_audience) {
-            throw new InvalidTokenException("Invalid Target Audience (aud)");
-        }
-
-        $email = $jwt->getClaim('email');
-        if (empty($email)) {
-            throw new InvalidTokenException("Email Claim Empty (email)");
-        }
-        $sub = $jwt->getClaim('sub');
-        if (empty($sub)) {
-            throw new InvalidTokenException("Subject Claim Empty (sub)");
-        }
-
-        // Return the user identity (subject and user email) if JWT verification is successful.
-        return array('sub' => $sub, 'email' => $email);
-    }
-
-    /**
-     * Fetches a KeySet instance for the public JWKs.
-     *
-     * @return \SimpleJWT\Keys\KeySet
-     */
-    protected static function get_jwk_set()
-    {
-        // Create a JWK Key Set from the gstatic URL
-        $jwkset = new KeySet();
-        $jwkset->load(self::get_jwk_set_raw());
-
-        return $jwkset;
-    }
-
-    /**
-     * Fetches the raw json encoded data for the public JWKs.
-     *
-     * @return string
-     */
-    protected static function get_jwk_set_raw()
-    {
-        // get the public key JWK Set object (RFC7517)
-        return InstanceLocalCache::remember('google_oidc_jwk_set', 3600, function () {
-            $httpclient = new Client();
-            $response = $httpclient->request('GET', self::get_jwk_url(), []);
-
-            return ((string) $response->getBody());
-        });
+        return JWT::validate($oidc_jwt, $expected_audience, $jwk_url, self::JWT_SIG_ALG, self::JWT_ISSUERS);
     }
 
     /**
@@ -138,18 +90,20 @@ class OIDC
      */
     protected static function get_jwk_url()
     {
-        $httpclient = new Client();
+        return InstanceLocalCache::remember('jwk_url__' . self::OPENID_CONFIGURATION_URI, 3600, function () {
+            $httpclient = new Client();
 
-        $content = [
-            'connect_timeout' => self::METADATA_CONNECTION_TIMEOUT_S,
-            'timeout' => self::METADATA_REQUEST_TIMEOUT_S,
-        ];
+            $content = [
+                'connect_timeout' => JWT::REQUEST_CONNECTION_TIMEOUT_S,
+                'timeout' => JWT::REQUEST_TIMEOUT_S,
+            ];
 
-        $response = $httpclient->request('GET', self::OPENID_CONFIGURATION_URI, $content);
+            $response = $httpclient->request('GET', self::OPENID_CONFIGURATION_URI, $content);
 
-        $result = json_decode((string) $response->getBody(), true);
+            $result = json_decode((string) $response->getBody(), true);
 
-        return $result['jwks_uri'];
+            return $result['jwks_uri'];
+        });
     }
 
     /**

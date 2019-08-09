@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;

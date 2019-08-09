@@ -4,7 +4,7 @@ namespace A1comms\GaeSupportLaravel\Auth\Guard\Combined;
 
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\UserProvider;
-use A1comms\GaeSupportLaravel\Auth\Guard\IAP_Guard;
+use A1comms\GaeSupportLaravel\Auth\Guard\IAP_Guard as IAP_Guard_Base;
 use A1comms\GaeSupportLaravel\Auth\Guard\AppEngine_Guard;
 use A1comms\GaeSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 
@@ -24,7 +24,7 @@ class IAP_Guard implements StatelessValidator
             return $result;
         }
 
-        $result = IAP_Guard::validate($request, $provider);
+        $result = IAP_Guard_Base::validate($request, $provider);
         if (!empty($result)) {
             return $result;
         }

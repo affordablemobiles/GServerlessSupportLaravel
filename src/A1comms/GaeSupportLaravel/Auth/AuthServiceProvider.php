@@ -33,10 +33,10 @@ class AuthServiceProvider extends ServiceProvider
             }
 
             if (!empty($config['model'])){
-                return new NullUserProvider($config['model'], $config['list']);
+                return new ListUserProvider($config['model'], $config['list']);
             }
 
-            return new NullUserProvider(IAPUser::class, $config['list']);
+            return new ListUserProvider(IAPUser::class, $config['list']);
         });
 
         Auth::viaRequest('gae-internal',                [Guard\AppEngine_Guard::class, 'validate']);

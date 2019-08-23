@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Auth\Token\Middleware;
 
+use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
@@ -23,12 +24,18 @@ class AuthTokenMiddleware
     private $audienceSource;
 
     /**
+     * @var callable
+     */
+    private $tokenTypeSource;
+
+    /**
      * Creates a new AuthTokenMiddleware.
      *
      * @param callable $audienceSource (optional) function to be called to return the target_audience for OIDC.
      */
-    public function __construct(callable $audienceSource = null) {
+    public function __construct(callable $audienceSource = null, callable $tokenTypeSource = null) {
         $this->audienceSource = $audienceSource;
+        $this->tokenTypeSource = $tokenTypeSource;
     }
 
     /**
@@ -70,8 +77,14 @@ class AuthTokenMiddleware
                         ));
                         break;
                     case 'google_oauth2':
-                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchOAuth2Token());
+                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchOAuth2Token(
+                            $request->getUri()
+                        ));
                         break;
+                    case 'google_dynamic':
+                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchDynamicToken(
+                            $request->getUri()
+                        ));
                     default:
                         break;
                 }
@@ -81,6 +94,25 @@ class AuthTokenMiddleware
         };
     }
 
+    /**
+     * Call dynamic handler to fetch the token.
+     *
+     * @return string
+     */
+    protected function fetchDynamicToken(UriInterface $request_uri)
+    {
+        $tokenType = call_user_func($this->tokenTypeSource, $request_uri);
+
+        switch ($tokenType) {
+            case "oidc":
+                return $this->fetchOIDCToken($request_uri);
+            case "oauth2":
+                return $this->fetchOAuth2Token($request_uri);
+            default:
+                throw new Exception("Invalid Token Type from callback");
+        }
+    }
+    
     /**
      * Call OIDC handler to fetch the token.
      *

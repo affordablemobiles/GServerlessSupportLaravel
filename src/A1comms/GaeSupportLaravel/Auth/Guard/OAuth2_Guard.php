@@ -4,6 +4,7 @@ namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;

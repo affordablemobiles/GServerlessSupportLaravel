@@ -2,6 +2,9 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
+use DateTime;
+use DateInterval;
+use Google\Protobuf;
 use Google\Cloud\Tasks\V2\Task;
 use Google\Cloud\Tasks\V2\AppEngineRouting;
 use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
@@ -66,9 +69,10 @@ class PushTask
         $this->task->setAppEngineHttpRequest($this->pushTask);
 
         if (!empty($options['delay_seconds'])) {
-            $secondsString = sprintf('+%s seconds', $options['delay_seconds']);
-            $futureTime = date(\DateTime::RFC3339, strtotime($secondsString));
-            $this->task->setScheduleTime($futureTime);
+            $secondsInterval = new DateInterval('PT'.$options['delay_seconds'].'S');
+            $futureTime = (new DateTime())->add($secondsInterval);
+            $futureTimeStamp = (new Protobuf\Timestamp())->fromDateTime($futureTime);
+            $this->task->setScheduleTime($futureTimeStamp);
         }
     }
 

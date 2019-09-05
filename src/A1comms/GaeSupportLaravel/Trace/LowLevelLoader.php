@@ -25,6 +25,7 @@ class LowLevelLoader implements LowLevelLoaderInterface
             \OpenCensus\Trace\Integrations\Mysql::class,
             \OpenCensus\Trace\Integrations\PDO::class,
             \OpenCensus\Trace\Integrations\Memcached::class,
+            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\Grpc::class,
             // Plus GDS (Datastore)...
             \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\GDS::class,
             // Guzzle calls...

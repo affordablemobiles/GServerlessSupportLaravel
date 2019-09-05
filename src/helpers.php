@@ -136,3 +136,15 @@ if (!function_exists('gae_basic_log')) {
         @file_put_contents('/var/log/' .$logName . '.log', json_encode($record) . "\n", FILE_APPEND);
     }
 }
+
+if (!function_exists('diefast')) {
+    function diefast($data = null) {
+        register_shutdown_function(function() {
+            if ( function_exists( 'fastcgi_finish_request' ) ) {
+                fastcgi_finish_request();
+            }
+        });
+
+        die($data);
+    }
+}

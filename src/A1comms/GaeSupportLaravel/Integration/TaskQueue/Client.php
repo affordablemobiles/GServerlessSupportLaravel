@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Tasks\V2\CloudTasksClient;

@@ -58,7 +58,7 @@ class Client
                 return "europe-west1";
                 break;
             default:
-                throw new Exception("Unknown Region");
+                throw new Exception("Unknown App Engine Region Code: " . $zone);
                 break;
         }
     }

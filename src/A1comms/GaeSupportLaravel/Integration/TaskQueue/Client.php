@@ -54,6 +54,9 @@ class Client
             case "eu2":
                 return "europe-west1";
                 break;
+            case "eu6":
+                return "europe-west1";
+                break;
             default:
                 throw new Exception("Unknown Region");
                 break;

@@ -2,6 +2,7 @@
 
 use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
+use Google\Cloud\Storage\StorageClient;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 
 require __DIR__ . '/helpers.php';
@@ -29,6 +30,9 @@ if (is_gae() && (php_sapi_name() != 'cli')){
         // Turn HTTPS on for Laravel
         $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
     }
+
+    $storage = new StorageClient();
+    $storage->registerStreamWrapper();
 
     if (!defined('GAE_TRACE_STOP')) {
         $options = [

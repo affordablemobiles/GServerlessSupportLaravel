@@ -6,8 +6,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use League\Flysystem\Filesystem as Flysystem;
-use Google\Cloud\Storage\StorageClient as GCSStorageClient;
-use Google\Cloud\Storage\StreamWrapper as GCSStreamWrapper;
 use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
 use A1comms\GaeSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
 
@@ -63,11 +61,6 @@ class GaeSupportServiceProvider extends ServiceProvider
         Storage::extend('gae', function ($app, $config) {
             return new Flysystem(new GaeFilesystemAdapter($config['root']));
         });
-
-        if (is_gae()) {
-            $storage = new GCSStorageClient();
-            GCSStreamWrapper::register($storage);
-        }
 
         // register the package's routes
         require __DIR__.'/Http/routes.php';

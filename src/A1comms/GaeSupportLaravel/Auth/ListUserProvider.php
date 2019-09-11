@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Auth;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 class ListUserProvider extends NullUserProvider
@@ -39,6 +40,8 @@ class ListUserProvider extends NullUserProvider
             return $user->fill([
                 $user->getAuthIdentifierName() => $identifier,
             ]);
+        } else {
+            Log::error('Auth@ListUserProvider: Denying access to user: ' . $identifier);
         }
 
         return null;

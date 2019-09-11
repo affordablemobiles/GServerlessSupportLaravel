@@ -37,6 +37,8 @@ class ListUserProvider extends NullUserProvider
         if (in_array($identifier, $this->list)) {
             $user = $this->createModel();
 
+            Log::info('Auth@ListUserProvider: Allowing access for user: ' . $identifier);
+            
             return $user->fill([
                 $user->getAuthIdentifierName() => $identifier,
             ]);

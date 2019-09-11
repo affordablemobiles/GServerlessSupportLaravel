@@ -19,10 +19,10 @@ class AppEngine_Guard extends BaseGuard
         $queueName = $request->header('X-AppEngine-QueueName');
         $cron = $request->header('X-AppEngine-Cron');
 
-        if (!empty($queueName)) {
-            return static::returnUser($provider, $queueName . '@appengine.google.internal');
-        } else if (!empty($cron)) {
+        if (!empty($cron)) {
             return static::returnUser($provider, 'cron@appengine.google.internal');
+        } else if (!empty($queueName)) {
+            return static::returnUser($provider, $queueName . '@appengine.google.internal');
         }
 
         return null;

@@ -39,4 +39,16 @@ class LumenApplication extends BaseLumenApplication
 
         return $return;
     }
+    
+    /**
+     * Register container bindings for the application.
+     *
+     * @return void
+     */
+    protected function registerViewBindings()
+    {
+        $this->singleton('view', function () {
+            return $this->loadComponent('view', 'A1comms\GaeSupportLaravel\View\ViewServiceProvider');
+        });
+    }
 }

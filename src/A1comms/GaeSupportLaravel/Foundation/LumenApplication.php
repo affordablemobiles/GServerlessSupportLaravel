@@ -47,6 +47,10 @@ class LumenApplication extends BaseLumenApplication
      */
     protected function registerViewBindings()
     {
-        $this->configure('view');
+        if ( ! empty($this->loadedProviders['A1comms\GaeSupportLaravel\View\ViewServiceProvider']) ) {
+            $this->configure('view');
+        } else {
+            parent::registerViewBindings();
+        }
     }
 }

@@ -39,4 +39,14 @@ class LumenApplication extends BaseLumenApplication
 
         return $return;
     }
+    
+    /**
+     * Register container bindings for the application.
+     *
+     * @return void
+     */
+    protected function registerViewBindings()
+    {
+        $this->configure('view');
+    }
 }

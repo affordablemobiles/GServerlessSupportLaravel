@@ -6,6 +6,7 @@ use DateTime;
 use DateInterval;
 use Google\Protobuf;
 use Google\Cloud\Tasks\V2\Task;
+use Google\Cloud\Tasks\V2\HttpMethod;
 use Google\Cloud\Tasks\V2\AppEngineRouting;
 use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
 use Illuminate\Support\Facades\Log;
@@ -62,7 +63,9 @@ class PushTask
         }
 
         if (!empty($options['method'])) {
-            $this->pushTask->setHttpMethod($options['method']);
+            $this->pushTask->setHttpMethod(
+                HttpMethod::value($options['method'])
+            );
         }
 
         $this->task = new Task();

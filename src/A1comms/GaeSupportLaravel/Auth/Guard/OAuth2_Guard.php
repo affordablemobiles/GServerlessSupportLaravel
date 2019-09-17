@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
+use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorReporting;
 
 class OAuth2_Guard extends BaseGuard
 {
@@ -33,6 +34,7 @@ class OAuth2_Guard extends BaseGuard
             return null;
         }
 
+        ErrorReporting::exceptionHandler((new Exception("Request is using legacy OAuth2 authentication token")), 200);
         return static::returnUser($provider, $return['email']);
     }
 }

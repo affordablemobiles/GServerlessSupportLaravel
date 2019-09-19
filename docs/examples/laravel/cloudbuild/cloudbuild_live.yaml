@@ -1,0 +1,17 @@
+steps:
+- name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/generate_env_LIVE.sh"]
+- name: "gcr.io/gae-runtimes/php72_app_builder:argo_current"
+  entrypoint: "composer"
+  args: ["install", "--no-dev", "--no-progress", "-o"]
+- name: "gcr.io/cloud-builders/npm"
+  args: ["install"]
+- name: "gcr.io/cloud-builders/npm"
+  args: ["run", "production"]
+- name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/deploy_LIVE.sh"]
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'COMMIT_SHA=$COMMIT_SHA'

@@ -1,0 +1,28 @@
+runtime: php72
+
+handlers:
+- url: /propman/favicon\.ico
+  static_files: public/favicon.ico
+  upload: public/favicon\.ico
+
+- url: /propman/vendor
+  static_dir: public/vendor
+
+- url: /propman/build
+  static_dir: public/build
+
+- url: /propman/fonts
+  static_dir: public/fonts
+
+- url: /propman/css
+  static_dir: public/css
+
+- url: /propman/js
+  static_dir: public/js
+
+- url: /propman/images
+  static_dir: public/images
+
+- url: .*
+  secure: always
+  script: auto

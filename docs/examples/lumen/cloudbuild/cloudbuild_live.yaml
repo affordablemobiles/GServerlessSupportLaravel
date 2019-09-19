@@ -1,0 +1,10 @@
+steps:
+- name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/generate_env_LIVE.sh"]
+- name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/deploy_LIVE.sh"]
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'COMMIT_SHA=$COMMIT_SHA'

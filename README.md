@@ -21,6 +21,7 @@ This library is designed for homogeneous operation between the Standard Environm
 * Guzzle integration (optional, see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/trace.md#guzzle))
 * Laravel Auth Integration for IAP (optional, see [docs/iap-auth-verify.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/iap-auth-verify.md))
 * Queue Driver for Cloud Tasks (optional, see [docs/queue.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/queue.md))
+* Examples for deployment from Git via Cloud Build, plus encrypted secrets with KMS (optional, see [docs/cloudbuild.md](https://github.com/a1comms/GaeSupportLaravel/blob/php72-laravel55/docs/cloudbuild.md))
 
 ## Installation
 

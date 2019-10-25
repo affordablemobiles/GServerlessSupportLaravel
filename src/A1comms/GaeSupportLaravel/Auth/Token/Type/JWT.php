@@ -92,7 +92,7 @@ class JWT
     protected static function get_jwk_set_raw($jwk_url)
     {
         // get the public key JWK Set object (RFC7517)
-        return InstanceLocalCache::remember('jwk_set__' . $jwk_url, 3600, function () use ($jwk_url) {
+        return InstanceLocalCache::remember('jwk_set__' . $jwk_url, 60, function () use ($jwk_url) {
             $httpclient = new Client();
 
             $content = [

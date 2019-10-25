@@ -90,7 +90,7 @@ class OIDC
      */
     protected static function get_jwk_url()
     {
-        return InstanceLocalCache::remember('jwk_url__' . self::OPENID_CONFIGURATION_URI, 3600, function () {
+        return InstanceLocalCache::remember('jwk_url__' . self::OPENID_CONFIGURATION_URI, 60, function () {
             $httpclient = new Client();
 
             $content = [

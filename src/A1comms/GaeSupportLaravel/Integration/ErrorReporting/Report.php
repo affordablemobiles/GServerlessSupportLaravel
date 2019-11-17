@@ -178,7 +178,7 @@ class Report
                     'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
                     'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
                     'referrer'              => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
-                    "responseStatusCode"    => $status_code,
+                    "responseStatusCode"    => null,
                     "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                 ],
             ],

@@ -52,17 +52,13 @@ class Client
 
         switch ($zone) {
             case "eu2":
-                return "europe-west1";
-                break;
+            case "eu5":
             case "eu6":
                 return "europe-west1";
-                break;
             case "us14":
                 return "us-central1";
-                break;
             default:
                 throw new Exception("Unknown App Engine Region Code: " . $zone);
-                break;
         }
     }
 }

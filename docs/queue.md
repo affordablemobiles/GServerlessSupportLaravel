@@ -22,6 +22,7 @@ You'll then need to add a driver entry into `config/queue.php`:
             'queue'     => 'default',
             'url'       => '/tasks',
             'encrypt'   => true,
+            'compress'  => true,
         ),
     ],
 ```

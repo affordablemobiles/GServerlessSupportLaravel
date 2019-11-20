@@ -12,7 +12,7 @@ Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpas
 
 This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
 
-*Note: we only intent to support Laravel LTS releases, with this version targeted specifically at **Laravel 5.5 LTS***
+*Note: we only intend to support Laravel LTS releases, with this version targeted specifically at **Laravel 5.5 LTS***
 
 ## Functionality
 * StackDriver Logging integration

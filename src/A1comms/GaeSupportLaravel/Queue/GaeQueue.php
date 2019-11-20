@@ -109,7 +109,7 @@ class GaeQueue extends Queue implements QueueContract
             $payload = $this->encrypter->encrypt($payload);
         }
         if ($this->shouldCompress) {
-            $payload = gzencode($payload, 9);
+            $payload = base64_encode(gzencode($payload, 9));
         }
 
         $task = new PushTask(
@@ -208,7 +208,12 @@ class GaeQueue extends Queue implements QueueContract
             // Ignore for security reasons!
             // So if we are being hacked
             // the hacker would think it went OK.
-            Log::warning('Marshalling Queue Request: Invalid job. ' . $e->getMessage());
+            Log::warning(
+                'Marshalling Queue Request: Invalid job. ' . $e->getMessage(),
+                [
+                    'exception' => $e,
+                ]
+            );
 
             return new Response('OK');
         }
@@ -262,7 +267,7 @@ class GaeQueue extends Queue implements QueueContract
     protected function parseJobBody($body)
     {
         if ($this->shouldCompress) {
-            $body = gzdecode($body);
+            $body = gzdecode(base64_decode($body));
         }
 
         if ($this->shouldEncrypt) {

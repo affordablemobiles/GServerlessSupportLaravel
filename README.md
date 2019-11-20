@@ -90,13 +90,6 @@ And remove the relevant Laravel service providers that these replace:
 $app = new A1comms\GaeSupportLaravel\Foundation\Application(
     realpath(__DIR__.'/../')
 );
-
-/*
-|--------------------------------------------------------------------------
-| Setup Early Logging
-|--------------------------------------------------------------------------
-*/
-A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```
 
 **5.** Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
@@ -113,12 +106,22 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 ```
 
-**6.** In `.env`, set the following:
+**6.** In `config/logging.php`, configure a custom logger:
+
+```php
+'gae' => [
+    'driver' => 'custom',
+    'via' => A1comms\GaeSupportLaravel\Log\CreateLoggingDriver::class,
+],
+```
+
+**7.** In `.env`, set the following:
 
 ```
 QUEUE_DRIVER=gae
 CACHE_DRIVER=array
 SESSION_DRIVER=gae
+LOG_CHANNEL=gae
 ```
 
 ### Lumen Specific (Not Laravel)

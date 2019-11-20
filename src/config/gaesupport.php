@@ -18,4 +18,6 @@ return [
     'trace_providers' => [
 
     ],
+
+    'dev-prefix' => 'dev-',
 ];

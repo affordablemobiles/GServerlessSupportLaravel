@@ -36,8 +36,26 @@ class LumenApplication extends BaseLumenApplication
             $storage = new GCSStorageClient();
             GCSStreamWrapper::register($storage);
         }
+        
+        $this->mergeConfigFrom(
+            __DIR__.'/../../../config/gaesupport.php', 'gaesupport'
+        );
 
         return $return;
+    }
+    
+    /**
+     * Merge the given configuration with the existing configuration.
+     *
+     * @param  string  $path
+     * @param  string  $key
+     * @return void
+     */
+    protected function mergeConfigFrom($path, $key)
+    {
+        $this->configure($key);
+        $config = $this->app['config']->get($key, []);
+        $this->app['config']->set($key, array_merge(require $path, $config));
     }
     
     /**

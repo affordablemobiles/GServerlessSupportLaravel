@@ -3,7 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Http\Controllers;
 
 use Illuminate\Routing\Controller;
-use A1comms\GaeSupportLaravel\Session\DataStoreSessionHandler;
+use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
 
 /**
  * SessionGarbageCollectionController
@@ -22,7 +22,7 @@ class SessionGarbageCollectionController extends Controller
      * @return void
      */
     public function run(){
-        $s = new DataStoreSessionHandler();
+        $s = new DatastoreSessionHandler();
         $s->googlegc();
     }
 }

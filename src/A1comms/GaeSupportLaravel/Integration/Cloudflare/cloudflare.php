@@ -37,9 +37,8 @@ if (is_gae()) {
             // IPv6
             $cf_ip_ranges = require __DIR__.'/cf-ipv6.php';
 
-            $ipv6 = get_ipv6_full($_SERVER["REMOTE_ADDR"]);
             foreach ($cf_ip_ranges as $range) {
-                if (ipv6_in_range($ipv6, $range)) {
+                if (ipv6_in_range($_SERVER["REMOTE_ADDR"], $range)) {
                     if ($is_cf) {
                         // TODO: Change logging here to support new runtimes.
                         gae_basic_log('cloudflare', 'INFO', 'Cloudflare IP changed from ' . $_SERVER["REMOTE_ADDR"] . ' to ' . $_SERVER["HTTP_CF_CONNECTING_IP"]);

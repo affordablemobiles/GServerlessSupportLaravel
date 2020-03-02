@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Auth\Token\Type;
 
+use Exception;
 use GuzzleHttp\Client;
 use SimpleJWT\JWT as JWTValidator;
 use SimpleJWT\Keys\KeySet;
@@ -45,21 +46,37 @@ class JWT
         }
 
         // Validate token by checking issuer and audience fields.
-        if (!in_array($jwt->getClaim('iss'), $issuers)) {
-            throw new InvalidTokenException("Invalid Issuer Claim (iss)");
+        try {
+            if (!in_array($jwt->getClaim('iss'), $issuers)) {
+                throw new InvalidTokenException("Invalid Issuer Claim (iss)");
+            }
+        } catch (Exception $e) {
+            throw new InvalidTokenException("Invalid Claim (iss): " . $e->getMessage(), 0, $e);
         }
-        if ($jwt->getClaim('aud') != $expected_audience) {
-            throw new InvalidTokenException("Invalid Target Audience (aud)");
+        try {
+            if ($jwt->getClaim('aud') != $expected_audience) {
+                throw new InvalidTokenException("Invalid Target Audience (aud)");
+            }
+        } catch (Exception $e) {
+            throw new InvalidTokenException("Invalid Claim (aud): " . $e->getMessage(), 0, $e);
         }
 
         // Also check 
-        $email = $jwt->getClaim('email');
-        if (empty($email)) {
-            throw new InvalidTokenException("Email Claim Empty (email)");
+        try {
+            $email = $jwt->getClaim('email');
+            if (empty($email)) {
+                throw new InvalidTokenException("Email Claim Empty (email)");
+            }
+        } catch (Exception $e) {
+            throw new InvalidTokenException("Invalid Claim (email): " . $e->getMessage(), 0, $e);
         }
-        $sub = $jwt->getClaim('sub');
-        if (empty($sub)) {
-            throw new InvalidTokenException("Subject Claim Empty (sub)");
+        try {
+            $sub = $jwt->getClaim('sub');
+            if (empty($sub)) {
+                throw new InvalidTokenException("Subject Claim Empty (sub)");
+            }
+        } catch (Exception $e) {
+            throw new InvalidTokenException("Invalid Claim (sub): " . $e->getMessage(), 0, $e);
         }
 
         // Return the user identity (subject and user email) if JWT verification is successful.

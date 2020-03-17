@@ -1,5 +1,5 @@
 {
-    "name": "a1comms/gae-support-laravel",
+    "name": "hubchain/gae-support-laravel",
     "description": "Google App Engine (Standard and Flexible Environment) runtime support for Laravel apps.",
     "license": "MIT",
     "authors": [

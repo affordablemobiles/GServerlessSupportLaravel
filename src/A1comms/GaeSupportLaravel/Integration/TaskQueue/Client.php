@@ -59,6 +59,7 @@ class Client
             case "eu5":
             case "eu6":
                 return "europe-west1";
+            case "us6":
             case "us14":
                 return "us-central1";
             default:

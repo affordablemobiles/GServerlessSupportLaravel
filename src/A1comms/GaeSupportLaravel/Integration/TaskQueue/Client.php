@@ -3,9 +3,9 @@
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Tasks\V2\CloudTasksClient;
+use Illuminate\Support\Str;
 
 class Client
 {
@@ -43,12 +43,16 @@ class Client
 
     private function fetchLocation() {
         $metadata = new Metadata();
-        $zone = $metadata->get('instance/zone');
-        //Log::info($zone);
-        $zone = explode("/", $zone);
-        //Log::info($zone);
+        $zone = explode(
+            "/",
+            $metadata->get('instance/zone')
+        );
         $zone = array_pop($zone);
-        //Log::info($zone);
+
+        // if the pattern is similar to europe-west1-a (i.e., GAE Flexible Environment)
+        if (Str::is('*-*-*', $zone)) {
+            return Str::beforeLast($zone, '-');
+        }
 
         switch ($zone) {
             case "eu2":

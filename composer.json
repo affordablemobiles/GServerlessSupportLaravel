@@ -9,12 +9,22 @@
         }
     ],
     "require": {
-        "php": ">=7.2.0",
+        "php": "^7.2",
         "opencensus/opencensus-exporter-stackdriver": "~0",
-        "guzzlehttp/guzzle": "~6",
-        "a1comms/php-gds": "~4.2",
+        "guzzlehttp/guzzle": "^6",
+        "a1comms/php-gds": "^4.2",
         "google/cloud": ">=0.100.0 <1.0.0",
-        "kelvinmo/simplejwt": "^0.2.4"
+        "kelvinmo/simplejwt": "^0.2.4",
+        "illuminate/support": "^6 || ^7",
+        "illuminate/contracts": "^6 || ^7",
+        "illuminate/http": "^6 || ^7",
+        "illuminate/cache": "^6 || ^7",
+        "illuminate/console": "^6 || ^7",
+        "illuminate/queue": "^6 || ^7",
+        "illuminate/view": "^6 || ^7",
+        "illuminate/container": "^6 || ^7",
+        "illuminate/encryption": "^6 || ^7",
+        "illuminate/filesystem": "^6 || ^7"
     },
     "require-dev": {
     },

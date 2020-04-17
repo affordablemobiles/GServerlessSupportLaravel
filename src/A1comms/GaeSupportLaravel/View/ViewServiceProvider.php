@@ -22,6 +22,8 @@ class ViewServiceProvider extends LaravelViewServiceProvider
 
             $this->registerGaeViewFinder();
 
+            $this->registerGaeBladeCompiler();
+
             $this->registerGaeEngineResolver();
         } else {
             parent::register();
@@ -50,6 +52,23 @@ class ViewServiceProvider extends LaravelViewServiceProvider
         $this->app->bind('view.finder', function ($app) {
             // TODO: Replace with a static manifest array search.
             return new FileViewFinder($app['files'], $app['config']['view.paths'], null, $this->app['config']['view.compiled']);
+        });
+    }
+
+    /**
+     * Register the Blade compiler implementation.
+     *
+     * @return void
+     */
+    public function registerBladeCompiler()
+    {
+        // The Compiler engine requires an instance of the CompilerInterface, which in
+        // this case will be the Blade compiler, so we'll first create the compiler
+        // instance to pass into the engine so it can compile the views properly.
+        $this->app->singleton('blade.compiler', function () {
+            return new FakeCompiler(
+                $this->app['config']['view.compiled']
+            );
         });
     }
 
@@ -86,15 +105,6 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function registerGaeBladeEngine($resolver)
     {
-        // The Compiler engine requires an instance of the CompilerInterface, which in
-        // this case will be the Blade compiler, so we'll first create the compiler
-        // instance to pass into the engine so it can compile the views properly.
-        $this->app->singleton('blade.compiler', function () {
-            return new FakeCompiler(
-                $this->app['config']['view.compiled']
-            );
-        });
-
         $resolver->register('blade', function () {
             return new CompilerEngine($this->app['blade.compiler']);
         });

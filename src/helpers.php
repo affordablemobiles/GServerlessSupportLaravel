@@ -31,6 +31,13 @@ if (!function_exists('is_gae_production')) {
     }
 }
 
+if (!function_exists('is_gae_development')) {
+    function is_gae_development() {
+        return (bool)(config('gaesupport.dev-prefix')
+            && strpos(gae_version(), config('gaesupport.dev-prefix')) === 0);
+    }
+}
+
 if (!function_exists('is_gae_flex')) {
     function is_gae_flex() {
         if (isset($_SERVER['GOOGLE_CLOUD_PROJECT']))

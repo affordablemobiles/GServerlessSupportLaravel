@@ -37,10 +37,7 @@ class PushTask
             }
 
             $this->pushTask->setAppEngineRouting($routing);
-        } else if (
-            config('gaesupport.dev-prefix')
-            && strpos(gae_version(), config('gaesupport.dev-prefix')) === 0
-        ) {
+        } else if (is_gae_development()) {
             /**
              * Support our development environment,
              * which runs working copies on live

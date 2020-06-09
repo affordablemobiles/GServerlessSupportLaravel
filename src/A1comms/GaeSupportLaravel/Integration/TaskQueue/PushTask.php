@@ -74,8 +74,9 @@ class PushTask
         if (!empty($options['delay_seconds'])) {
             $secondsInterval = new DateInterval('PT'.$options['delay_seconds'].'S');
             $futureTime = (new DateTime())->add($secondsInterval);
-            $futureTimeStamp = (new Protobuf\Timestamp())->fromDateTime($futureTime);
-            $this->task->setScheduleTime($futureTimeStamp);
+            $timestamp = new Protobuf\Timestamp();
+            $timestamp->fromDateTime($futureTime);
+            $this->task->setScheduleTime($timestamp);
         }
     }
 

@@ -5,10 +5,12 @@ namespace A1comms\GaeSupportLaravel\Integration\JWT\Signer;
 use Exception;
 use InvalidArgumentException;
 use Lcobucci\JWT\Signer\BaseSigner;
+use Lcobucci\JWT\Signer\Key;
+use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signature;
 use Google_Client;
-use Google_Service_iam;
-use Google_Service_iam_SignBlobRequest;
+use Google_Service_IAMCredentials;
+use Google_Service_IAMCredentials_SignBlobRequest;
 
 /**
  * Sign with a Google Service Account using the IAM API
@@ -51,7 +53,7 @@ class IAMSigner implements Signer
      */
     public function sign($payload, $key)
     {
-        return new Signature($this->createHash($payload, $this->getKey($key)));
+        return new Signature($this->createHash($payload, $key));
     }
 
     /**
@@ -67,21 +69,7 @@ class IAMSigner implements Signer
      */
     public function verify($expected, $payload, $key)
     {
-        return $this->doVerify($expected, $payload, $this->getKey($key));
-    }
-
-    /**
-     * @param Key|string $key
-     *
-     * @return Key
-     */
-    private function getKey($key)
-    {
-        if (!is_string($key)) {
-            throw new InvalidArgumentException("Key must be a string containing the service account ID");
-        }
-
-        return $key;
+        return $this->doVerify($expected, $payload, $key);
     }
 
     /**
@@ -94,24 +82,24 @@ class IAMSigner implements Signer
      *
      * @return string
      */
-    public function createHash($payload, string $key) {
+    public function createHash($payload, Key $key) {
         $client = new Google_Client();
 
         $client->setApplicationName('GaeSupportLaravel-JWT/0.1');
         $client->useApplicationDefaultCredentials();
         $client->addScope('https://www.googleapis.com/auth/cloud-platform');
 
-        $service = new Google_Service_iam($client);
+        $service = new Google_Service_IAMCredentials($client);
 
-        $keyID = sprintf('projects/-/serviceAccounts/%s', $key);
+        $keyID = sprintf('projects/-/serviceAccounts/%s', $key->getContent());
 
-        $requestBody = new Google_Service_iam_SignBlobRequest();
+        $requestBody = new Google_Service_IAMCredentials_SignBlobRequest();
 
-        $requestBody->setBytesToSign($payload);
+        $requestBody->setPayload(base64_encode($payload));
 
-        $response = $service->projects_serviceAccounts->signBlob($name, $requestBody);
+        $response = $service->projects_serviceAccounts->signBlob($keyID, $requestBody);
 
-        return $response->getSignature();
+        return base64_decode($response->getSignedBlob());
     }
 
     /**
@@ -125,7 +113,7 @@ class IAMSigner implements Signer
      *
      * @return boolean
      */
-    public function doVerify($expected, $payload, string $key) {
+    public function doVerify($expected, $payload, Key $key) {
         throw new Exception("signature verification is currently unsupported");
     }
 }

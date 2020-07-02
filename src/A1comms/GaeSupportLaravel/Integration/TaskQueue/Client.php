@@ -56,6 +56,7 @@ class Client
 
         switch ($zone) {
             case "eu2":
+            case "eu4":
             case "eu5":
             case "eu6":
                 return "europe-west1";

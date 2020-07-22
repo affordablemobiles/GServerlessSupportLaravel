@@ -158,7 +158,7 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
 
-## Upgrading (from Laravel 5.5 LTS on `a1comms/gae-support-laravel:~5.5`)
+## Upgrading (from Laravel 5.5 LTS)
 
 ### Laravel Specific (Not Lumen)
 

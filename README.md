@@ -106,13 +106,25 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 ```
 
-**6.** In `config/logging.php`, configure a custom logger:
+**6.** In `config/logging.php`, configure a custom logger and set it as the default:
 
 ```php
-'gae' => [
-    'driver' => 'custom',
-    'via' => A1comms\GaeSupportLaravel\Log\CreateLoggingDriver::class,
-],
+<?php
+
+use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
+
+return [
+    
+    'default' => 'gae',
+
+    'channels' => [
+        'gae' => [
+            'driver' => 'custom',
+            'via' => CreateLoggingDriver::class,
+        ],
+    ],
+
+];
 ```
 
 **7.** In `.env`, set the following:
@@ -174,11 +186,23 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```
 
-**2.** In `config/logging.php`, configure a custom logger:
+**2.** In `config/logging.php`, configure a custom logger and set it as the default:
 
 ```php
-'gae' => [
-    'driver' => 'custom',
-    'via' => A1comms\GaeSupportLaravel\Log\CreateLoggingDriver::class,
-],
+<?php
+
+use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
+
+return [
+    
+    'default' => 'gae',
+
+    'channels' => [
+        'gae' => [
+            'driver' => 'custom',
+            'via' => CreateLoggingDriver::class,
+        ],
+    ],
+
+];
 ```

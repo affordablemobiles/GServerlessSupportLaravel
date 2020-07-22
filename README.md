@@ -157,3 +157,27 @@ To our class, that'll inject the required logging hook:
 ```php
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
+
+## Upgrading (from Laravel 5.5 LTS on `a1comms/gae-support-laravel:~5.5`)
+
+### Laravel Specific (Not Lumen)
+
+**1.** Remove the following from `bootstrap/app.php`:
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Setup Early Logging
+|--------------------------------------------------------------------------
+*/
+A1comms\GaeSupportLaravel\Log\Logger::setup($app);
+```
+
+**2.** In `config/logging.php`, configure a custom logger:
+
+```php
+'gae' => [
+    'driver' => 'custom',
+    'via' => A1comms\GaeSupportLaravel\Log\CreateLoggingDriver::class,
+],
+```

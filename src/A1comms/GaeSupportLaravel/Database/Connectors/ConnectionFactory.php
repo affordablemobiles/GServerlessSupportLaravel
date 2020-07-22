@@ -18,9 +18,9 @@ class ConnectionFactory extends LaravelConnectionFactory
      */
     protected function createPdoResolver(array $config)
     {
-        if ( array_key_exists('unix_socket', $config) ) {
+        if (array_key_exists('unix_socket', $config)) {
             return $this->createPdoResolverWithSockets($config);
-        } else if ( array_key_exists('host', $config) ) {
+        } elseif (array_key_exists('host', $config)) {
             return $this->createPdoResolverWithHosts($config);
         } else {
             return $this->createPdoResolverWithoutHosts($config);

@@ -30,9 +30,9 @@ class JWT
      * @param string $jwk_url URL of the JWK public key file.
      * @param string $sig_alg Expected signature algorithm of the JWT.
      * @param array $issuers An array of acceptable issuers.
-     * 
+     *
      * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
-     * 
+     *
      * @return array Returns array containing "sub" and "email" if token is valid.
      */
     public static function validate($jwt, $expected_audience, $jwk_url, $sig_alg, $issuers)
@@ -61,7 +61,7 @@ class JWT
             throw new InvalidTokenException("Invalid Claim (aud): " . $e->getMessage(), 0, $e);
         }
 
-        // Also check 
+        // Also check
         try {
             $email = $jwt->getClaim('email');
             if (empty($email)) {
@@ -80,14 +80,14 @@ class JWT
         }
 
         // Return the user identity (subject and user email) if JWT verification is successful.
-        return array('sub' => $sub, 'email' => $email);
+        return ['sub' => $sub, 'email' => $email];
     }
 
     /**
      * Fetches a KeySet instance for the public JWKs.
      *
      * @param string $jwk_url URL of the JWK public key file.
-     * 
+     *
      * @return \SimpleJWT\Keys\KeySet
      */
     protected static function get_jwk_set($jwk_url)
@@ -103,7 +103,7 @@ class JWT
      * Fetches the raw json encoded data for the public JWKs.
      *
      * @param string $jwk_url URL of the JWK public key file.
-     * 
+     *
      * @return string
      */
     protected static function get_jwk_set_raw($jwk_url)

@@ -30,7 +30,7 @@
 /*
 * Modified by James Greene <james@cloudflare.com> to include IPV6 support
 * (original version only supported IPV4).
-* 21 May 2012 
+* 21 May 2012
 */
 
 
@@ -39,7 +39,8 @@
 // netmasks, it is easier to ensure that the binary strings are padded
 // with zeros out to 32 characters - IP addresses are 32 bit numbers
 if (!function_exists('decbin32')) {
-    function decbin32 ($dec) {
+    function decbin32($dec)
+    {
         return str_pad(decbin($dec), 32, '0', STR_PAD_LEFT);
     }
 }
@@ -55,7 +56,8 @@ if (!function_exists('decbin32')) {
 // Note little validation is done on the range inputs - it expects you to
 // use one of the above 3 formats.
 if (!function_exists('ipv4_in_range')) {
-    function ipv4_in_range($ip, $range) {
+    function ipv4_in_range($ip, $range)
+    {
         if (strpos($range, '/') !== false) {
             // $range is in IP/NETMASK format
             list($range, $netmask) = explode('/', $range, 2);
@@ -63,14 +65,16 @@ if (!function_exists('ipv4_in_range')) {
                 // $netmask is a 255.255.0.0 format
                 $netmask = str_replace('*', '0', $netmask);
                 $netmask_dec = ip2long($netmask);
-                return ( (ip2long($ip) & $netmask_dec) == (ip2long($range) & $netmask_dec) );
+                return ((ip2long($ip) & $netmask_dec) == (ip2long($range) & $netmask_dec));
             } else {
                 // $netmask is a CIDR size block
                 // fix the range argument
                 $x = explode('.', $range);
-                while(count($x)<4) $x[] = '0';
-                list($a,$b,$c,$d) = $x;
-                $range = sprintf("%u.%u.%u.%u", empty($a)?'0':$a, empty($b)?'0':$b,empty($c)?'0':$c,empty($d)?'0':$d);
+                while (count($x)<4) {
+                    $x[] = '0';
+                }
+                list($a, $b, $c, $d) = $x;
+                $range = sprintf("%u.%u.%u.%u", empty($a)?'0':$a, empty($b)?'0':$b, empty($c)?'0':$c, empty($d)?'0':$d);
                 $range_dec = ip2long($range);
                 $ip_dec = ip2long($ip);
                 
@@ -94,29 +98,30 @@ if (!function_exists('ipv4_in_range')) {
             
             if (strpos($range, '-')!==false) { // A-B format
                 list($lower, $upper) = explode('-', $range, 2);
-                $lower_dec = (float)sprintf("%u",ip2long($lower));
-                $upper_dec = (float)sprintf("%u",ip2long($upper));
-                $ip_dec = (float)sprintf("%u",ip2long($ip));
-                return ( ($ip_dec>=$lower_dec) && ($ip_dec<=$upper_dec) );
+                $lower_dec = (float)sprintf("%u", ip2long($lower));
+                $upper_dec = (float)sprintf("%u", ip2long($upper));
+                $ip_dec = (float)sprintf("%u", ip2long($ip));
+                return (($ip_dec>=$lower_dec) && ($ip_dec<=$upper_dec));
             }
             return false;
-        } 
+        }
     }
 }
 
 if (!function_exists('ip2long6')) {
-    function ip2long6($ip) {
-        if (substr_count($ip, '::')) { 
-            $ip = str_replace('::', str_repeat(':0000', 8 - substr_count($ip, ':')) . ':', $ip); 
-        } 
+    function ip2long6($ip)
+    {
+        if (substr_count($ip, '::')) {
+            $ip = str_replace('::', str_repeat(':0000', 8 - substr_count($ip, ':')) . ':', $ip);
+        }
             
         $ip = explode(':', $ip);
-        $r_ip = ''; 
+        $r_ip = '';
         foreach ($ip as $v) {
-            $r_ip .= str_pad(base_convert($v, 16, 2), 16, 0, STR_PAD_LEFT); 
-        } 
+            $r_ip .= str_pad(base_convert($v, 16, 2), 16, 0, STR_PAD_LEFT);
+        }
             
-        return base_convert($r_ip, 2, 10); 
+        return base_convert($r_ip, 2, 10);
     }
 }
 
@@ -124,7 +129,7 @@ if (!function_exists('ip2long6')) {
 if (!function_exists('get_ipv6_full')) {
     function get_ipv6_full($ip)
     {
-        $pieces = explode ("/", $ip, 2);
+        $pieces = explode("/", $ip, 2);
         $left_piece = $pieces[0];
         $right_piece = $pieces[1];
 
@@ -135,7 +140,7 @@ if (!function_exists('get_ipv6_full')) {
 
         // Pad out the shorthand entries.
         $main_ip_pieces = explode(":", $main_ip_piece);
-        foreach($main_ip_pieces as $key=>$val) {
+        foreach ($main_ip_pieces as $key=>$val) {
             $main_ip_pieces[$key] = str_pad($main_ip_pieces[$key], 4, "0", STR_PAD_LEFT);
         }
 
@@ -150,12 +155,11 @@ if (!function_exists('get_ipv6_full')) {
                 $main_ip_pieces[$i] = "0000";
             }
             $main_ip_pieces[7] = $last_piece;
-        }
-        else {
+        } else {
             // Build the full form of the IPV6 address
             for ($i = $size; $i < 8; $i++) {
                 $main_ip_pieces[$i] = "0000";
-            }        
+            }
         }
         
         // Rebuild the final long form IPV6 address
@@ -167,13 +171,13 @@ if (!function_exists('get_ipv6_full')) {
 
 
 // Determine whether the IPV6 address is within range.
-// $ip is the IPV6 address in decimal format to check if its within the IP range created by the cloudflare IPV6 address, $range_ip. 
+// $ip is the IPV6 address in decimal format to check if its within the IP range created by the cloudflare IPV6 address, $range_ip.
 // $ip and $range_ip are converted to full IPV6 format.
 // Returns true if the IPV6 address, $ip,  is within the range from $range_ip.  False otherwise.
 if (!function_exists('ipv6_in_range')) {
     function ipv6_in_range($ip, $range_ip)
     {
-        $pieces = explode ("/", $range_ip, 2);
+        $pieces = explode("/", $range_ip, 2);
         $left_piece = $pieces[0];
         $right_piece = $pieces[1];
 
@@ -184,7 +188,7 @@ if (!function_exists('ipv6_in_range')) {
 
         // Pad out the shorthand entries.
         $main_ip_pieces = explode(":", $main_ip_piece);
-        foreach($main_ip_pieces as $key=>$val) {
+        foreach ($main_ip_pieces as $key=>$val) {
             $main_ip_pieces[$key] = str_pad($main_ip_pieces[$key], 4, "0", STR_PAD_LEFT);
         }
 
@@ -204,13 +208,12 @@ if (!function_exists('ipv6_in_range')) {
                 $last[$i] = "ffff";
             }
             $main_ip_pieces[7] = $last_piece;
-        }
-        else {
+        } else {
             // Build the full form of the IPV6 address
             for ($i = $size; $i < 8; $i++) {
                 $first[$i] = "0000";
                 $last[$i] = "ffff";
-            }        
+            }
         }
 
         // Rebuild the final long form IPV6 address

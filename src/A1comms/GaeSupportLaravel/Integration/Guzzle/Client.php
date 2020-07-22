@@ -30,24 +30,19 @@ class Client extends GuzzleClient
             return parent::__construct($config);
         }
 
-        if (!isset($config['handler']))
-        {
+        if (!isset($config['handler'])) {
             $config['handler'] = HandlerStack::create();
             $config['handler']->setHandler(\GuzzleHttp\choose_handler());
         }
 
-        if (method_exists($config['handler'], 'push'))
-        {
+        if (method_exists($config['handler'], 'push')) {
             // We are able to modify the handler stack, continue...
 
             // Unless disabled, add TraceMiddleware for sub-request trace merging in StackDriver.
-            if (@$config['gaesupport']['trace'] !== false)
-            {
+            if (@$config['gaesupport']['trace'] !== false) {
                 $config['handler']->push(new TraceMiddleware());
             }
-        }
-        else
-        {
+        } else {
             Log::warning('A1comms\\GaeSupportLaravel\\Integration\\Guzzle\\Client: Unable to modify handler stack, no push method defined');
         }
 

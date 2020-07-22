@@ -37,10 +37,12 @@ class GaeJob extends Job implements JobContract
      * @param  object  $job
      * @param  bool    $pushed
      */
-    public function __construct(Container $container,
-                                GaeQueue $gaeQueue,
-                                $job,
-                                $pushed = false)
+    public function __construct(
+        Container $container,
+        GaeQueue $gaeQueue,
+        $job,
+        $pushed = false
+    )
     {
         $this->job = $job;
         $this->gaeQueue = $gaeQueue;

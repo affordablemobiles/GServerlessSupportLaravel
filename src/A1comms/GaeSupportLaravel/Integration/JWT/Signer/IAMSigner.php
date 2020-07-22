@@ -14,10 +14,10 @@ use Google_Service_IAMCredentials_SignBlobRequest;
 
 /**
  * Sign with a Google Service Account using the IAM API
- * 
+ *
  * You can grab the JWKS public key definition for a service account
  * by visiting:
- * 
+ *
  * https://www.googleapis.com/service_accounts/v1/metadata/jwk/{ACCOUNT_EMAIL}
  */
 class IAMSigner implements Signer
@@ -27,7 +27,8 @@ class IAMSigner implements Signer
      *
      * @return string
      */
-    public function getAlgorithmId() {
+    public function getAlgorithmId()
+    {
         return "RS256";
     }
 
@@ -82,7 +83,8 @@ class IAMSigner implements Signer
      *
      * @return string
      */
-    public function createHash($payload, Key $key) {
+    public function createHash($payload, Key $key)
+    {
         $client = new Google_Client();
 
         $client->setApplicationName('GaeSupportLaravel-JWT/0.1');
@@ -113,7 +115,8 @@ class IAMSigner implements Signer
      *
      * @return boolean
      */
-    public function doVerify($expected, $payload, Key $key) {
+    public function doVerify($expected, $payload, Key $key)
+    {
         throw new Exception("signature verification is currently unsupported");
     }
 }

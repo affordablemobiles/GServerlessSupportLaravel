@@ -23,7 +23,7 @@ class BaseGuard implements StatelessValidator
 
     protected static function returnUser(UserProvider $provider = null, string $email)
     {
-        if (empty($provider)){
+        if (empty($provider)) {
             $user = new IAPUser();
 
             $user->fill([

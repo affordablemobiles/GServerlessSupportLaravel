@@ -29,9 +29,9 @@ class IAP
      *
      * @param string $iap_jwt The JWT token to be validated.
      * @param string $expected_audience The expected audience of the provided JWT.
-     * 
+     *
      * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
-     * 
+     *
      * @return array Returns array containing "sub" and "email" if token is valid.
      */
     public static function validateToken($iap_jwt, $expected_audience)

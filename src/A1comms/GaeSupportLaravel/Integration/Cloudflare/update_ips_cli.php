@@ -12,15 +12,18 @@ $ipv6_arr   = explode("\n", $ipv6_list);
 writeFile(__DIR__.'/cf-ipv4.php', remove_empty($ipv4_arr));
 writeFile(__DIR__.'/cf-ipv6.php', remove_empty($ipv6_arr));
 
-function remove_empty($array) {
+function remove_empty($array)
+{
     $array = array_map('trim', $array);
     return array_filter($array, '_remove_empty_internal');
 }
 
-function _remove_empty_internal($value) {
+function _remove_empty_internal($value)
+{
     return !empty($value) || $value === 0;
 }
 
-function writeFile($file, $array) {
+function writeFile($file, $array)
+{
     file_put_contents($file, '<?php return '.var_export($array, true).';'.PHP_EOL);
 }

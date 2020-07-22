@@ -15,10 +15,10 @@ class InstanceLocal extends CacheManager
      *
      * @return \Illuminate\Contracts\Cache\Repository
      */
-    public static function getInstance() 
+    public static function getInstance()
     {
         if (!self::$instance) {
-            self::$instance = new self(app());    
+            self::$instance = new self(app());
         }
         
         return self::$instance;

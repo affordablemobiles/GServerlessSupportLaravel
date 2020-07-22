@@ -56,7 +56,7 @@ class OIDC
      * Fetch an OIDC ID token.
      *
      * @param string $target_audience The target audience of the generated JWT.
-     * 
+     *
      * @return string
      */
     public static function fetchToken($target_audience = '')
@@ -71,9 +71,9 @@ class OIDC
      *
      * @param string $oidc_jwt The JWT token to be validated.
      * @param string $expected_audience The expected audience of the provided JWT.
-     * 
+     *
      * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
-     * 
+     *
      * @return array Returns array containing "sub" and "email" if token is valid.
      */
     public static function validateToken($oidc_jwt, $expected_audience)
@@ -122,7 +122,7 @@ class OIDC
      * Fetch the value of a GCE metadata server URI.
      *
      * @param string $uri The metadata URI.
-     * 
+     *
      * @return string
      */
     protected static function getFromMetadata($uri)

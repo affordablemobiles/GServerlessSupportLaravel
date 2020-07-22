@@ -25,7 +25,6 @@ class Handler extends ExceptionHandler
             try {
                 ErrorBootstrap::exceptionHandler($exception);
             } catch (Exception $ex) {
-
             }
         }
     }

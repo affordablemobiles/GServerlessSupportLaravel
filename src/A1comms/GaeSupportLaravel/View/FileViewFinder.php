@@ -79,7 +79,7 @@ class FileViewFinder extends LaravelFileViewFinder
         $startPathArr = explode('/', trim($startPath, '/'));
         $endPathArr = explode('/', trim($endPath, '/'));
         $normalizePathArray = function ($pathSegments, $absolute) {
-            $result = array();
+            $result = [];
             foreach ($pathSegments as $segment) {
                 if ('..' === $segment && ($absolute || \count($result))) {
                     array_pop($result);
@@ -113,7 +113,8 @@ class FileViewFinder extends LaravelFileViewFinder
     public static function isAbsolutePath($file)
     {
         return strspn($file, '/\\', 0, 1)
-            || (\strlen($file) > 3 && ctype_alpha($file[0])
+            || (
+                \strlen($file) > 3 && ctype_alpha($file[0])
                 && ':' === $file[1]
                 && strspn($file, '/\\', 2, 1)
             )

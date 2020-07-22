@@ -14,7 +14,6 @@ class TaskCronAuthentication
      */
     public function __construct()
     {
-
     }
 
     /**
@@ -28,15 +27,15 @@ class TaskCronAuthentication
     {
         if (!is_gae()) {
             Log::info("App Engine Authentication Middleware: Not on App Engine, Bypassing...");
-        } else if ($request->header('X_APPENGINE_CRON', false)) {
+        } elseif ($request->header('X_APPENGINE_CRON', false)) {
             Log::info("App Engine Authentication Middleware: Cron Detected, OK");
-        } else if ($request->header('X_APPENGINE_QUEUENAME', false)) {
+        } elseif ($request->header('X_APPENGINE_QUEUENAME', false)) {
             Log::info("App Engine Authentication Middleware: Queue Task Detected (Queue Name: " . $request->header('X_APPENGINE_QUEUENAME', false) . "), OK");
         } else {
             return response('Unauthorized.', 401);
         }
 
-		// return
+        // return
         return $next($request);
     }
 }

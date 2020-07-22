@@ -21,7 +21,8 @@ class SessionGarbageCollectionController extends Controller
      *
      * @return void
      */
-    public function run(){
+    public function run()
+    {
         $s = new DatastoreSessionHandler();
         $s->googlegc();
     }

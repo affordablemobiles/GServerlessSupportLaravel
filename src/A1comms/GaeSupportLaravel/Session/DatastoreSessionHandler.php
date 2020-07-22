@@ -143,7 +143,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         $obj_sess = $this->obj_store->fetchByName($id);
 
-        if($obj_sess instanceof GDS\Entity) {
+        if ($obj_sess instanceof GDS\Entity) {
             $this->orig_id = $id;
             $this->orig_data = $obj_sess->data;
 
@@ -170,7 +170,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
             'lastaccess'    => $this->lastaccess
         ])->setKeyName($id);
 
-        if ( ($this->orig_id != $id) || ($this->orig_data != $data) ){
+        if (($this->orig_id != $id) || ($this->orig_data != $data)) {
             $this->obj_store->upsert($obj_sess);
         }
 
@@ -190,7 +190,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         $obj_sess = $this->obj_store->fetchByName($id);
 
-        if($obj_sess instanceof GDS\Entity) {
+        if ($obj_sess instanceof GDS\Entity) {
             $this->obj_store->delete($obj_sess);
         }
 

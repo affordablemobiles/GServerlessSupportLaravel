@@ -21,7 +21,7 @@ class IAPUser implements NullUserModel
      */
     public function fill(array $attributes)
     {
-        foreach($attributes as $k => $v) {
+        foreach ($attributes as $k => $v) {
             $this->{$k} = $v;
         }
 

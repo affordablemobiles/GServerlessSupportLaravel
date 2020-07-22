@@ -39,5 +39,5 @@ class OIDC_Guard extends BaseGuard
         }
 
         return static::returnUser($provider, $return['email']);
-    }    
+    }
 }

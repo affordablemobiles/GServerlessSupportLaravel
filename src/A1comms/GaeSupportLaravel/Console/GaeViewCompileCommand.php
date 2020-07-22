@@ -67,7 +67,7 @@ class GaeViewCompileCommand extends Command
         $viewPaths = config('view.paths', []);
 
         $hints = app('view')->getFinder()->getHints();
-        foreach( $hints as $namespace => $paths ) {
+        foreach ($hints as $namespace => $paths) {
             $viewPaths = array_merge($paths, $viewPaths);
         }
 
@@ -110,7 +110,8 @@ class GaeViewCompileCommand extends Command
     public function writeManifest($compiledDirectory)
     {
         $this->files->put(
-            $compiledDirectory . "/manifest.php", '<?php return '.var_export($this->manifest, true).';'.PHP_EOL
+            $compiledDirectory . "/manifest.php",
+            '<?php return '.var_export($this->manifest, true).';'.PHP_EOL
         );
     }
 }

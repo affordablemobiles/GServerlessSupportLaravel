@@ -15,7 +15,8 @@ class Client
 
     private static $myInstance = null;
 
-    public static function instance() {
+    public static function instance()
+    {
         if (is_null(self::$myInstance)) {
             self::$myInstance = new Client();
         }
@@ -23,25 +24,30 @@ class Client
         return self::$myInstance;
     }
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->client = new CloudTasksClient();
         $this->project = gae_project();
         $this->location = $this->fetchLocation();
     }
 
-    public function getClient() {
+    public function getClient()
+    {
         return $this->client;
     }
 
-    public function getQueueName($queue) {
+    public function getQueueName($queue)
+    {
         return $this->client->queueName($this->project, $this->location, $queue);
     }
 
-    public function getLocation() {
+    public function getLocation()
+    {
         return $this->location;
     }
 
-    private function fetchLocation() {
+    private function fetchLocation()
+    {
         $metadata = new Metadata();
         $zone = explode(
             "/",

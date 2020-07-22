@@ -22,7 +22,10 @@ class LumenApplication extends BaseLumenApplication
     {
         $return = parent::__construct($basePath);
 
-        Logger::setup($this);
+        $this->mergeConfigFrom(
+            __DIR__.'/../../../config/logging.php',
+            'logging'
+        );
 
         $this->withFacades();
 

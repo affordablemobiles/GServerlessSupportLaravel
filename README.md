@@ -25,11 +25,11 @@ This library is designed for homogeneous operation between the Standard Environm
 
 ## Installation
 
-Pull in the package via Composer (no official release yet, as this is community contributed BETA).
+Pull in the package via Composer:
 
 ```js
 "require": {
-    "a1comms/gae-support-laravel": "dev-php7.3-laravel6.0"
+    "a1comms/gae-support-laravel": "~6.0"
 }
 ```
 
@@ -157,4 +157,28 @@ To our class, that'll inject the required logging hook:
 
 ```php
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
+```
+
+## Upgrading (from Laravel 5.5 LTS on `a1comms/gae-support-laravel:~5.5`)
+
+### Laravel Specific (Not Lumen)
+
+**1.** Remove the following from `bootstrap/app.php`:
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Setup Early Logging
+|--------------------------------------------------------------------------
+*/
+A1comms\GaeSupportLaravel\Log\Logger::setup($app);
+```
+
+**2.** In `config/logging.php`, configure a custom logger:
+
+```php
+'gae' => [
+    'driver' => 'custom',
+    'via' => A1comms\GaeSupportLaravel\Log\CreateLoggingDriver::class,
+],
 ```

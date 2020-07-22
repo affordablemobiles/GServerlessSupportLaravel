@@ -27,6 +27,8 @@
         "illuminate/filesystem": "^6 || ^7"
     },
     "require-dev": {
+        "phpmd/phpmd" : "@stable",
+        "friendsofphp/php-cs-fixer": "^2.6"
     },
     "autoload": {
         "psr-4": {

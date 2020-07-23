@@ -17,7 +17,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function register()
     {
-        if (is_gae() && (env('APP_ENV', 'production') == 'production')){
+        if (is_gae() && (env('APP_ENV', 'production') == 'production')) {
             $this->registerFactory();
 
             $this->registerGaeViewFinder();
@@ -60,7 +60,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      *
      * @return void
      */
-    public function registerBladeCompiler()
+    public function registerGaeBladeCompiler()
     {
         // The Compiler engine requires an instance of the CompilerInterface, which in
         // this case will be the Blade compiler, so we'll first create the compiler

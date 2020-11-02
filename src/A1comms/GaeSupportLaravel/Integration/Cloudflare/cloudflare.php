@@ -8,7 +8,8 @@ if (!defined('BLOCK_NON_CF')) {
     define('BLOCK_NON_CF', false);
 }
 
-require __DIR__ . "/ip_in_range.php";
+require __DIR__ . '/../../../../helpers.php';
+require __DIR__ . '/ip_in_range.php';
 
 // Only run if we're on GAE
 if (is_gae()) {

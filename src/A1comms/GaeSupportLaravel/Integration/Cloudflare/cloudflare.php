@@ -1,7 +1,11 @@
 <?php
 
+if (!empty($_ENV['BLOCK_NON_CF'])) {
+    define('BLOCK_NON_CF', $_ENV['BLOCK_NON_CF']);
+}
+
 if (!defined('BLOCK_NON_CF')) {
-    define('BLOCK_NON_CF', true);
+    define('BLOCK_NON_CF', false);
 }
 
 require __DIR__ . "/ip_in_range.php";

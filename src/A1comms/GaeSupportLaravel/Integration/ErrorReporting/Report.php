@@ -109,14 +109,15 @@ class Report
     /**
      * @param mixed $ex \Throwable (PHP 7) or \Exception (PHP 5)
      */
-    public static function exceptionHandler($ex, $status_code = 500)
+    public static function exceptionHandler($ex, $status_code = 500, $context = [])
     {
         $message = sprintf('PHP Notice: %s', (string)$ex);
         if (self::$psrLogger) {
             $service = self::$psrLogger->getMetadataProvider()->serviceId();
             $version = self::$psrLogger->getMetadataProvider()->versionId();
             self::$psrLogger->error($message, [
-                'context' => [
+                'context' => $context,
+                'runtime_context' => [
                     'reportLocation' => [
                         'filePath' => $ex->getFile(),
                         'lineNumber' => $ex->getLine(),
@@ -166,7 +167,7 @@ class Report
         $service = self::$psrLogger->getMetadataProvider()->serviceId();
         $version = self::$psrLogger->getMetadataProvider()->versionId();
         $context = [
-            'context' => [
+            'runtime_context' => [
                 'reportLocation' => [
                     'filePath' => $file,
                     'lineNumber' => $line,

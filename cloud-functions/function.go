@@ -1,6 +1,7 @@
 package function
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -21,7 +22,7 @@ func HandleSessionCleanRequest(w http.ResponseWriter, r *http.Request) {
 
 	oldestTime := time.Now().Add(time.Duration(sessionDuration) * -1)
 
-	client, err := datastore.NewClient(ctx, "DetectProjectID")
+	client, err := datastore.NewClient(ctx, datastore.DetectProjectID)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +43,8 @@ func HandleSessionCleanRequest(w http.ResponseWriter, r *http.Request) {
 		for k := range keys {
 			kArr = append(kArr, k)
 
-			if len(keys) >= 100 {
+			if len(kArr) >= 100 {
+				log.Printf("Deleting batch of %d keys...", len(kArr))
 				err := client.DeleteMulti(ctx, kArr)
 				if err != nil {
 					done <- err
@@ -53,6 +55,7 @@ func HandleSessionCleanRequest(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		log.Printf("Deleting batch of %d keys...", len(kArr))
 		err := client.DeleteMulti(ctx, kArr)
 		if err != nil {
 			done <- err

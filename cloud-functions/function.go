@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"cloud.google.com/go/datastore"
 	"google.golang.org/api/iterator"
 	"maze.io/x/duration"
+
+	"github.com/remeh/sizedwaitgroup"
 )
 
 // HandleSessionCleanRequest handles garbage collections of Datastore sessions.
@@ -40,27 +43,44 @@ func HandleSessionCleanRequest(w http.ResponseWriter, r *http.Request) {
 	go func(done chan<- error, keys <-chan *datastore.Key) {
 		kArr := []*datastore.Key{}
 
-		for k := range keys {
-			kArr = append(kArr, k)
+		wg := sizedwaitgroup.New(75)
 
-			if len(kArr) >= 100 {
-				log.Printf("Deleting batch of %d keys...", len(kArr))
-				err := client.DeleteMulti(ctx, kArr)
-				if err != nil {
-					done <- err
-					return
-				}
+		sendData := func(force bool) {
+			if force || len(kArr) >= 500 {
+				wg.Add()
+				go func(v []*datastore.Key) {
+					defer func() {
+						v = []*datastore.Key{}
+
+						// Collect memory...
+						runtime.GC()
+
+						wg.Done()
+					}()
+
+					log.Printf("Deleting batch of %d keys...", len(v))
+					err := client.DeleteMulti(ctx, v)
+					if err != nil {
+						panic(err)
+					}
+				}(kArr)
 
 				kArr = []*datastore.Key{}
+
+				// Collect memory...
+				runtime.GC()
 			}
 		}
 
-		log.Printf("Deleting batch of %d keys...", len(kArr))
-		err := client.DeleteMulti(ctx, kArr)
-		if err != nil {
-			done <- err
-			return
+		for k := range keys {
+			kArr = append(kArr, k)
+
+			sendData(false)
 		}
+
+		sendData(true)
+
+		wg.Wait()
 
 		done <- nil
 	}(doneChan, keyChannel)
@@ -79,6 +99,8 @@ func HandleSessionCleanRequest(w http.ResponseWriter, r *http.Request) {
 
 			keys <- k
 		}
+
+		close(keys)
 
 		done <- nil
 	}(doneChan, keyChannel)

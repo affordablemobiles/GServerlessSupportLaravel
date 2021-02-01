@@ -72,7 +72,7 @@ gcloud kms keys add-iam-policy-binding cloudbuild --keyring=deployment --locatio
 
 ```
 echo -n "<secret string>" |\
- gcloud kms encrypt --project="<project-id>" --location=global --keyring=cloudbuild --key=deployment --ciphertext-file=- --plaintext-file=- |\
+ gcloud kms encrypt --project="<project-id>" --location=global --keyring=deployment --key=cloudbuild --ciphertext-file=- --plaintext-file=- |\
  base64
 ```
 
@@ -86,7 +86,7 @@ steps:
   secretEnv: ['<SECRET_NAME>']
 ...
 secrets:
-- kmsKeyName: projects/<project-id>/locations/global/keyRings/cloudbuild/cryptoKeys/deployment
+- kmsKeyName: projects/<project-id>/locations/global/keyRings/deployment/cryptoKeys/cloudbuild
   secretEnv:
     <SECRET_NAME>: <ENCRYPTED_BASE64_DATA>
 ```
@@ -106,7 +106,7 @@ secrets:
 ```
 echo -n "<base64'd encrypted secret from Cloud Build file>" |\
  base64 -d |\
- gcloud kms decrypt --project="<source-project-id>" --location=global --keyring=cloudbuild --key=deployment --ciphertext-file=- --plaintext-file=-
+ gcloud kms decrypt --project="<source-project-id>" --location=global --keyring=deployment --key=cloudbuild --ciphertext-file=- --plaintext-file=-
 ```
 
 ### 9. Transfer a secret to another project without viewing it
@@ -114,7 +114,7 @@ echo -n "<base64'd encrypted secret from Cloud Build file>" |\
 ```
 echo -n "<base64'd encrypted secret from Cloud Build file>" |\
  base64 -d |\
- gcloud kms decrypt --project="<source-project-id>" --location=global --keyring=cloudbuild --key=deployment --ciphertext-file=- --plaintext-file=- |\
- gcloud kms encrypt --project="<destination-project-id>" --location=global --keyring=cloudbuild --key=deployment --ciphertext-file=- --plaintext-file=- |\
+ gcloud kms decrypt --project="<source-project-id>" --location=global --keyring=deployment --key=cloudbuild --ciphertext-file=- --plaintext-file=- |\
+ gcloud kms encrypt --project="<destination-project-id>" --location=global --keyring=deployment --key=cloudbuild --ciphertext-file=- --plaintext-file=- |\
  base64
 ```

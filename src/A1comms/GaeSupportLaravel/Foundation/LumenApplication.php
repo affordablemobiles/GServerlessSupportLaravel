@@ -41,7 +41,8 @@ class LumenApplication extends BaseLumenApplication
         }
         
         $this->mergeConfigFrom(
-            __DIR__.'/../../../config/gaesupport.php', 'gaesupport'
+            __DIR__.'/../../../config/gaesupport.php',
+            'gaesupport'
         );
 
         return $return;
@@ -68,7 +69,7 @@ class LumenApplication extends BaseLumenApplication
      */
     protected function registerViewBindings()
     {
-        if ( ! empty($this->loadedProviders['A1comms\GaeSupportLaravel\View\ViewServiceProvider']) ) {
+        if (! empty($this->loadedProviders['A1comms\GaeSupportLaravel\View\ViewServiceProvider'])) {
             $this->configure('view');
         } else {
             parent::registerViewBindings();

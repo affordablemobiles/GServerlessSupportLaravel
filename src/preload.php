@@ -14,11 +14,11 @@ $laravelHelpers = __DIR__ . '/../../../laravel/framework/src/Illuminate/Support/
 $lumenHelpers = __DIR__ . '/../../../illuminate/support/helpers.php';
 if (is_file($laravelHelpers)) {
     require $laravelHelpers;
-} else if (is_file($lumenHelpers)) {
+} elseif (is_file($lumenHelpers)) {
     require $lumenHelpers;
 }
 
-if (is_gae() && (php_sapi_name() != 'cli')){
+if (is_gae() && (php_sapi_name() != 'cli')) {
     // Set up exception logging properly...
     ErrorBootstrap::init();
 
@@ -43,7 +43,7 @@ if (is_gae() && (php_sapi_name() != 'cli')){
             ),
         ];
 
-        if (is_gae_flex()){
+        if (is_gae_flex()) {
             Tracer::start(new StackdriverExporter(['async' => true]), $options);
         } else {
             // TODO: Async on Standard Environment too!
@@ -52,8 +52,7 @@ if (is_gae() && (php_sapi_name() != 'cli')){
     }
 
     $loaderInterface = 'App\\Trace\\LowLevelLoader';
-    if (!class_exists($loaderInterface))
-    {
+    if (!class_exists($loaderInterface)) {
         // TODO: Different default arrays for Laravel vs Lumen?
         $loaderInterface = A1comms\GaeSupportLaravel\Trace\LowLevelLoader::class;
     }

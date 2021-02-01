@@ -41,11 +41,11 @@ class OAuth2
 
     /**
      * Validate an OAuth2 access_token.
-     * 
+     *
      * @param string The access_token to validate.
-     * 
+     *
      * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
-     * 
+     *
      * @return array Returns decoded token information from the tokeninfo endpoint.
      */
     public static function validateToken($token)

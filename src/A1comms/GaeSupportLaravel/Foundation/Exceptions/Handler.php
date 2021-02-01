@@ -21,12 +21,11 @@ class Handler extends ExceptionHandler
         parent::report($exception);
 
         // Log the error out to Stackdriver Error Reporting.
-		if ($this->shouldReport($exception)) {
-			try {
-				ErrorBootstrap::exceptionHandler($exception);
-			} catch (Exception $ex) {
-
-			}
-		}
+        if ($this->shouldReport($exception)) {
+            try {
+                ErrorBootstrap::exceptionHandler($exception);
+            } catch (Exception $ex) {
+            }
+        }
     }
 }

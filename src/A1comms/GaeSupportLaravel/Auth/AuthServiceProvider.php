@@ -19,33 +19,33 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Auth::provider('null', function(Application $app, array $config) {
-            if (!empty($config['model'])){
+        Auth::provider('null', function (Application $app, array $config) {
+            if (!empty($config['model'])) {
                 return new NullUserProvider($config['model']);
             }
 
             return new NullUserProvider(IAPUser::class);
         });
 
-        Auth::provider('list', function(Application $app, array $config) {
+        Auth::provider('list', function (Application $app, array $config) {
             if (empty($config['list'])) {
                 $config['list'] = [];
             }
 
-            if (!empty($config['model'])){
+            if (!empty($config['model'])) {
                 return new ListUserProvider($config['model'], $config['list']);
             }
 
             return new ListUserProvider(IAPUser::class, $config['list']);
         });
 
-        Auth::viaRequest('gae-internal',                [Guard\AppEngine_Guard::class, 'validate']);
-        Auth::viaRequest('gae-iap',                     [Guard\IAP_Guard::class, 'validate']);
-        Auth::viaRequest('gae-oidc',                    [Guard\OIDC_Guard::class, 'validate']);
-        Auth::viaRequest('gae-oauth2',                  [Guard\OAuth2_Guard::class, 'validate']);
+        Auth::viaRequest('gae-internal', [Guard\AppEngine_Guard::class, 'validate']);
+        Auth::viaRequest('gae-iap', [Guard\IAP_Guard::class, 'validate']);
+        Auth::viaRequest('gae-oidc', [Guard\OIDC_Guard::class, 'validate']);
+        Auth::viaRequest('gae-oauth2', [Guard\OAuth2_Guard::class, 'validate']);
 
-        Auth::viaRequest('gae-combined-iap',            [Guard\Combined\IAP_Guard::class, 'validate']);
-        Auth::viaRequest('gae-combined-iap-oidc',       [Guard\Combined\IAP_OIDC_Guard::class, 'validate']);
-        Auth::viaRequest('gae-combined-iap-oidc-oauth2',[Guard\Combined\IAP_OIDC_OAuth2_Guard::class, 'validate']);
+        Auth::viaRequest('gae-combined-iap', [Guard\Combined\IAP_Guard::class, 'validate']);
+        Auth::viaRequest('gae-combined-iap-oidc', [Guard\Combined\IAP_OIDC_Guard::class, 'validate']);
+        Auth::viaRequest('gae-combined-iap-oidc-oauth2', [Guard\Combined\IAP_OIDC_OAuth2_Guard::class, 'validate']);
     }
 }

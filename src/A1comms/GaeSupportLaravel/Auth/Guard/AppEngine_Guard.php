@@ -21,7 +21,7 @@ class AppEngine_Guard extends BaseGuard
 
         if (!empty($cron)) {
             return static::returnUser($provider, 'cron@appengine.google.internal');
-        } else if (!empty($queueName)) {
+        } elseif (!empty($queueName)) {
             return static::returnUser($provider, $queueName . '@appengine.google.internal');
         }
 

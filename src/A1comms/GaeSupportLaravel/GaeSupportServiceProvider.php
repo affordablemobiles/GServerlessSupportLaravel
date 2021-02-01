@@ -31,7 +31,8 @@ class GaeSupportServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/gaesupport.php', 'gaesupport'
+            __DIR__.'/../../config/gaesupport.php',
+            'gaesupport'
         );
     }
 
@@ -54,7 +55,7 @@ class GaeSupportServiceProvider extends ServiceProvider
         }
 
         // Register the DatastoreSessionHandler
-        Session::extend('gae', function($app) {
+        Session::extend('gae', function ($app) {
             return new DatastoreSessionHandler;
         });
 
@@ -73,6 +74,6 @@ class GaeSupportServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return array('gae-support');
+        return ['gae-support'];
     }
 }

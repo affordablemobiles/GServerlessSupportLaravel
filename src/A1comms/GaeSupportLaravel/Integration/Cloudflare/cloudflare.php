@@ -18,12 +18,12 @@ if (is_gae()) {
     $gaeWARM = @$_SERVER['REQUEST_URI'] == '/_ah/warmup' ? true : false;
 
     // If it isn't coming from a supported AppIdentity, or isn't a CRON.
-    if ( ! ( $gaeCRON || $gaeWARM || isset($_SERVER['HTTP_X_APPENGINE_QUEUENAME']) ) ) {
+    if (! ($gaeCRON || $gaeWARM || isset($_SERVER['HTTP_X_APPENGINE_QUEUENAME']))) {
         $is_cf = isset($_SERVER["HTTP_CF_CONNECTING_IP"]);
 
         $accepted_cf = false;
 
-        if (strpos($_SERVER["REMOTE_ADDR"], ":") === FALSE) {
+        if (strpos($_SERVER["REMOTE_ADDR"], ":") === false) {
             // IPv4
             $cf_ip_ranges = require __DIR__.'/cf-ipv4.php';
 
@@ -54,8 +54,8 @@ if (is_gae()) {
                 }
             }
         }
-        if ( BLOCK_NON_CF ) {
-            if ( ! $accepted_cf ) {
+        if (BLOCK_NON_CF) {
+            if (! $accepted_cf) {
                 // TODO: Change logging here to support new runtimes.
                 syslog(LOG_WARNING, 'Cloudflare protection: BLOCK. Not via Cloudflare');
                 header('HTTP/1.1 403 Forbidden');

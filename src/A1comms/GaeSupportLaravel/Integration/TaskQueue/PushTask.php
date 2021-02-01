@@ -16,7 +16,8 @@ class PushTask
     private $task;
     private $pushTask;
 
-    public function __construct($url_path, $query_data = [], $options = []) {
+    public function __construct($url_path, $query_data = [], $options = [])
+    {
         $this->pushTask = new AppEngineHttpRequest();
 
         $this->pushTask->setRelativeUri($url_path);
@@ -37,7 +38,7 @@ class PushTask
             }
 
             $this->pushTask->setAppEngineRouting($routing);
-        } else if (is_gae_development()) {
+        } elseif (is_gae_development()) {
             /**
              * Support our development environment,
              * which runs working copies on live
@@ -55,7 +56,7 @@ class PushTask
                 ->setVersion(gae_version());
 
             $this->pushTask->setAppEngineRouting($routing);
-        } else if (gae_service() != "default") {
+        } elseif (gae_service() != "default") {
             $routing = (new AppEngineRouting())
                 ->setService(gae_service());
 
@@ -80,16 +81,19 @@ class PushTask
         }
     }
 
-    public function getTask() {
+    public function getTask()
+    {
         return $this->task;
     }
 
-    public function add($queue_name = 'default') {
+    public function add($queue_name = 'default')
+    {
         $queue = new PushQueue($queue_name);
         return $queue->addTasks([$this])[0];
     }
 
-    public static function parseTaskName(Task $task) {
+    public static function parseTaskName(Task $task)
+    {
         // In Format: `projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID`
         $taskName = $task->getName();
 

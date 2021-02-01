@@ -73,7 +73,6 @@ class NullUserProvider implements UserProvider
      */
     public function updateRememberToken(Authenticatable $user, $token)
     {
-
     }
 
     /**

@@ -19,7 +19,7 @@ class DWDTokenSource extends OAuth2
     {
         $this->subject = $subject;
 
-        if (!is_array($scopes)){
+        if (!is_array($scopes)) {
             throw new Exception("Invalid scopes: must be an array");
         }
         $this->scopes = $scopes;

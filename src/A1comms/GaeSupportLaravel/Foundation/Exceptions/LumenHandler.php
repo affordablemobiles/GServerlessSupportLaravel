@@ -25,7 +25,6 @@ class LumenHandler extends ExceptionHandler
             try {
                 ErrorBootstrap::exceptionHandler($exception);
             } catch (Exception $ex) {
-
             }
         }
     }

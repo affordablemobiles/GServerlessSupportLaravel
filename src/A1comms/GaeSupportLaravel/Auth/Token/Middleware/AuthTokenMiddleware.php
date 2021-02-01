@@ -33,7 +33,8 @@ class AuthTokenMiddleware
      *
      * @param callable $audienceSource (optional) function to be called to return the target_audience for OIDC.
      */
-    public function __construct(callable $audienceSource = null, callable $tokenTypeSource = null) {
+    public function __construct(callable $audienceSource = null, callable $tokenTypeSource = null)
+    {
         $this->audienceSource = $audienceSource;
         $this->tokenTypeSource = $tokenTypeSource;
     }
@@ -48,7 +49,7 @@ class AuthTokenMiddleware
      *   $audienceSource = function(\Psr\Http\Message\UriInterface $request_uri) {
      *       return "my-client-id@gcloud.internal";
      *   }
-     * 
+     *
      *   $authMiddleware = new AuthTokenMiddleware($audienceSource);
      *   $stack = HandlerStack::create();
      *   $stack->push($authMiddleware);
@@ -85,6 +86,7 @@ class AuthTokenMiddleware
                         $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchDynamicToken(
                             $request->getUri()
                         ));
+                        // no break
                     default:
                         break;
                 }

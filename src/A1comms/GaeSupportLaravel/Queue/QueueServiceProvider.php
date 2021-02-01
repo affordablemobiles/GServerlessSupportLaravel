@@ -32,5 +32,4 @@ class QueueServiceProvider extends LaravelQueueServiceProvider
             return new GaeConnector($app['encrypter'], $app['request']);
         });
     }
-
 }

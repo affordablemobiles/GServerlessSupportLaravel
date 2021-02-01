@@ -7,16 +7,19 @@ class PushQueue
     private $name;
     private $full_name;
 
-    public function __construct($name = 'default') {
+    public function __construct($name = 'default')
+    {
         $this->name = $name;
         $this->full_name = Client::instance()->getQueueName($name);
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->name;
     }
 
-    public function addTasks($tasks) {
+    public function addTasks($tasks)
+    {
         if (!is_array($tasks)) {
             throw new \InvalidArgumentException('$tasks must be an array. Actual type: ' . gettype($tasks));
         }

@@ -2,7 +2,7 @@ steps:
 - name: "gcr.io/cloud-builders/gcloud"
   entrypoint: "bash"
   args: ["./cloudbuild/generate_env_LIVE.sh"]
-- name: "gcr.io/gae-runtimes/php72_app_builder:argo_current"
+- name: "gcr.io/gae-runtimes/php74_app_builder:argo_current"
   entrypoint: "composer"
   args: ["install", "--no-dev", "--no-progress", "-o"]
 - name: "gcr.io/cloud-builders/npm"

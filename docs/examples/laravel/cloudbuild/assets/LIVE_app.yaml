@@ -1,4 +1,4 @@
-runtime: php72
+runtime: php74
 
 handlers:
 - url: /propman/favicon\.ico

@@ -40,7 +40,8 @@ Pull in the package via Composer:
 ```json
     "scripts": {
         "post-autoload-dump": [
-            "php artisan gae:prepare"
+            "php artisan gae:prepare",
+            "php artisan view:cache"
         ]
     },
 ```
@@ -58,7 +59,6 @@ Pull in the package via Composer:
 ```php
     'providers' => [
         A1comms\GaeSupportLaravel\Auth\AuthServiceProvider::class,
-        A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
         A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
         A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
     ];
@@ -68,7 +68,6 @@ And remove the relevant Laravel service providers that these replace:
 
 ```php
     'providers' => [
-        //Illuminate\View\ViewServiceProvider::class,
         //Illuminate\Queue\QueueServiceProvider::class,
     ];
 ```

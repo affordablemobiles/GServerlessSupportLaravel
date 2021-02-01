@@ -88,7 +88,7 @@ And remove the relevant Laravel service providers that these replace:
 */
 
 $app = new A1comms\GaeSupportLaravel\Foundation\Application(
-    realpath(__DIR__.'/../')
+    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 ```
 
@@ -118,7 +118,7 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 **7.** In `.env`, set the following:
 
 ```
-QUEUE_DRIVER=gae
+QUEUE_CONNECTION=gae
 CACHE_DRIVER=array
 SESSION_DRIVER=gae
 LOG_CHANNEL=gae

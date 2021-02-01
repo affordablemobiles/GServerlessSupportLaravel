@@ -23,7 +23,7 @@ class ProviderRepository extends LaravelProviderRepository
     {
         $providers = Collection::make($this->app->config['app.providers'])
                         ->partition(function ($provider) {
-                            return Str::startsWith($provider, 'Illuminate\\');
+                            return strpos($provider, 'Illuminate\\') === 0;
                         });
 
         $providers->splice(1, 0, [$this->app->make(PackageManifest::class)->providers()]);

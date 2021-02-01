@@ -2,7 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Foundation\Exceptions;
 
-use Exception;
+use Throwable;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 
@@ -13,10 +13,10 @@ class LumenHandler extends ExceptionHandler
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      *
-     * @param  \Exception  $exception
+     * @param  \Throwable  $exception
      * @return void
      */
-    public function report(Exception $exception)
+    public function report(Throwable $exception)
     {
         parent::report($exception);
 

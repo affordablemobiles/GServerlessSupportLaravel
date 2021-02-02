@@ -107,6 +107,8 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 
 **6.** In `config/logging.php`, configure a custom logger and set it as the default:
 
+*It's also useful to set the emergency log path to a location App Engine will forward to Stackdriver Logging, see below.*
+
 ```php
 <?php
 
@@ -120,6 +122,10 @@ return [
         'gae' => [
             'driver' => 'custom',
             'via' => CreateLoggingDriver::class,
+        ],
+
+        'emergency' => [
+            'path' => '/var/log/emergency.log',
         ],
     ],
 
@@ -152,7 +158,7 @@ LOG_CHANNEL=gae
 */
 
 $app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
-    realpath(__DIR__.'/../')
+    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 ```
 
@@ -185,7 +191,25 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```
 
-**2.** In `config/logging.php`, configure a custom logger and set it as the default:
+**2.** Then update `bootstrap/app.php` from this:
+
+```php
+$app = new A1comms\GaeSupportLaravel\Foundation\Application(
+    realpath(__DIR__.'/../')
+);
+```
+
+To this:
+
+```php
+$app = new A1comms\GaeSupportLaravel\Foundation\Application(
+    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
+);
+```
+
+**3.** In `config/logging.php`, configure a custom logger and set it as the default:
+
+*It's also useful to set the emergency log path to a location App Engine will forward to Stackdriver Logging, see below.*
 
 ```php
 <?php
@@ -200,8 +224,31 @@ return [
         'gae' => [
             'driver' => 'custom',
             'via' => CreateLoggingDriver::class,
+        ], 
+
+        'emergency' => [
+            'path' => '/var/log/emergency.log',
         ],
     ],
 
 ];
+```
+
+**4.** In `config/app.php`, remove the `ViewServiceProvider`:
+
+```php
+    'providers' => [
+        //-- A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
+    ];
+```
+
+**5.** Update `composer.json` to add `php artisan view:cache` to the `post-autoload-dump` scripts:
+
+```json
+    "scripts": {
+        "post-autoload-dump": [
+            "php artisan gae:prepare",
+            "php artisan view:cache"
+        ]
+    },
 ```

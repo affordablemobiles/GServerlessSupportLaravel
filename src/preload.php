@@ -2,6 +2,7 @@
 
 use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
+use Google\Cloud\Debugger\Agent as DebuggerAgent;
 use Google\Cloud\Storage\StorageClient;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 
@@ -21,6 +22,11 @@ if (is_file($laravelHelpers)) {
 if (is_gae() && (php_sapi_name() != 'cli')) {
     // Set up exception logging properly...
     ErrorBootstrap::init();
+
+    // Enable Stackdriver Debugger...
+    if (env('STACKDRIVER_DEBUGGER', 'false') == 'true') {
+        $agent = new DebuggerAgent(['sourceRoot' => realpath(__DIR__.'/../../../../')]);
+    }
 
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {

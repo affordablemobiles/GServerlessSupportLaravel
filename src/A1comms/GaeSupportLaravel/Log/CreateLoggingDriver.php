@@ -38,7 +38,7 @@ class CreateLoggingDriver
                 // making it invalid JSON, so it won't be parsed.
                 // This means, it won't be properly tied to the request (no trace_id parsed),
                 // plus, your "textPayload" will be a hardly readable, single compressed line of truncated JSON.
-                $handler = new StreamHandler('/var/log/app.log', Logger::INFO);
+                $handler = new StreamHandler('/var/log/'.$logName.'.log', Logger::INFO);
                 $handler->setFormatter(new JsonFormatter());
                 $logger = new Logger($logName, [$handler]);
             }

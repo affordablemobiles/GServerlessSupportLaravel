@@ -180,7 +180,15 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 
 ### Laravel Specific (Not Lumen)
 
-**1.** Remove the following from `bootstrap/app.php`:
+**1.** Update the package version in `composer.json`:
+
+```json
+"require": {
+    "a1comms/gae-support-laravel": "~6.0"
+}
+```
+
+**2.** Remove the following from `bootstrap/app.php`:
 
 ```php
 /*
@@ -191,7 +199,7 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 A1comms\GaeSupportLaravel\Log\Logger::setup($app);
 ```
 
-**2.** Then update `bootstrap/app.php` from this:
+**3.** Then update `bootstrap/app.php` from this:
 
 ```php
 $app = new A1comms\GaeSupportLaravel\Foundation\Application(
@@ -207,7 +215,7 @@ $app = new A1comms\GaeSupportLaravel\Foundation\Application(
 );
 ```
 
-**3.** In `config/logging.php`, configure a custom logger and set it as the default:
+**4.** In `config/logging.php`, configure a custom logger and set it as the default:
 
 *It's also useful to set the emergency log path to a location App Engine will forward to Stackdriver Logging, see below.*
 
@@ -234,7 +242,7 @@ return [
 ];
 ```
 
-**4.** In `config/app.php`, remove the `ViewServiceProvider`:
+**5.** In `config/app.php`, remove the `ViewServiceProvider`:
 
 ```php
     'providers' => [
@@ -242,7 +250,7 @@ return [
     ];
 ```
 
-**5.** Update `composer.json` to add `php artisan view:cache` to the `post-autoload-dump` scripts:
+**6.** Update `composer.json` to add `php artisan view:cache` to the `post-autoload-dump` scripts:
 
 ```json
     "scripts": {
@@ -252,3 +260,5 @@ return [
         ]
     },
 ```
+
+**7.** Follow the Laravel upgrade steps for all versions 5.5 ... 6.0

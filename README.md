@@ -176,7 +176,7 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
 
-## Upgrading (from Laravel 5.5 LTS)
+## Upgrading (from Laravel/Lumen 5.5 LTS)
 
 ### Laravel Specific (Not Lumen)
 
@@ -262,3 +262,31 @@ return [
 ```
 
 **7.** Follow the Laravel upgrade steps for all versions 5.5 ... 6.0
+
+### Lumen Specific (Not Laravel)
+
+**1.** Update the package version in `composer.json`:
+
+```json
+"require": {
+    "a1comms/gae-support-laravel": "~6.0"
+}
+```
+
+**2.** Update `bootstrap/app.php` to change this:
+
+```php
+$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
+    realpath(__DIR__.'/../')
+);
+```
+
+To this:
+
+```php
+$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
+    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
+);
+```
+
+**3.** Follow the Lumen upgrade steps for all versions 5.5 ... 6.0

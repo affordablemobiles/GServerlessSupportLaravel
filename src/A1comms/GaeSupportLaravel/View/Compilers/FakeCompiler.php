@@ -79,7 +79,6 @@ class FakeCompiler implements CompilerInterface
      */
     public function directive($name, callable $handler)
     {
-
     }
 
     /**

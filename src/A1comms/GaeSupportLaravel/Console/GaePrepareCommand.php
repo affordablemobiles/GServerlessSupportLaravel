@@ -63,8 +63,7 @@ class GaePrepareCommand extends Command
 
     public function runViewCompiler()
     {
-        if (in_array(ViewServiceProvider::class, config('app.providers')))
-        {
+        if (in_array(ViewServiceProvider::class, config('app.providers'))) {
             $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...");
             $this->call('gae:viewcompile');
             $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...done");

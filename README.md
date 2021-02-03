@@ -243,26 +243,7 @@ return [
 ];
 ```
 
-**5.** In `config/app.php`, remove the `ViewServiceProvider`:
-
-```php
-    'providers' => [
-        //-- A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
-    ];
-```
-
-**6.** Update `composer.json` to add `php artisan view:cache` to the `post-autoload-dump` scripts:
-
-```json
-    "scripts": {
-        "post-autoload-dump": [
-            "php artisan gae:prepare",
-            "php artisan view:cache"
-        ]
-    },
-```
-
-**7.** Follow the Laravel upgrade steps for all versions 5.5 ... 6.0
+**5.** Follow the Laravel upgrade steps for all versions 5.5 ... 6.0
 
 ### Lumen Specific (Not Laravel)
 

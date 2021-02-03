@@ -25,10 +25,7 @@ if (is_gae() && (php_sapi_name() != 'cli')) {
 
     // Enable Stackdriver Debugger...
     if (env('STACKDRIVER_DEBUGGER', 'false') == 'true') {
-        $agent = new DebuggerAgent([
-            'logger' => (new \A1comms\GaeSupportLaravel\Log\CreateLoggingDriver)(['logName' => 'logpoint']),
-            'sourceRoot' => realpath(__DIR__.'/../../../../')
-        ]);
+        $agent = new DebuggerAgent(['sourceRoot' => realpath(__DIR__.'/../../../../')]);
     }
 
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).

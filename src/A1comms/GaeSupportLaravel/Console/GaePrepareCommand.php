@@ -54,9 +54,21 @@ class GaePrepareCommand extends Command
 
         $this->call('config:clear');
 
+        $this->runViewCompiler();
+
         $this->runRefreshManifest();
 
         $this->info($this->logPrefix . "Ready to Deploy!");
+    }
+
+    public function runViewCompiler()
+    {
+        if (in_array(ViewServiceProvider::class, config('app.providers')))
+        {
+            $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...");
+            $this->call('gae:viewcompile');
+            $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...done");
+        }
     }
 
     public function runRefreshManifest()

@@ -37,6 +37,10 @@ return [
             'driver' => 'custom',
             'via' => CreateLoggingDriver::class,
         ],
+
+        'emergency' => [
+            'path' => '/var/log/emergency.log',
+        ],
     ],
 
 ];

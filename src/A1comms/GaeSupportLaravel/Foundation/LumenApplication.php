@@ -24,7 +24,8 @@ class LumenApplication extends BaseLumenApplication
 
         $this->mergeConfigFrom(
             __DIR__.'/../../../config/logging.php',
-            'logging'
+            'logging',
+            true
         );
 
         $this->withFacades();
@@ -55,11 +56,21 @@ class LumenApplication extends BaseLumenApplication
      * @param  string  $key
      * @return void
      */
-    protected function mergeConfigFrom($path, $key)
+    protected function mergeConfigFrom($path, $key, $flip = false)
     {
         $this->configure($key);
-        $config = $this->app['config']->get($key, []);
-        $this->app['config']->set($key, array_merge(require $path, $config));
+        
+        if ($flip) {
+            $this['config']->set($key, array_merge(
+                $this['config']->get($key, []),
+                require $path
+            ));
+        } else {
+            $this['config']->set($key, array_merge(
+                require $path,
+                $this['config']->get($key, [])
+            ));
+        }
     }
     
     /**

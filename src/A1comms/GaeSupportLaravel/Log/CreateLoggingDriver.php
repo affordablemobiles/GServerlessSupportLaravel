@@ -21,7 +21,7 @@ class CreateLoggingDriver
         $logName = isset($config['logName']) ? $config['logName'] : 'app';
 
         if (is_cloud_run()) {
-            $handler = new StreamHandler('php://stderr', Logger::INFO);
+            $handler = new StreamHandler('/tmp/logpipe', Logger::INFO);
             $handler->setFormatter(new JsonFormatter());
             $logger = new Logger($logName, [$handler]);
         } elseif (is_gae_flex()) {

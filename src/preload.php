@@ -38,6 +38,9 @@ if (is_gae() && (php_sapi_name() != 'cli')) {
 
     if (!defined('GAE_TRACE_STOP')) {
         $options = [
+            'sampler' => (
+                new A1comms\GaeSupportLaravel\Trace\Sampler\HttpHeaderSampler()
+            ),
             'propagator' => (
                 new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
                     (new A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter())

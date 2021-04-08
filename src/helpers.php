@@ -1,9 +1,17 @@
 <?php
 
+if (!function_exists('is_cloud_run')) {
+    function is_cloud_run()
+    {
+        return isset($_SERVER['K_SERVICE']);
+    }
+}
+
 if (!function_exists('is_gae')) {
     function is_gae()
     {
-        return isset($_SERVER['GAE_INSTANCE']);
+        // Cloud Run emulates App Engine
+        return (is_cloud_run() || isset($_SERVER['GAE_INSTANCE']));
     }
 }
 

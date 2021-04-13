@@ -64,7 +64,11 @@ if (!function_exists('is_gae_flex')) {
 if (!function_exists('gae_instance')) {
     function gae_instance()
     {
-        if (is_gae()) {
+        if (is_cloud_run()) {
+            // there is no instance idenfitier on Cloud Run
+            // return the revision so we aren't returning nothing.
+            return $_SERVER['K_REVISION'];
+        } elseif (is_gae()) {
             return $_SERVER['GAE_INSTANCE'];
         } else {
             return false;
@@ -76,7 +80,11 @@ if (!function_exists('gae_project')) {
     function gae_project()
     {
         if (is_gae()) {
-            return $_SERVER['GOOGLE_CLOUD_PROJECT'];
+            if (isset($_SERVER['GOOGLE_CLOUD_PROJECT'])) {
+                return $_SERVER['GOOGLE_CLOUD_PROJECT'];
+            }
+
+            return (new \Google\Cloud\Core\Compute\Metadata())->getProjectId();
         } else {
             return false;
         }
@@ -86,7 +94,9 @@ if (!function_exists('gae_project')) {
 if (!function_exists('gae_service')) {
     function gae_service()
     {
-        if (is_gae()) {
+        if (is_cloud_run()) {
+            return $_SERVER['K_SERVICE'];
+        } elseif (is_gae()) {
             return $_SERVER['GAE_SERVICE'];
         } else {
             return false;
@@ -97,7 +107,9 @@ if (!function_exists('gae_service')) {
 if (!function_exists('gae_version')) {
     function gae_version()
     {
-        if (is_gae()) {
+        if (is_cloud_run()) {
+            return $_SERVER['K_REVISION'];
+        } elseif (is_gae()) {
             return $_SERVER['GAE_VERSION'];
         } else {
             return false;
@@ -150,13 +162,20 @@ if (!function_exists('gae_basic_log')) {
     function gae_basic_log($logName = 'app', $severity, $message)
     {
         $record = [
-            "severity" => $severity,
-            'message' => $message,
+            'severity' => $severity,
+            'jsonPayload' => [
+                'message' => $message,
+                'logName' => $logName,
+            ],
             'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
             'time' => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 
-        @file_put_contents('/var/log/' .$logName . '.log', json_encode($record) . "\n", FILE_APPEND);
+        if (is_cloud_run()) {
+            @file_put_contents('/tmp/logpipe', json_encode($record) . "\n", FILE_APPEND);
+        } else {
+            @file_put_contents('/var/log/' .$logName . '.log', json_encode($record) . "\n", FILE_APPEND);
+        }
     }
 }
 

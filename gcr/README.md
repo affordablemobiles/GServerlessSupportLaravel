@@ -1,6 +1,8 @@
 # Cloud Run
 
-In this documentation, we discuss running Laravel (with GaeSupportLaravel) on [fully managed Cloud Run](https://cloud.google.com/run/docs/reference/container-contract), using [Google's buildpacks from the App Engine PHP runtimes](https://console.cloud.google.com/gcr/images/gae-runtimes/EU/buildpacks/php74/builder).
+In this documentation, we discuss running Laravel (with GaeSupportLaravel) on [fully managed Cloud Run](https://cloud.google.com/run/docs/reference/container-contract).
+
+We are using [Google's buildpacks from the App Engine PHP runtimes](https://console.cloud.google.com/gcr/images/gae-runtimes/EU/buildpacks/php74/builder).
 
 ## Supported Features
 

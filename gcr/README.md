@@ -67,3 +67,11 @@ Until a better solution is presented, we emulate how this would work in a Go app
 ```
 
 As shown, ensure it sits below the default `RouteServiceProvider`.
+
+### Cloud Tasks
+
+When creating Cloud Tasks on App Engine, we use `Google\Cloud\Tasks\V2\AppEngineHttpRequest` routing objects that are routed within the App Engine platform itself, but this doesn't work for Cloud Run.
+
+Here, you'll need to use `Google\Cloud\Tasks\V2\HttpRequest` objects that route via normal HTTP requests, likely with some form of configured authentication (OAuth2 or OIDC for IAP).
+
+With this in mind, it'll be easier to ignore our wrapper/integration and work with the [underlying client library](https://github.com/googleapis/google-cloud-php/tree/master/Tasks/src/V2) directly.

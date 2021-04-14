@@ -23,6 +23,21 @@ This library is designed for homogeneous operation between the Standard Environm
 * Queue Driver for Cloud Tasks (optional, see [docs/queue.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/queue.md))
 * Examples for deployment from Git via Cloud Build, plus encrypted secrets with KMS (optional, see [docs/cloudbuild.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/cloudbuild.md))
 
+## NOTE for outdated `google-cloud-php`
+
+This library depends on an OpenCensus tracing library that forces an outdated `google-cloud-php` version.
+
+To get the latest version, add the following lines to your `composer.json` file:
+
+```json
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/a1comms/opencensus-php-exporter-stackdriver.git"
+        }
+    ],
+```
+
 ## Installation
 
 Pull in the package via Composer:

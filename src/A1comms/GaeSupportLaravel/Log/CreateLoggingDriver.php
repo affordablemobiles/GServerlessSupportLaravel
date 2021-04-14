@@ -20,7 +20,11 @@ class CreateLoggingDriver
     {
         $logName = isset($config['logName']) ? $config['logName'] : 'app';
 
-        if (is_gae_flex()) {
+        if (is_cloud_run()) {
+            $handler = new StreamHandler('/tmp/logpipe', Logger::INFO);
+            $handler->setFormatter(new JsonFormatter());
+            $logger = new Logger($logName, [$handler]);
+        } elseif (is_gae_flex()) {
             $psrLogger = LoggingClient::psrBatchLogger($logName);
             $handler = new PsrHandler($psrLogger);
             $logger = new Logger($logName, [$handler]);

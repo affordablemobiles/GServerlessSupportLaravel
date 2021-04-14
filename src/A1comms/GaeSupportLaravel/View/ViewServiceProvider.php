@@ -25,6 +25,9 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             $this->registerGaeBladeCompiler();
 
             $this->registerGaeEngineResolver();
+        } elseif (is_gae()) {
+            app()->config['view.compiled'] = realpath(gae_storage_path('framework/views'));
+            parent::register();
         } else {
             parent::register();
         }

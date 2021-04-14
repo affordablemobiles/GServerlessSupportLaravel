@@ -9,9 +9,9 @@ Cloud Build allows the deployments to be re-producible from clearly defined conf
 ### 1. Cloud Build Configuration (inside the repository)
 First, you'll need to add Cloud Build configuration to your repository.
 
-As a starting point, you'll find an example `cloudbuild` folder, along with a useful `.gcloudignore` file in `docs/examples/laravel` for Laravel, or `docs/examples/lumen` for Lumen.
+As a starting point, you'll find an example `cloudbuild` folder, along with a useful `.gcloudignore` file in `docs/examples/laravel` for Laravel, or `docs/examples/lumen` for Lumen. If you want to deploy within Cloud Run, instead of GAE, you'll find a "buildpack-cloud-run" folder for each in the same location.
 
-In the example, there is a single set of configuration and scripts to support a deployment called `LIVE`, but you can add extra sets of config/scripts to support multiple, such as `staging` and `test` as required.
+In both these examples, there is a single set of configuration and scripts to support a deployment called `LIVE`, but you can add extra sets of config/scripts to support multiple, such as `staging` and `test` as required.
 
 The files you'll want to edit are:
 

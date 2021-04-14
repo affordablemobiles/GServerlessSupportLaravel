@@ -159,15 +159,14 @@ if (!function_exists('is_lumen')) {
 }
 
 if (!function_exists('gae_basic_log')) {
-    function gae_basic_log($logName = 'app', $severity, $message)
+    function gae_basic_log($logName = 'app', $severity, $message, $context = [])
     {
         $record = [
-            'severity' => $severity,
-            'jsonPayload' => [
-                'message' => $message,
-                'logName' => $logName,
-            ],
-            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'severity'                      => $severity,
+            'message'                       => $message,
+            'context'                       => $context,
+            'customLogName'                 => $logName,
+            'logging.googleapis.com/trace'  => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
             'time' => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 

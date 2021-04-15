@@ -24,7 +24,8 @@
         "illuminate/view": "^6 || ^7",
         "illuminate/container": "^6 || ^7",
         "illuminate/encryption": "^6 || ^7",
-        "illuminate/filesystem": "^6 || ^7"
+        "illuminate/filesystem": "^6 || ^7",
+        "ralouphie/mimey": "^2.1"
     },
     "require-dev": {
         "phpmd/phpmd" : "@stable",

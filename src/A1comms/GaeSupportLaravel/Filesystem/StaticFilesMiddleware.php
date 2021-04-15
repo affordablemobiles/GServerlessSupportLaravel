@@ -3,6 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Filesystem;
 
 use Closure;
+use Mimey\MimeTypes;
 use Illuminate\Http\Request;
 
 class StaticFilesMiddleware
@@ -20,12 +21,10 @@ class StaticFilesMiddleware
             $path = public_path() . '/' . request()->path();
             
             if (is_file($path)) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mtype = finfo_file($finfo, $path);
-                finfo_close($finfo);
-                
                 return response()->file($path, [
-                    'Content-Type' => $mtype,
+                    'Content-Type' => (new MimeTypes)->getMimeType(
+                        pathinfo($path, PATHINFO_EXTENSION)
+                    ),
                 ]);
             }
         }

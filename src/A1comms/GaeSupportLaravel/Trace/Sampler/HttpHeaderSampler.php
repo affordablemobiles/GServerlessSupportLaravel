@@ -7,7 +7,7 @@ use A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter;
 
 class HttpHeaderSampler implements SamplerInterface
 {
-    const HEADER_NAME = '';
+    const HEADER_NAME = 'HTTP_X_CLOUD_TRACE_CONTEXT';
 
     public function shouldSample()
     {

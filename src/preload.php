@@ -26,7 +26,8 @@ if (is_gae() && (php_sapi_name() != 'cli')) {
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
     } elseif (is_cloud_run()) {
-        $_SERVER['REMOTE_ADDR'] = trim(array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])));
+        $forwards = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {
         // Turn HTTPS on for Laravel

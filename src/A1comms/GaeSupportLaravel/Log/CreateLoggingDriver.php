@@ -28,7 +28,7 @@ class CreateLoggingDriver
             $psrLogger = LoggingClient::psrBatchLogger($logName);
             $handler = new PsrHandler($psrLogger);
             $logger = new Logger($logName, [$handler]);
-        } else {
+        } elseif (is_gae()) {
             if (env('GAE_SYNC_LOGS', 'false') === 'true') {
                 $psrLogger = (new LoggingClient())->psrLogger($logName);
                 $handler = new PsrHandler($psrLogger);
@@ -46,6 +46,10 @@ class CreateLoggingDriver
                 $handler->setFormatter(new JsonFormatter());
                 $logger = new Logger($logName, [$handler]);
             }
+        } else {
+            $handler = new StreamHandler('php://stderr', Logger::INFO);
+            $handler->setFormatter(new JsonFormatter());
+            $logger = new Logger($logName, [$handler]);
         }
 
         return $logger;

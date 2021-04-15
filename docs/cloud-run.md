@@ -68,6 +68,20 @@ Until a better solution is presented, we emulate how this would work in a Go app
 
 As shown, ensure it sits below the default `RouteServiceProvider`.
 
+**Or alternatively, if you already have a catch-all route, do it via middleware**, although this results in slightly lower performance:
+
+In `app/Http/Kernel.php`:
+
+```php
+class Kernel extends HttpKernel
+{
+    protected $middleware = [
+        ...
+
+        \A1comms\GaeSupportLaravel\Filesystem\StaticFilesMiddleware::class,
+    ];
+```
+
 ### Cloud Tasks
 
 When creating Cloud Tasks on App Engine, we use `Google\Cloud\Tasks\V2\AppEngineHttpRequest` routing objects that are routed within the App Engine platform itself, but this doesn't work for Cloud Run.

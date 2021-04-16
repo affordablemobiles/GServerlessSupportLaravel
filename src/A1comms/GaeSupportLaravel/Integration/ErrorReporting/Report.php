@@ -139,7 +139,7 @@ class Report
                         "responseStatusCode"    => $status_code,
                         "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
-                    'user' => empty($_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']) ? null : str_replace('accounts.google.com:', '', $_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']),
+                    'user' => self::getUserNameForReport(),
                 ]),
                 'serviceContext' => [
                     'service' => $service,
@@ -190,7 +190,7 @@ class Report
                     "responseStatusCode"    => null,
                     "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                 ],
-                'user' => empty($_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']) ? null : str_replace('accounts.google.com:', '', $_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']),
+                'user' => self::getUserNameForReport(),
             ],
             'serviceContext' => [
                 'service' => $service,
@@ -274,5 +274,14 @@ class Report
             $functionName[] = $trace[0]['class'];
         }
         return implode('', array_reverse($functionName));
+    }
+
+    private static function getUserNameForReport()
+    {
+        if (defined('ERROR_REPORTING_USER')) {
+            return ERROR_REPORTING_USER;
+        }
+
+        return empty($_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']) ? null : str_replace('accounts.google.com:', '', $_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']);
     }
 }

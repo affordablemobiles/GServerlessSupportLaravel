@@ -2,6 +2,7 @@
 
 namespace A1comms\GaeSupportLaravel\Integration\ErrorReporting;
 
+use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
 
@@ -26,8 +27,15 @@ class Report
     {
         $options = ['batchEnabled' => false];
 
-        self::$psrLogger = $psrLogger ?: (new LoggingClient())
-            ->psrLogger(self::DEFAULT_LOGNAME, $options);
+        if (is_cloud_run()) {
+            self::$psrLogger = (new CreateLoggingDriver)([
+                'logName'   => self::DEFAULT_LOGNAME,
+                'formatter' => 'exception',
+            ]);
+        } else {
+            self::$psrLogger = $psrLogger ?: (new LoggingClient())
+                ->psrLogger(self::DEFAULT_LOGNAME, $options);
+        }
 
         register_shutdown_function([self::class, 'shutdownHandler']);
         set_exception_handler([self::class, 'exceptionHandler']);
@@ -113,11 +121,10 @@ class Report
     {
         $message = sprintf('PHP Notice: %s', (string)$ex);
         if (self::$psrLogger) {
-            $service = self::$psrLogger->getMetadataProvider()->serviceId();
-            $version = self::$psrLogger->getMetadataProvider()->versionId();
+            $service = gae_service();
+            $version = gae_version();
             self::$psrLogger->error($message, [
-                'context' => $context,
-                'runtime_context' => [
+                'context' => array_merge($context, [
                     'reportLocation' => [
                         'filePath' => $ex->getFile(),
                         'lineNumber' => $ex->getLine(),
@@ -132,7 +139,8 @@ class Report
                         "responseStatusCode"    => $status_code,
                         "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
-                ],
+                    'user' => empty($_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']) ? null : str_replace('accounts.google.com:', '', $_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']),
+                ]),
                 'serviceContext' => [
                     'service' => $service,
                     'version' => $version,
@@ -164,10 +172,10 @@ class Report
         if (!self::$psrLogger) {
             return false;
         }
-        $service = self::$psrLogger->getMetadataProvider()->serviceId();
-        $version = self::$psrLogger->getMetadataProvider()->versionId();
+        $service = gae_service();
+        $version = gae_version();
         $context = [
-            'runtime_context' => [
+            'context' => [
                 'reportLocation' => [
                     'filePath' => $file,
                     'lineNumber' => $line,
@@ -182,6 +190,7 @@ class Report
                     "responseStatusCode"    => null,
                     "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                 ],
+                'user' => empty($_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']) ? null : str_replace('accounts.google.com:', '', $_SERVER['HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL']),
             ],
             'serviceContext' => [
                 'service' => $service,
@@ -207,12 +216,8 @@ class Report
                 case E_PARSE:
                 case E_COMPILE_ERROR:
                 case E_CORE_ERROR:
-                    $service = self::$psrLogger
-                        ->getMetadataProvider()
-                        ->serviceId();
-                    $version = self::$psrLogger
-                        ->getMetadataProvider()
-                        ->versionId();
+                    $service = gae_service();
+                    $version = gae_version();
                     $message = sprintf(
                         '%s: %s in %s on line %d',
                         self::getErrorPrefix($err['type']),

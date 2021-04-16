@@ -19,10 +19,22 @@ class CreateLoggingDriver
     public function __invoke(array $config)
     {
         $logName = isset($config['logName']) ? $config['logName'] : 'app';
+        
+        $formatter = new JsonFormatter();
+        if (isset($config['formatter'])) {
+            switch ($config['formatter']) {
+                case "exception":
+                    $formatter = new ExceptionJsonFormatter();
+                    break;
+                default:
+                    $formatter = new JsonFormatter();
+                    break;
+            }
+        }
 
         if (is_cloud_run()) {
             $handler = new StreamHandler('/tmp/logpipe', Logger::INFO);
-            $handler->setFormatter(new JsonFormatter());
+            $handler->setFormatter($formatter);
             $logger = new Logger($logName, [$handler]);
         } elseif (is_gae_flex()) {
             $psrLogger = LoggingClient::psrBatchLogger($logName);
@@ -43,12 +55,12 @@ class CreateLoggingDriver
                 // This means, it won't be properly tied to the request (no trace_id parsed),
                 // plus, your "textPayload" will be a hardly readable, single compressed line of truncated JSON.
                 $handler = new StreamHandler('/var/log/app.log', Logger::INFO);
-                $handler->setFormatter(new JsonFormatter());
+                $handler->setFormatter($formatter);
                 $logger = new Logger($logName, [$handler]);
             }
         } else {
             $handler = new StreamHandler('php://stderr', Logger::INFO);
-            $handler->setFormatter(new JsonFormatter());
+            $handler->setFormatter($formatter);
             $logger = new Logger($logName, [$handler]);
         }
 

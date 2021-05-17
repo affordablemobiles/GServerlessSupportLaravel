@@ -37,7 +37,7 @@ class JWT
      */
     public static function validate($jwt, $expected_audience, $jwk_url, $sig_alg, $issuers)
     {
-        $jwkset = self::get_jwk_set($jwk_url);
+        $jwkset = static::get_jwk_set($jwk_url);
 
         try {
             $jwt = JWTValidator::decode($jwt, $jwkset, $sig_alg);

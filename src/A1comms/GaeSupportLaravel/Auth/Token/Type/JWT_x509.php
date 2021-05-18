@@ -13,6 +13,12 @@ class JWT_x509 extends JWT
 
     /**
      * Fetches a KeySet instance for the public JWKs.
+     * 
+     * Note: due to the way tokens are presented at the URL,
+     *       this package requires "web-token/jwt-framework"
+     *       to convert the x509 certificates to JWKs:
+     * 
+     *       composer require web-token/jwt-framework
      *
      * @param string $jwk_url URL of the JWK public key file.
      *

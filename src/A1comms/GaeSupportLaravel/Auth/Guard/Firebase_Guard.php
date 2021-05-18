@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase;
+use A1comms\GaeSupportLaravel\Auth\Model\FirebaseUser;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
+use A1comms\GaeSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 
-class Firebase_Guard extends BaseGuard
+class Firebase_Guard implements StatelessValidator
 {
     /**
      * Authenticate a user based on request information,
@@ -25,7 +27,7 @@ class Firebase_Guard extends BaseGuard
             throw new Exception("Firebase Authentication Guard: Audience (env FIREBASE_PROJECT) not defined");
         }
 
-        $jwt = $request->cookie('__identity_session');
+        $jwt = $request->cookie(config('gaesupport.auth.firebase.cookie_name'));
         if (empty($jwt)) {
             return null;
         }
@@ -38,6 +40,19 @@ class Firebase_Guard extends BaseGuard
             return null;
         }
 
-        return static::returnUser($provider, $return['email']);
+        return static::returnUser($provider, $return);
+    }
+
+    protected static function returnUser(UserProvider $provider = null, array $data)
+    {
+        if (empty($provider)) {
+            $user = new FirebaseUser();
+
+            $user->fill($data);
+
+            return $user;
+        } else {
+            return $provider->retrieveById($id);
+        }
     }
 }

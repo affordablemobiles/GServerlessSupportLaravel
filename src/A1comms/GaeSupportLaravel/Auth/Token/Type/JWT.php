@@ -80,7 +80,7 @@ class JWT
         }
 
         // Return the user identity (subject and user email) if JWT verification is successful.
-        return ['sub' => $sub, 'email' => $email];
+        return $jwt->getClaims();
     }
 
     /**

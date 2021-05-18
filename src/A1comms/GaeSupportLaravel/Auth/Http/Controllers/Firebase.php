@@ -22,7 +22,7 @@ class Firebase extends BaseController
         );
     
         return response('OK')->cookie(
-            '__identity_session', $cookie, 2628000, null, null, true, true, false, 'strict'
+            config('gaesupport.auth.firebase.cookie_name'), $cookie, 2628000, null, null, true, true, false, 'strict'
         );
     }
 }

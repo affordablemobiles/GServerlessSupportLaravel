@@ -20,4 +20,13 @@ return [
     ],
 
     'dev-prefix' => 'dev-',
+
+    /**
+     * Authentication Settings
+     */
+    'auth' => [
+        'firebase' => [
+            'cookie_name' => '__identity_session',
+        ],
+    ],
 ];

@@ -74,9 +74,11 @@
                     Laravel
                 </div>
 
-                <div class="links" style="margin-bottom: 20px;">
-                    <img src="{{ Auth::user()->picture }}" style="border-radius: 50%; height: 70px; width: 70px; vertical-align: middle; border: 5px solid;" />
-                </div>
+                @if(!empty(Auth::user()->picture))
+                    <div class="links" style="margin-bottom: 20px;">
+                        <img src="{{ Auth::user()->picture }}" style="border-radius: 50%; height: 70px; width: 70px; vertical-align: middle; border: 5px solid;" />
+                    </div>
+                @endif
 
                 <div class="links">
                     <a href="#">{{ Auth::user()->name }}</a><br />

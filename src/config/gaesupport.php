@@ -27,6 +27,7 @@ return [
     'auth' => [
         'firebase' => [
             'cookie_name' => '__identity_session',
+            'logout_redirect' => '/',
         ],
     ],
 ];

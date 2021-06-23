@@ -151,6 +151,19 @@ if (!function_exists('app_path')) {
     }
 }
 
+if (! function_exists('public_path')) {
+    /**
+     * Get the path to the public folder.
+     *
+     * @param  string  $path
+     * @return string
+     */
+     function public_path($path = null)
+     {
+        return rtrim(app()->basePath('public/' . $path), '/');
+     }
+}
+
 if (!function_exists('is_lumen')) {
     function is_lumen()
     {

@@ -44,6 +44,11 @@ if (!function_exists('is_gae_production')) {
 if (!function_exists('is_gae_development')) {
     function is_gae_development()
     {
+        if (is_cloud_run()) {
+            return (bool)(config('gaesupport.dev-prefix')
+                && strpos($_SERVER['HTTP_HOST'], config('gaesupport.dev-prefix')) === 0);
+        }
+        
         return (bool)(config('gaesupport.dev-prefix')
             && strpos(gae_version(), config('gaesupport.dev-prefix')) === 0);
     }
@@ -158,10 +163,10 @@ if (! function_exists('public_path')) {
      * @param  string  $path
      * @return string
      */
-     function public_path($path = null)
-     {
+    function public_path($path = null)
+    {
         return rtrim(app()->basePath('public/' . $path), '/');
-     }
+    }
 }
 
 if (!function_exists('is_lumen')) {

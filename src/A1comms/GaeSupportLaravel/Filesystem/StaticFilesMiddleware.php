@@ -41,7 +41,7 @@ class StaticFilesMiddleware
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function file($file, array $headers = [])
-    {   
+    {
         return new BinaryFileResponse($file, 200, $headers);
     }
 }

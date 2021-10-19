@@ -6,6 +6,7 @@ use GDS;
 use Carbon\Carbon;
 use SessionHandlerInterface;
 use Illuminate\Support\Facades\Log;
+use Google\Cloud\Core\ExponentialBackoff;
 use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
 
 /**
@@ -171,7 +172,21 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         ])->setKeyName($id);
 
         if (($this->orig_id != $id) || ($this->orig_data != $data)) {
-            $this->obj_store->upsert($obj_sess);
+            /**
+             * If Datastore returns too much contention on write,
+             * keep retrying with exponential backoff, 6 times until we fail.
+             */
+            $result = (new ExponentialBackoff(6, function ($ex, $retryAttempt = 1) {
+                if (strpos((string)$ex, 'too much contention on these datastore entities') !== false) {
+                    Log::info('ExponentialBackoff: retrying datastore upsert (session): too much contention on these datastore entities');
+                    return true;
+                } elseif (strpos((string)$ex, 'Connection reset by peer') !== false) {
+                    Log::info('ExponentialBackoff: retrying datastore upsert (session): Connection reset by peer');
+                    return true;
+                }
+
+                return false;
+            }))->execute([$this->obj_store, 'upsert'], [$obj_sess]);
         }
 
         return true;

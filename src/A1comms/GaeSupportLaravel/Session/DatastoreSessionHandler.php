@@ -142,7 +142,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      */
     public function read($id)
     {
-        $obj_sess = $this->obj_store->fetchByName($id);
+        $obj_sess = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'fetchByName'], [$id]);
 
         if ($obj_sess instanceof GDS\Entity) {
             $this->orig_id = $id;
@@ -176,17 +176,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
              * If Datastore returns too much contention on write,
              * keep retrying with exponential backoff, 6 times until we fail.
              */
-            $result = (new ExponentialBackoff(6, function ($ex, $retryAttempt = 1) {
-                if (strpos((string)$ex, 'too much contention on these datastore entities') !== false) {
-                    Log::info('ExponentialBackoff: retrying datastore upsert (session): too much contention on these datastore entities');
-                    return true;
-                } elseif (strpos((string)$ex, 'Connection reset by peer') !== false) {
-                    Log::info('ExponentialBackoff: retrying datastore upsert (session): Connection reset by peer');
-                    return true;
-                }
-
-                return false;
-            }))->execute([$this->obj_store, 'upsert'], [$obj_sess]);
+            $result = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'upsert'], [$obj_sess]);
         }
 
         return true;
@@ -203,10 +193,10 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      */
     public function destroy($id)
     {
-        $obj_sess = $this->obj_store->fetchByName($id);
+        $obj_sess = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'fetchByName'], [$id]);
 
         if ($obj_sess instanceof GDS\Entity) {
-            $this->obj_store->delete($obj_sess);
+            $result = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'delete'], [$obj_sess]);
         }
 
         return true;

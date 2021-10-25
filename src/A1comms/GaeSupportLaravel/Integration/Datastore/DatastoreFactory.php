@@ -3,6 +3,7 @@
 namespace A1comms\GaeSupportLaravel\Integration\Datastore;
 
 use GDS;
+use Illuminate\Support\Facades\Log;
 
 class DatastoreFactory
 {

@@ -39,6 +39,8 @@ class AuthServiceProvider extends ServiceProvider
             return new ListUserProvider(IAPUser::class, $config['list']);
         });
 
+        Auth::viaRequest('firebase', [Guard\Firebase_Guard::class, 'validate']);
+
         Auth::viaRequest('gae-internal', [Guard\AppEngine_Guard::class, 'validate']);
         Auth::viaRequest('gae-iap', [Guard\IAP_Guard::class, 'validate']);
         Auth::viaRequest('gae-oidc', [Guard\OIDC_Guard::class, 'validate']);

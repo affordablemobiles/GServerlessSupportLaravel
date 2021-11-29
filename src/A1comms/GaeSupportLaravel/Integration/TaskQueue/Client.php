@@ -60,6 +60,10 @@ class Client
             return Str::beforeLast($zone, '-');
         }
 
+        if (!empty(config('gaesupport.cloud-tasks.region'))) {
+            return config('gaesupport.cloud-tasks.region');
+        }
+
         switch ($zone) {
             case "eu2":
             case "eu4":

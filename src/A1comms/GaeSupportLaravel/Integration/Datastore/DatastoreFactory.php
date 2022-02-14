@@ -20,6 +20,9 @@ class DatastoreFactory
         } elseif (strpos((string)$ex, 'Connection reset by peer') !== false) {
             Log::info('ExponentialBackoff: retrying datastore operation: Connection reset by peer');
             return true;
+        } elseif (strpos((string)$ex, '"status": "UNAVAILABLE"') !== false) {
+            Log::info('ExponentialBackoff: retrying datastore operation: UNAVAILABLE');
+            return true;
         }
 
         return false;

@@ -5,6 +5,8 @@ namespace A1comms\GaeSupportLaravel\Auth\Token;
 use Exception;
 use GuzzleHttp\Client;
 use Google\Auth\Credentials\GCECredentials;
+use Google\Cloud\Core\ExponentialBackoff;
+use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
 class OAuth2
@@ -63,9 +65,9 @@ class OAuth2
             $client = new Client($clientParams);
 
             // make the request
-            $response = $client->get(
+            $response = (new ExponentialBackoff(6, [OAuth2::class, 'shouldRetry']))->execute([$client, 'get'], [
                 self::TOKENINFO_ENDPOINT_URI . '?access_token=' . $token
-            );
+            ]);
 
             $response = json_decode($response->getBody(), true);
         } catch (Exception $e) {
@@ -73,5 +75,14 @@ class OAuth2
         }
 
         return $response;
+    }
+
+    public static function shouldRetry($ex, $retryAttempt = 1)
+    {
+        if (GuzzleTools::isConnectionError($ex, self::VALIDATE_CONNECTION_TIMEOUT_S)) {
+            return true;
+        }
+
+        return false;
     }
 }

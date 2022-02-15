@@ -7,6 +7,8 @@ use GuzzleHttp\Client;
 use SimpleJWT\JWT as JWTValidator;
 use SimpleJWT\Keys\KeySet;
 use SimpleJWT\InvalidTokenException as JWTInvalidTokenException;
+use Google\Cloud\Core\ExponentialBackoff;
+use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 
@@ -117,9 +119,18 @@ class JWT
                 'timeout' => self::REQUEST_TIMEOUT_S,
             ];
 
-            $response = $httpclient->request('GET', $jwk_url, $content);
+            $response = (new ExponentialBackoff(6, [JWT::class, 'shouldRetry']))->execute([$httpclient, 'request'], ['GET', $jwk_url, $content]);
 
             return ((string) $response->getBody());
         });
+    }
+
+    public static function shouldRetry($ex, $retryAttempt = 1)
+    {
+        if (GuzzleTools::isConnectionError($ex, self::REQUEST_CONNECTION_TIMEOUT_S)) {
+            return true;
+        }
+
+        return false;
     }
 }

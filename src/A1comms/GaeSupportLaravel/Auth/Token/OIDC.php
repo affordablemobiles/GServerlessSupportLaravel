@@ -3,9 +3,11 @@
 namespace A1comms\GaeSupportLaravel\Auth\Token;
 
 use GuzzleHttp\Client;
+use Google\Cloud\Core\ExponentialBackoff;
 use A1comms\GaeSupportLaravel\Auth\Token\Type\JWT;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
+use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 
 class OIDC
 {
@@ -98,7 +100,7 @@ class OIDC
                 'timeout' => JWT::REQUEST_TIMEOUT_S,
             ];
 
-            $response = $httpclient->request('GET', self::OPENID_CONFIGURATION_URI, $content);
+            $response = (new ExponentialBackoff(6, [JWT::class, 'shouldRetry']))->execute([$httpclient, 'request'], ['GET', self::OPENID_CONFIGURATION_URI, $content]);
 
             $result = json_decode((string) $response->getBody(), true);
 
@@ -137,8 +139,17 @@ class OIDC
             ],
         ];
 
-        $response = $client->get($uri, $content);
+        $response = (new ExponentialBackoff(6, [OIDC::class, 'shouldRetry']))->execute([$client, 'get'], [$uri, $content]);
 
         return ((string) $response->getBody());
+    }
+
+    public static function shouldRetry($ex, $retryAttempt = 1)
+    {
+        if (GuzzleTools::isConnectionError($ex, self::METADATA_CONNECTION_TIMEOUT_S)) {
+            return true;
+        }
+
+        return false;
     }
 }

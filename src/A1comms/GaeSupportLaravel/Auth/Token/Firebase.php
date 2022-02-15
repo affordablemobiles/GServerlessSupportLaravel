@@ -6,6 +6,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Auth\Middleware\AuthTokenMiddleware;
+use Google\Cloud\Core\ExponentialBackoff;
+use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 use A1comms\GaeSupportLaravel\Auth\Token\Type\JWT_x509;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 
@@ -20,6 +22,16 @@ class Firebase
      * JWT Signature Algorithm
      */
     const JWT_SIG_ALG = 'RS256';
+
+    /**
+     * Connection timeout for the request.
+     */
+    const REQUEST_CONNECTION_TIMEOUT_S = 0.5;
+
+    /**
+     * Timeout for the whole request.
+     */
+    const REQUEST_TIMEOUT_S = 1;
 
     /**
      * Validate a Firebase session cookie token.
@@ -63,14 +75,16 @@ class Firebase
         }
 
         try {
-            $response = $client->request(
+            $response = (new ExponentialBackoff(6, [Firebase::class, 'shouldRetry']))->execute([$client, 'request'], [
                 'POST',
                 'https://identitytoolkit.googleapis.com/v1/projects/' . $expected_audience . ':createSessionCookie',
                 [
                     'json' => $data,
                     'http_errors' => false,
+                    'connect_timeout' => self::REQUEST_CONNECTION_TIMEOUT_S,
+                    'timeout' => self::REQUEST_TIMEOUT_S,
                 ]
-            );
+            ]);
         } catch (GuzzleException $e) {
             throw $e;
         }
@@ -104,5 +118,14 @@ class Firebase
     protected static function get_jwk_url()
     {
         return self::JWK_URI;
+    }
+
+    public static function shouldRetry($ex, $retryAttempt = 1)
+    {
+        if (GuzzleTools::isConnectionError($ex, self::REQUEST_CONNECTION_TIMEOUT_S)) {
+            return true;
+        }
+
+        return false;
     }
 }

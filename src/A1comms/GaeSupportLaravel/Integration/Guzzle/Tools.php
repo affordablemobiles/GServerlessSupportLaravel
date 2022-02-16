@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class Tools
 {
-    private static function isConnectionError($ex, $timeout = 2)
+    public static function isConnectionError($ex, $timeout = 2)
     {
         if ($ex instanceof ConnectException) {
             $regex = "/Operation timed out after " . (string)$timeout . "[0-9]{3} milliseconds/";

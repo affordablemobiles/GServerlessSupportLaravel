@@ -1,27 +1,30 @@
 runtime: php74
 
+automatic_scaling:
+  max_concurrent_requests: 2
+
+entrypoint: serve --workers=2 public/index.php
+
+inbound_services:
+- warmup
+
 handlers:
-- url: /propman/favicon\.ico
+- url: /favicon.ico
   static_files: public/favicon.ico
-  upload: public/favicon\.ico
+  upload: public/favicon.ico
 
-- url: /propman/vendor
-  static_dir: public/vendor
+- url: /robots.txt
+  static_files: public/robots.txt
+  upload: public/robots.txt
 
-- url: /propman/build
-  static_dir: public/build
-
-- url: /propman/fonts
+- url: /fonts
   static_dir: public/fonts
 
-- url: /propman/css
+- url: /css
   static_dir: public/css
 
-- url: /propman/js
+- url: /js
   static_dir: public/js
-
-- url: /propman/images
-  static_dir: public/images
 
 - url: .*
   secure: always

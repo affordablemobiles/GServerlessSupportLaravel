@@ -38,7 +38,15 @@ Add some trigers to your project in Cloud Console, specifying the branch as your
 
 https://console.cloud.google.com/cloud-build/triggers
 
-## Encrypting Secrets with KMS and Cloud Build
+## Using Secret Manager with Cloud Build
+
+The newer, more accepted method of managing secrets with Cloud Build is using Secret Manager.
+
+In the future, this will be further replaced by direct integration with Secret Manager from App Engine, similar to what Cloud Run has, but until then, we convert the secret references to plain text at deploy time.
+
+Secrets can be managed in Secret Manager from Cloud Console, then referenced in the Cloud Build YAML config, as detailed in the examples.
+
+## Encrypting Secrets with KMS and Cloud Build (deprecated)
 
 While it is considered bad practice to store application secrets in the repository along with the application (and for very good reason), this is at odds with what we are trying to achieve with a clearly defined set of configuration to be deployed directly from the repository via Cloud Build.
 

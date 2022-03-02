@@ -17,6 +17,12 @@ $config
         'heredoc_indentation' => false,
         '@PhpCsFixer' => true,
         '@PhpCsFixer:risky' => true,
+        'binary_operator_spaces' => [
+            'operators' => [
+                '=' => 'align',
+                '=>' => 'align',
+            ]
+        ],
     ])
     ->setFinder($finder)
 ;

@@ -41,7 +41,7 @@ class NullUserProvider implements UserProvider
     /**
      * Retrieve a user by their unique identifier.
      *
-     * @param mixed $identifier
+     * @param string $identifier
      *
      * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */
@@ -57,7 +57,7 @@ class NullUserProvider implements UserProvider
     /**
      * Retrieve a user by their unique identifier and "remember me" token.
      *
-     * @param mixed  $identifier
+     * @param string $identifier
      * @param string $token
      *
      * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel

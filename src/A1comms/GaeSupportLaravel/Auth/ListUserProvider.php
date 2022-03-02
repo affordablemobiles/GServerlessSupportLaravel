@@ -19,7 +19,7 @@ class ListUserProvider extends NullUserProvider
      * Create a new null user provider.
      *
      * @param string $model
-     * @param mixed  $list
+     * @param array  $list
      */
     public function __construct($model, $list = [])
     {
@@ -30,7 +30,7 @@ class ListUserProvider extends NullUserProvider
     /**
      * Retrieve a user by their unique identifier.
      *
-     * @param mixed $identifier
+     * @param string $identifier
      *
      * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */

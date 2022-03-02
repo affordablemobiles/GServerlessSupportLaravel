@@ -25,7 +25,7 @@
         "illuminate/container": "^9",
         "illuminate/encryption": "^9",
         "illuminate/filesystem": "^9",
-        "ralouphie/mimey": "^2.1"
+        "xantios/mimey": "^2.2"
     },
     "require-dev": {
         "phpmd/phpmd" : "@stable",
@@ -39,6 +39,12 @@
             "src/preload.php"
         ]
     },
+    "repositories": [
+        {
+          "type": "git",
+          "url": "https://github.com/a1comms/opencensus-php-exporter-stackdriver.git"
+        }
+      ],
     "extra": {
         "laravel": {
             "providers": [

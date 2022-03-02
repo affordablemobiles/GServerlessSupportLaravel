@@ -60,7 +60,7 @@ class GaeViewCompileCommand extends Command
         $this->info('Blade Compiler: Startup...');
 
         $compiledDirectory = config('view.compiled', null);
-        $viewPaths = config('view.paths', []);
+        $viewPaths         = config('view.paths', []);
 
         $hints = app('view')->getFinder()->getHints();
         foreach ($hints as $namespace => $paths) {
@@ -73,7 +73,7 @@ class GaeViewCompileCommand extends Command
         $this->info('Blade Compiler: Cleaning view storage directory...done');
 
         for ($i = 0; $i < \count($viewPaths); ++$i) {
-            $path = $viewPaths[$i];
+            $path         = $viewPaths[$i];
             $relativePath = FileViewFinder::getRelativePath(base_path(), $path);
 
             $this->info('Blade Compiler: Compiling views in '.$relativePath.' ('.($i + 1).'/'.\count($viewPaths).')...');
@@ -81,8 +81,8 @@ class GaeViewCompileCommand extends Command
             $files = $this->files->allFiles($path);
 
             for ($g = 0; $g < \count($files); ++$g) {
-                $file = $files[$g];
-                $filePath = $file->getPathname();
+                $file             = $files[$g];
+                $filePath         = $file->getPathname();
                 $fileRelativePath = FileViewFinder::getRelativePath(base_path(), $filePath);
 
                 if (!preg_match('/(.*)\\.blade\\.php$/', $filePath)) {
@@ -91,8 +91,8 @@ class GaeViewCompileCommand extends Command
                     continue;
                 }
 
-                $compiler = new BladeCompiler($this->files, $compiledDirectory);
-                $compiledPath = $compiler->compile($filePath);
+                $compiler                          = new BladeCompiler($this->files, $compiledDirectory);
+                $compiledPath                      = $compiler->compile($filePath);
                 $this->manifest[$fileRelativePath] = FileViewFinder::getRelativePath($compiledDirectory, $compiledPath);
 
                 $this->info("Blade Compiler: \tCompiled view (".($g + 1).'/'.\count($files).') '.$fileRelativePath);

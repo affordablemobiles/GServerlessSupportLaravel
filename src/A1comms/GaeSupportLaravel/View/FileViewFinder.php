@@ -37,7 +37,7 @@ class FileViewFinder extends LaravelFileViewFinder
     {
         // Normalize separators on Windows
         if ('\\' === \DIRECTORY_SEPARATOR) {
-            $endPath = str_replace('\\', '/', $endPath);
+            $endPath   = str_replace('\\', '/', $endPath);
             $startPath = str_replace('\\', '/', $startPath);
         }
         $stripDriveLetter = function ($path) {
@@ -47,11 +47,11 @@ class FileViewFinder extends LaravelFileViewFinder
 
             return $path;
         };
-        $endPath = $stripDriveLetter($endPath);
+        $endPath   = $stripDriveLetter($endPath);
         $startPath = $stripDriveLetter($startPath);
         // Split the paths into arrays
-        $startPathArr = explode('/', trim($startPath, '/'));
-        $endPathArr = explode('/', trim($endPath, '/'));
+        $startPathArr       = explode('/', trim($startPath, '/'));
+        $endPathArr         = explode('/', trim($endPath, '/'));
         $normalizePathArray = function ($pathSegments, $absolute) {
             $result = [];
             foreach ($pathSegments as $segment) {
@@ -65,7 +65,7 @@ class FileViewFinder extends LaravelFileViewFinder
             return $result;
         };
         $startPathArr = $normalizePathArray($startPathArr, self::isAbsolutePath($startPath));
-        $endPathArr = $normalizePathArray($endPathArr, self::isAbsolutePath($endPath));
+        $endPathArr   = $normalizePathArray($endPathArr, self::isAbsolutePath($endPath));
         // Find for which directory the common path stops
         $index = 0;
         while (isset($startPathArr[$index], $endPathArr[$index]) && $startPathArr[$index] === $endPathArr[$index]) {
@@ -78,7 +78,7 @@ class FileViewFinder extends LaravelFileViewFinder
             $depth = \count($startPathArr) - $index;
         }
         // Repeated "../" for each level need to reach the common path
-        $traverser = str_repeat('../', $depth);
+        $traverser        = str_repeat('../', $depth);
         $endPathRemainder = implode('/', \array_slice($endPathArr, $index));
         // Construct $endPath from traversing to the common path, then to the remaining $endPath
         $relativePath = $traverser.('' !== $endPathRemainder ? $endPathRemainder/*.'/'*/ : '');

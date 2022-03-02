@@ -18,7 +18,7 @@ class AppEngine_Guard extends BaseGuard
     public static function validate(Request $request, UserProvider $provider = null)
     {
         $queueName = $request->header('X-AppEngine-QueueName');
-        $cron = $request->header('X-AppEngine-Cron');
+        $cron      = $request->header('X-AppEngine-Cron');
 
         if (!empty($cron)) {
             return static::returnUser($provider, 'cron@appengine.google.internal');

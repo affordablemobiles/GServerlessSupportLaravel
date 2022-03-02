@@ -54,10 +54,10 @@ class Grpc implements IntegrationInterface
         //                                   array $options = [])
         opencensus_trace_method(BaseStub::class, '_simpleRequest', function ($stub, $method) {
             return [
-                'name' => 'gRPC::'.$method,
+                'name'       => 'gRPC::'.$method,
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method,
+                    'uri'  => $method,
                     'type' => 'simpleRequest',
                 ],
                 'kind' => Span::KIND_CLIENT,
@@ -66,7 +66,7 @@ class Grpc implements IntegrationInterface
 
         opencensus_trace_method(UnaryCall::class, 'wait', function ($scope) {
             return [
-                'name' => 'gRPC::wait',
+                'name'       => 'gRPC::wait',
                 'attributes' => [
                     'type' => 'UnaryCall',
                 ],
@@ -78,10 +78,10 @@ class Grpc implements IntegrationInterface
         //                                         array $options = [])
         opencensus_trace_method(BaseStub::class, '_clientStreamRequest', function ($stub, $method) {
             return [
-                'name' => 'grpc/clientStreamRequest',
+                'name'       => 'grpc/clientStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method,
+                    'uri'  => $method,
                 ],
                 'kind' => Span::KIND_CLIENT,
             ];
@@ -91,10 +91,10 @@ class Grpc implements IntegrationInterface
         //                                         array $options = [])
         opencensus_trace_method(BaseStub::class, '_serverStreamRequest', function ($stub, $method) {
             return [
-                'name' => 'grpc/serverStreamRequest',
+                'name'       => 'grpc/serverStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method,
+                    'uri'  => $method,
                 ],
                 'kind' => Span::KIND_CLIENT,
             ];
@@ -103,10 +103,10 @@ class Grpc implements IntegrationInterface
         // protected function _bidiRequest($method, $deserialize, array $metadata = [], array $options = [])
         opencensus_trace_method(BaseStub::class, '_bidiRequest', function ($stub, $method) {
             return [
-                'name' => 'grpc/bidiRequest',
+                'name'       => 'grpc/bidiRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method,
+                    'uri'  => $method,
                 ],
                 'kind' => Span::KIND_CLIENT,
             ];

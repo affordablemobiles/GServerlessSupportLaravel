@@ -31,33 +31,33 @@ class GDS implements IntegrationInterface
     {
         opencensus_trace_method(GatewayREST::class, 'executePostRequest', function ($str_method, $args) {
             return [
-                'name' => 'GDS::execute/'.$str_method,
+                'name'       => 'GDS::execute/'.$str_method,
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(GatewayREST::class, 'fetchByKeyPart', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::fetchByKeyPart',
+                'name'       => 'GDS::fetchByKeyPart',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(GatewayREST::class, 'upsert', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::upsert',
+                'name'       => 'GDS::upsert',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(GatewayREST::class, 'gql', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::gql',
+                'name'       => 'GDS::gql',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
     }
@@ -66,33 +66,33 @@ class GDS implements IntegrationInterface
     {
         opencensus_trace_method(Gateway::class, 'execute', function ($str_method, $args) {
             return [
-                'name' => 'GDS::execute/'.$str_method,
+                'name'       => 'GDS::execute/'.$str_method,
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(Gateway::class, 'fetchByKeyPart', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::fetchByKeyPart',
+                'name'       => 'GDS::fetchByKeyPart',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(Gateway::class, 'upsert', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::upsert',
+                'name'       => 'GDS::upsert',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
 
         opencensus_trace_method(Gateway::class, 'gql', function ($arr_key_parts, $str_setter) {
             return [
-                'name' => 'GDS::gql',
+                'name'       => 'GDS::gql',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT,
+                'kind'       => Span::KIND_CLIENT,
             ];
         });
     }

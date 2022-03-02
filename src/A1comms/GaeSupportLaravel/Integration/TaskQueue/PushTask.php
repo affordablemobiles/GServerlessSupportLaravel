@@ -98,8 +98,8 @@ class PushTask
 
         if (!empty($options['delay_seconds'])) {
             $secondsInterval = new DateInterval('PT'.$options['delay_seconds'].'S');
-            $futureTime = (new DateTime())->add($secondsInterval);
-            $timestamp = new Protobuf\Timestamp();
+            $futureTime      = (new DateTime())->add($secondsInterval);
+            $timestamp       = new Protobuf\Timestamp();
             $timestamp->fromDateTime($futureTime);
             $this->task->setScheduleTime($timestamp);
         }
@@ -125,10 +125,10 @@ class PushTask
         $taskDetails = explode('/', $taskName);
 
         return [
-            'project_id' => $taskDetails[1],
+            'project_id'  => $taskDetails[1],
             'location_id' => $taskDetails[3],
-            'queue_id' => $taskDetails[5],
-            'task_id' => $taskDetails[7],
+            'queue_id'    => $taskDetails[5],
+            'task_id'     => $taskDetails[7],
         ];
     }
 }

@@ -86,7 +86,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleApplicationConstruct($scope, $basePath = null)
     {
         return [
-            'name' => 'laravel/app/construct',
+            'name'       => 'laravel/app/construct',
             'attributes' => [],
         ];
     }
@@ -94,7 +94,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleKernelRequestHandle($scope, $request)
     {
         return [
-            'name' => 'laravel/kernel/handle',
+            'name'       => 'laravel/kernel/handle',
             'attributes' => [],
         ];
     }
@@ -102,7 +102,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleRequestCapture()
     {
         return [
-            'name' => 'laravel/request/capture',
+            'name'       => 'laravel/request/capture',
             'attributes' => [],
         ];
     }
@@ -110,7 +110,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleResponseSend($scope)
     {
         return [
-            'name' => 'laravel/response/send',
+            'name'       => 'laravel/response/send',
             'attributes' => [],
         ];
     }
@@ -118,7 +118,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleKernelRequestTerminate($scope, $request, $response)
     {
         return [
-            'name' => 'laravel/kernel/terminate',
+            'name'       => 'laravel/kernel/terminate',
             'attributes' => [],
         ];
     }
@@ -126,7 +126,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleRouterDispatch($scope, $request)
     {
         return [
-            'name' => 'laravel/router/dispatch',
+            'name'       => 'laravel/router/dispatch',
             'attributes' => [],
         ];
     }
@@ -141,7 +141,7 @@ class LaravelExtended implements IntegrationInterface
                 // Can't handle closures yet.
             } elseif (!\is_object($p)) {
                 [$name, $parameters] = self::parsePipeString($p);
-                $tracedMiddleware[] = $name;
+                $tracedMiddleware[]  = $name;
                 // ---
                 // Disable this as it's causing segfaults, see:
                 // https://github.com/census-instrumentation/opencensus-php/issues/200
@@ -152,7 +152,7 @@ class LaravelExtended implements IntegrationInterface
         }
 
         return [
-            'name' => 'laravel/pipeline/register',
+            'name'       => 'laravel/pipeline/register',
             'attributes' => $tracedMiddleware,
         ];
     }
@@ -160,7 +160,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleMiddlewareRun($scope)
     {
         return [
-            'name' => 'laravel/middleware/run',
+            'name'       => 'laravel/middleware/run',
             'attributes' => [
                 'name' => $scope::class,
             ],
@@ -170,7 +170,7 @@ class LaravelExtended implements IntegrationInterface
     public static function handleControllerRun($scope)
     {
         return [
-            'name' => 'laravel/controller/run',
+            'name'       => 'laravel/controller/run',
             'attributes' => [],
         ];
     }
@@ -178,9 +178,9 @@ class LaravelExtended implements IntegrationInterface
     public static function handleView($scope, $path, $data)
     {
         return [
-            'name' => 'laravel/view',
+            'name'       => 'laravel/view',
             'attributes' => [
-                'path' => $path,
+                'path'         => $path,
                 'pre-compiled' => true,
             ],
         ];

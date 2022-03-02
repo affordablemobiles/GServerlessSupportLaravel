@@ -33,10 +33,10 @@ class TraceProvider implements IntegrationInterface
         }
 
         return [
-            'name' => 'GuzzleHttp::request',
+            'name'       => 'GuzzleHttp::request',
             'attributes' => [
                 'method' => $method,
-                'uri' => $uri,
+                'uri'    => $uri,
             ],
         ];
     }

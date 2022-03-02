@@ -13,7 +13,7 @@ require __DIR__.'/helpers.php';
 // as we may be loading before them, resulting in undefined function errors
 // in the Trace initialisation.
 $laravelHelpers = __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php';
-$lumenHelpers = __DIR__.'/../../../illuminate/support/helpers.php';
+$lumenHelpers   = __DIR__.'/../../../illuminate/support/helpers.php';
 if (is_file($laravelHelpers)) {
     require $laravelHelpers;
 } elseif (is_file($lumenHelpers)) {
@@ -28,7 +28,7 @@ if (is_gae() && (PHP_SAPI !== 'cli')) {
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
     } elseif (is_cloud_run()) {
-        $forwards = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {

@@ -75,7 +75,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     public function __construct()
     {
         // Get session max lifetime to leverage Memcache expire functionality.
-        $this->expire = ini_get('session.gc_maxlifetime');
+        $this->expire     = ini_get('session.gc_maxlifetime');
         $this->lastaccess = $this->getTimeStamp();
         $this->deleteTime = Carbon::now()->subSeconds($this->expire)->toDateTimeString();
 
@@ -124,7 +124,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         $obj_sess = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'fetchByName'], [$id]);
 
         if ($obj_sess instanceof GDS\Entity) {
-            $this->orig_id = $id;
+            $this->orig_id   = $id;
             $this->orig_data = $obj_sess->data;
 
             return $obj_sess->data;
@@ -144,7 +144,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     public function write($id, $data)
     {
         $obj_sess = $this->obj_store->createEntity([
-            'data' => $data,
+            'data'       => $data,
             'lastaccess' => $this->lastaccess,
         ])->setKeyName($id);
 

@@ -19,8 +19,8 @@ class Client
 
     public function __construct()
     {
-        $this->client = new CloudTasksClient();
-        $this->project = gae_project();
+        $this->client   = new CloudTasksClient();
+        $this->project  = gae_project();
         $this->location = $this->fetchLocation();
     }
 
@@ -51,7 +51,7 @@ class Client
     private function fetchLocation()
     {
         $metadata = new Metadata();
-        $zone = explode(
+        $zone     = explode(
             '/',
             $metadata->get('instance/zone')
         );

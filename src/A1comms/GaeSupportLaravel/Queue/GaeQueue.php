@@ -72,10 +72,10 @@ class GaeQueue extends Queue implements QueueContract
         $shouldEncrypt = false,
         $shouldCompress = false
     ) {
-        $this->request = $request;
-        $this->url = $url;
-        $this->default = $default;
-        $this->shouldEncrypt = $shouldEncrypt;
+        $this->request        = $request;
+        $this->url            = $url;
+        $this->default        = $default;
+        $this->shouldEncrypt  = $shouldEncrypt;
         $this->shouldCompress = $shouldCompress;
 
         $this->encrypter = app('encrypter');
@@ -267,8 +267,8 @@ class GaeQueue extends Queue implements QueueContract
         $body = $this->parseJobBody($r->input(static::PAYLOAD_REQ_PARAM_NAME));
 
         return (object) [
-            'id' => $r->header('X-AppEngine-TaskName'),
-            'body' => $body,
+            'id'     => $r->header('X-AppEngine-TaskName'),
+            'body'   => $body,
             'pushed' => true,
         ];
     }

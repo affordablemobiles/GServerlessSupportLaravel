@@ -129,7 +129,7 @@ class JWT
 
             $content = [
                 'connect_timeout' => self::REQUEST_CONNECTION_TIMEOUT_S,
-                'timeout' => self::REQUEST_TIMEOUT_S,
+                'timeout'         => self::REQUEST_TIMEOUT_S,
             ];
 
             $response = (new ExponentialBackoff(6, [self::class, 'shouldRetry']))->execute([$httpclient, 'request'], ['GET', $jwk_url, $content]);

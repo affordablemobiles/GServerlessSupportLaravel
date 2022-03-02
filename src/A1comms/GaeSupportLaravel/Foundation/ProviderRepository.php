@@ -21,7 +21,7 @@ class ProviderRepository extends LaravelProviderRepository
     public function preCompileManifest(): void
     {
         $providers = Collection::make($this->app->config['app.providers'])
-            ->partition(fn ($provider) => str_starts_with($provider, 'Illuminate\\')  )
+            ->partition(fn ($provider) => str_starts_with($provider, 'Illuminate\\'))
         ;
 
         $providers->splice(1, 0, [$this->app->make(PackageManifest::class)->providers()]);

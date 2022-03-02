@@ -21,7 +21,7 @@ use Throwable;
 
 class JsonFormatter extends NormalizerFormatter
 {
-    public const BATCH_MODE_JSON = 1;
+    public const BATCH_MODE_JSON     = 1;
     public const BATCH_MODE_NEWLINES = 2;
 
     protected $batchMode;
@@ -29,7 +29,7 @@ class JsonFormatter extends NormalizerFormatter
 
     protected $message;
 
-    protected $maxNormalizeDepth = 9;
+    protected $maxNormalizeDepth     = 9;
     protected $maxNormalizeItemCount = 1000;
 
     /**
@@ -39,7 +39,7 @@ class JsonFormatter extends NormalizerFormatter
 
     public function __construct(int $batchMode = self::BATCH_MODE_NEWLINES, bool $appendNewline = true)
     {
-        $this->batchMode = $batchMode;
+        $this->batchMode     = $batchMode;
         $this->appendNewline = $appendNewline;
     }
 
@@ -80,10 +80,10 @@ class JsonFormatter extends NormalizerFormatter
             $normalized['extra'] = new \stdClass();
         }
 
-        $normalized['message'] = $this->normalize($this->message);
-        $normalized['severity'] = $normalized['level_name'];
+        $normalized['message']                      = $this->normalize($this->message);
+        $normalized['severity']                     = $normalized['level_name'];
         $normalized['logging.googleapis.com/trace'] = 'projects/'.gae_project().'/traces/'.Tracer::spanContext()->traceId();
-        $normalized['time'] = $normalized['datetime']->format(DateTimeInterface::RFC3339_EXTENDED);
+        $normalized['time']                         = $normalized['datetime']->format(DateTimeInterface::RFC3339_EXTENDED);
 
         unset($normalized['level'], $normalized['level_name'], $normalized['datetime']);
 
@@ -128,7 +128,7 @@ class JsonFormatter extends NormalizerFormatter
     {
         $instance = $this;
 
-        $oldNewline = $this->appendNewline;
+        $oldNewline          = $this->appendNewline;
         $this->appendNewline = false;
         array_walk($records, function (&$value, $key) use ($instance): void {
             $value = $instance->format($value);
@@ -186,10 +186,10 @@ class JsonFormatter extends NormalizerFormatter
     protected function normalizeException($e, $depth = 0)
     {
         $data = [
-            'class' => Utils::getClass($e),
+            'class'   => Utils::getClass($e),
             'message' => $e->getMessage(),
-            'code' => $e->getCode(),
-            'file' => $e->getFile().':'.$e->getLine(),
+            'code'    => $e->getCode(),
+            'file'    => $e->getFile().':'.$e->getLine(),
         ];
 
         if ($this->includeStacktraces) {

@@ -61,7 +61,7 @@ class OAuth2
             $clientParams = [
                 'allow_redirects' => false,
                 'connect_timeout' => self::VALIDATE_CONNECTION_TIMEOUT_S,
-                'timeout' => self::VALIDATE_REQUEST_TIMEOUT_S,
+                'timeout'         => self::VALIDATE_REQUEST_TIMEOUT_S,
             ];
 
             // create the HTTP client

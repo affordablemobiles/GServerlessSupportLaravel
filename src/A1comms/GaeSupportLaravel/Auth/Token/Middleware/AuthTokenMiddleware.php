@@ -37,7 +37,7 @@ class AuthTokenMiddleware
      */
     public function __construct(callable $audienceSource = null, callable $tokenTypeSource = null)
     {
-        $this->audienceSource = $audienceSource;
+        $this->audienceSource  = $audienceSource;
         $this->tokenTypeSource = $tokenTypeSource;
     }
 

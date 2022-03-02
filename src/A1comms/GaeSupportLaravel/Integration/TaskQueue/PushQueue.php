@@ -11,7 +11,7 @@ class PushQueue
 
     public function __construct($name = 'default')
     {
-        $this->name = $name;
+        $this->name      = $name;
         $this->full_name = Client::instance()->getQueueName($name);
     }
 

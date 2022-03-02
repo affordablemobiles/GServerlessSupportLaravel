@@ -41,13 +41,13 @@ class CreateLoggingDriver
             $logger = new Logger($logName, [$handler]);
         } elseif (is_gae_flex()) {
             $psrLogger = LoggingClient::psrBatchLogger($logName);
-            $handler = new PsrHandler($psrLogger);
-            $logger = new Logger($logName, [$handler]);
+            $handler   = new PsrHandler($psrLogger);
+            $logger    = new Logger($logName, [$handler]);
         } elseif (is_gae()) {
             if ('true' === env('GAE_SYNC_LOGS', 'false')) {
                 $psrLogger = (new LoggingClient())->psrLogger($logName);
-                $handler = new PsrHandler($psrLogger);
-                $logger = new Logger($logName, [$handler]);
+                $handler   = new PsrHandler($psrLogger);
+                $logger    = new Logger($logName, [$handler]);
             } else {
                 // Log via structured logs in /var/log, which get dumped async into StackDriver by the runtime.
                 //

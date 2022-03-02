@@ -107,7 +107,7 @@ class OIDC
 
             $content = [
                 'connect_timeout' => JWT::REQUEST_CONNECTION_TIMEOUT_S,
-                'timeout' => JWT::REQUEST_TIMEOUT_S,
+                'timeout'         => JWT::REQUEST_TIMEOUT_S,
             ];
 
             $response = (new ExponentialBackoff(6, [JWT::class, 'shouldRetry']))->execute([$httpclient, 'request'], ['GET', self::OPENID_CONFIGURATION_URI, $content]);
@@ -143,8 +143,8 @@ class OIDC
 
         $content = [
             'connect_timeout' => self::METADATA_CONNECTION_TIMEOUT_S,
-            'timeout' => self::METADATA_REQUEST_TIMEOUT_S,
-            'headers' => [
+            'timeout'         => self::METADATA_REQUEST_TIMEOUT_S,
+            'headers'         => [
                 'Metadata-Flavor' => 'Google',
             ],
         ];

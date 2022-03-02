@@ -17,21 +17,21 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
     public function mapSpan($span)
     {
         $start = $span->startTime();
-        $end = $span->endTime();
+        $end   = $span->endTime();
         if ($end <= 0) {
             $end = microtime(true);
         }
 
         return [
-            'label' => $span->name(),
-            'start' => $start,
+            'label'          => $span->name(),
+            'start'          => $start,
             'relative_start' => $start - $this->requestStartTime,
-            'end' => $end,
-            'relative_end' => $end - $this->requestEndTime,
-            'duration' => $end - $start,
-            'duration_str' => $this->getDataFormatter()->formatDuration($end - $start),
-            'params' => [],
-            'collector' => null,
+            'end'            => $end,
+            'relative_end'   => $end - $this->requestEndTime,
+            'duration'       => $end - $start,
+            'duration_str'   => $this->getDataFormatter()->formatDuration($end - $start),
+            'params'         => [],
+            'collector'      => null,
         ];
     }
 
@@ -57,11 +57,11 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
         });
 
         return [
-            'start' => $this->requestStartTime,
-            'end' => $this->requestEndTime,
-            'duration' => $this->getRequestDuration(),
+            'start'        => $this->requestStartTime,
+            'end'          => $this->requestEndTime,
+            'duration'     => $this->getRequestDuration(),
             'duration_str' => $this->getDataFormatter()->formatDuration($this->getRequestDuration()),
-            'measures' => $measures,
+            'measures'     => $measures,
         ];
     }
 
@@ -80,15 +80,15 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
     {
         return [
             'time' => [
-                'icon' => 'clock-o',
+                'icon'    => 'clock-o',
                 'tooltip' => 'Request Duration',
-                'map' => 'time.duration_str',
+                'map'     => 'time.duration_str',
                 'default' => "'0ms'",
             ],
             'timeline' => [
-                'icon' => 'tasks',
-                'widget' => 'PhpDebugBar.Widgets.TimelineWidget',
-                'map' => 'time',
+                'icon'    => 'tasks',
+                'widget'  => 'PhpDebugBar.Widgets.TimelineWidget',
+                'map'     => 'time',
                 'default' => '{}',
             ],
         ];

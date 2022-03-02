@@ -39,7 +39,7 @@ class DWDTokenSource extends OAuth2
 
     public function toJwt(array $config = [])
     {
-        $gce_creds = new GCECredentials();
+        $gce_creds    = new GCECredentials();
         $client_email = $gce_creds->getClientName();
 
         $time = time();

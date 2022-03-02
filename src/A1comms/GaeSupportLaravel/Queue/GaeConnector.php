@@ -32,7 +32,7 @@ class GaeConnector implements ConnectorInterface
         EncrypterContract $crypt,
         Request $request
     ) {
-        $this->crypt = $crypt;
+        $this->crypt   = $crypt;
         $this->request = $request;
     }
 

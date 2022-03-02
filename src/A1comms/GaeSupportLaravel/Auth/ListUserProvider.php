@@ -24,7 +24,7 @@ class ListUserProvider extends NullUserProvider
     public function __construct($model, $list = [])
     {
         $this->model = $model;
-        $this->list = $list;
+        $this->list  = $list;
     }
 
     /**

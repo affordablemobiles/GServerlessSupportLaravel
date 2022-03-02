@@ -64,11 +64,11 @@ class Firebase
 
         $client = new Client([
             'handler' => $stack,
-            'auth' => 'google_auth',
+            'auth'    => 'google_auth',
         ]);
 
         $data = [
-            'idToken' => $idToken,
+            'idToken'       => $idToken,
             'validDuration' => $expiry,
         ];
         if (!empty($tenantId)) {
@@ -80,10 +80,10 @@ class Firebase
                 'POST',
                 'https://identitytoolkit.googleapis.com/v1/projects/'.$expected_audience.':createSessionCookie',
                 [
-                    'json' => $data,
-                    'http_errors' => false,
+                    'json'            => $data,
+                    'http_errors'     => false,
                     'connect_timeout' => self::REQUEST_CONNECTION_TIMEOUT_S,
-                    'timeout' => self::REQUEST_TIMEOUT_S,
+                    'timeout'         => self::REQUEST_TIMEOUT_S,
                 ],
             ]);
         } catch (GuzzleException $e) {

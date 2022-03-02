@@ -18,27 +18,27 @@ class LaravelAuth implements IntegrationInterface
         }
 
         opencensus_trace_method(Guard\BaseGuard::class, 'returnUser', [
-            'name' => 'laravel/auth/returnUser',
+            'name'       => 'laravel/auth/returnUser',
             'attributes' => [],
         ]);
 
         opencensus_trace_method(Guard\AppEngine_Guard::class, 'validate', [
-            'name' => 'laravel/auth/guard/appengine',
+            'name'       => 'laravel/auth/guard/appengine',
             'attributes' => [],
         ]);
 
         opencensus_trace_method(Guard\IAP_Guard::class, 'validate', [
-            'name' => 'laravel/auth/guard/iap',
+            'name'       => 'laravel/auth/guard/iap',
             'attributes' => [],
         ]);
 
         opencensus_trace_method(Guard\OIDC_Guard::class, 'validate', [
-            'name' => 'laravel/auth/guard/oidc',
+            'name'       => 'laravel/auth/guard/oidc',
             'attributes' => [],
         ]);
 
         opencensus_trace_method(Guard\OAuth2_Guard::class, 'validate', [
-            'name' => 'laravel/auth/guard/oauth2',
+            'name'       => 'laravel/auth/guard/oauth2',
             'attributes' => [],
         ]);
     }

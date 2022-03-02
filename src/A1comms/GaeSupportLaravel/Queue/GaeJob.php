@@ -44,9 +44,9 @@ class GaeJob extends Job implements JobContract
         $job,
         $pushed = false
     ) {
-        $this->job = $job;
-        $this->gaeQueue = $gaeQueue;
-        $this->pushed = $pushed;
+        $this->job       = $job;
+        $this->gaeQueue  = $gaeQueue;
+        $this->pushed    = $pushed;
         $this->container = $container;
     }
 

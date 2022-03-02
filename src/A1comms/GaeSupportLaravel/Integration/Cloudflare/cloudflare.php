@@ -35,11 +35,11 @@ if (is_gae()) {
                     if ($is_cf) {
                         // TODO: Change logging here to support new runtimes.
                         gae_basic_log('cloudflare', 'INFO', 'Cloudflare IP changed from '.$_SERVER['REMOTE_ADDR'].' to '.$_SERVER['HTTP_CF_CONNECTING_IP'], [
-                            'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
+                            'REMOTE_ADDR'           => $_SERVER['REMOTE_ADDR'],
                             'HTTP_CF_CONNECTING_IP' => $_SERVER['HTTP_CF_CONNECTING_IP'],
                         ]);
                         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
-                        $accepted_cf = true;
+                        $accepted_cf            = true;
                     }
 
                     break;
@@ -54,11 +54,11 @@ if (is_gae()) {
                     if ($is_cf) {
                         // TODO: Change logging here to support new runtimes.
                         gae_basic_log('cloudflare', 'INFO', 'Cloudflare IP changed from '.$_SERVER['REMOTE_ADDR'].' to '.$_SERVER['HTTP_CF_CONNECTING_IP'], [
-                            'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
+                            'REMOTE_ADDR'           => $_SERVER['REMOTE_ADDR'],
                             'HTTP_CF_CONNECTING_IP' => $_SERVER['HTTP_CF_CONNECTING_IP'],
                         ]);
                         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
-                        $accepted_cf = true;
+                        $accepted_cf            = true;
                     }
 
                     break;

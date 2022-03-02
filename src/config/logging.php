@@ -36,7 +36,7 @@ return [
     'channels' => [
         'gae' => [
             'driver' => 'custom',
-            'via' => CreateLoggingDriver::class,
+            'via'    => CreateLoggingDriver::class,
         ],
 
         'emergency' => [

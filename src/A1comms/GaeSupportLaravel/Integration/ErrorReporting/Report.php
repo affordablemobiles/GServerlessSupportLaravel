@@ -30,7 +30,7 @@ class Report
 
         if (is_cloud_run()) {
             self::$psrLogger = (new CreateLoggingDriver())([
-                'logName' => self::DEFAULT_LOGNAME,
+                'logName'   => self::DEFAULT_LOGNAME,
                 'formatter' => 'exception',
             ]);
         } else {
@@ -150,17 +150,17 @@ class Report
             self::$psrLogger->error($message, [
                 'context' => array_merge($context, [
                     'reportLocation' => [
-                        'filePath' => $ex->getFile(),
-                        'lineNumber' => $ex->getLine(),
+                        'filePath'     => $ex->getFile(),
+                        'lineNumber'   => $ex->getLine(),
                         'functionName' => self::getFunctionNameForReport($ex->getTrace()),
                     ],
                     'httpRequest' => [
-                        'method' => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                        'url' => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                        'userAgent' => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                        'referrer' => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                        'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                        'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                        'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                        'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
                         'responseStatusCode' => $status_code,
-                        'remoteIp' => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                        'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
                     'user' => self::getUserNameForReport(),
                 ]),
@@ -199,17 +199,17 @@ class Report
         $context = [
             'context' => [
                 'reportLocation' => [
-                    'filePath' => $file,
-                    'lineNumber' => $line,
+                    'filePath'     => $file,
+                    'lineNumber'   => $line,
                     'functionName' => self::getFunctionNameForReport(),
                 ],
                 'httpRequest' => [
-                    'method' => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                    'url' => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                    'userAgent' => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                    'referrer' => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                    'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                    'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                    'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                    'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
                     'responseStatusCode' => null,
-                    'remoteIp' => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                    'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                 ],
                 'user' => self::getUserNameForReport(),
             ],
@@ -249,8 +249,8 @@ class Report
                     $context = [
                         'context' => [
                             'reportLocation' => [
-                                'filePath' => $err['file'],
-                                'lineNumber' => $err['line'],
+                                'filePath'     => $err['file'],
+                                'lineNumber'   => $err['line'],
                                 'functionName' => self::getFunctionNameForReport(),
                             ],
                         ],

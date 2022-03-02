@@ -6,7 +6,7 @@ HERE := $(shell dirname $(THIS))
 all: lint
 
 fix:
-	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php_cs
+	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php
 
 lint:
-	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php_cs --dry-run
+	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php --dry-run

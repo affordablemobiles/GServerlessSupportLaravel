@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\View\Compilers;
 
 use A1comms\GaeSupportLaravel\View\FileViewFinder;
@@ -10,8 +12,7 @@ class BladeCompiler extends LaravelBladeCompiler
     /**
      * Compile the view at the given path.
      *
-     * @param  string  $path
-     * @return void
+     * @param string $path
      */
     public function compile($path = null)
     {
@@ -19,7 +20,7 @@ class BladeCompiler extends LaravelBladeCompiler
             $this->setPath($path);
         }
 
-        if (! is_null($this->cachePath)) {
+        if (null !== $this->cachePath) {
             $contents = $this->compileString($this->files->get($this->getPath()));
 
             $compiledPath = $this->getCompiledPath($this->getRelativePath());

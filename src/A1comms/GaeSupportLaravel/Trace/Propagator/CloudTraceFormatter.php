@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace\Propagator;
 
 use OpenCensus\Trace\Propagator\CloudTraceFormatter as BaseCloudTraceFormatter;
@@ -7,9 +9,10 @@ use OpenCensus\Trace\Propagator\CloudTraceFormatter as BaseCloudTraceFormatter;
 class CloudTraceFormatter extends BaseCloudTraceFormatter
 {
     /**
-     * Generate a SpanContext object from the Trace Context header
+     * Generate a SpanContext object from the Trace Context header.
      *
      * @param string $header
+     *
      * @return SpanContext
      */
     public function deserialize($header)

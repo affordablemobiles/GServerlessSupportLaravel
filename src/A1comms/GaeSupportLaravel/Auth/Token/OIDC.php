@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth\Token;
 
-use GuzzleHttp\Client;
-use Google\Cloud\Core\ExponentialBackoff;
 use A1comms\GaeSupportLaravel\Auth\Token\Type\JWT;
-use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
+use Google\Cloud\Core\ExponentialBackoff;
+use GuzzleHttp\Client;
 
 class OIDC
 {
@@ -17,53 +18,53 @@ class OIDC
      * The IP is used instead of the domain 'metadata' to avoid slow responses
      * when not on Compute Engine.
      */
-    const METADATA_HOST = '169.254.169.254';
+    public const METADATA_HOST = '169.254.169.254';
 
     /**
      * Connection timeout when speaking to
      * the metadata server.
      */
-    const METADATA_CONNECTION_TIMEOUT_S = 0.5;
+    public const METADATA_CONNECTION_TIMEOUT_S = 0.5;
 
     /**
      * Timeout for the whole request when talking
      * to the metadata server.
      */
-    const METADATA_REQUEST_TIMEOUT_S = 1;
+    public const METADATA_REQUEST_TIMEOUT_S = 1;
 
     /**
      * The metadata path of the default identity token.
      */
-    const IDENTITY_TOKEN_URI_PATH = 'v1/instance/service-accounts/default/identity';
+    public const IDENTITY_TOKEN_URI_PATH = 'v1/instance/service-accounts/default/identity';
 
     /**
-     * URI of the public OpenID configuration definition
+     * URI of the public OpenID configuration definition.
      */
-    const OPENID_CONFIGURATION_URI = 'https://accounts.google.com/.well-known/openid-configuration';
+    public const OPENID_CONFIGURATION_URI = 'https://accounts.google.com/.well-known/openid-configuration';
 
     /**
-     * JWT Signature Algorithm
+     * JWT Signature Algorithm.
      */
-    const JWT_SIG_ALG = 'RS256';
+    public const JWT_SIG_ALG = 'RS256';
 
     /**
-     * List of acceptable JWT issuers
+     * List of acceptable JWT issuers.
      */
-    const JWT_ISSUERS = [
+    public const JWT_ISSUERS = [
         'https://accounts.google.com',
-        'accounts.google.com'
+        'accounts.google.com',
     ];
 
     /**
      * Fetch an OIDC ID token.
      *
-     * @param string $target_audience The target audience of the generated JWT.
+     * @param string $target_audience the target audience of the generated JWT
      *
      * @return string
      */
     public static function fetchToken($target_audience = '')
     {
-        $uri = self::getFetchTokenUri() . '?audience=' . urlencode($target_audience) . '&format=full';
+        $uri = self::getFetchTokenUri().'?audience='.urlencode($target_audience).'&format=full';
 
         return self::getFromMetadata($uri);
     }
@@ -71,18 +72,27 @@ class OIDC
     /**
      * Validate an OIDC ID token.
      *
-     * @param string $oidc_jwt The JWT token to be validated.
-     * @param string $expected_audience The expected audience of the provided JWT.
+     * @param string $oidc_jwt          the JWT token to be validated
+     * @param string $expected_audience the expected audience of the provided JWT
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid.
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
      *
-     * @return array Returns array containing "sub" and "email" if token is valid.
+     * @return array returns array containing "sub" and "email" if token is valid
      */
     public static function validateToken($oidc_jwt, $expected_audience)
     {
         $jwk_url = self::get_jwk_url();
 
         return JWT::validate($oidc_jwt, $expected_audience, $jwk_url, self::JWT_SIG_ALG, self::JWT_ISSUERS);
+    }
+
+    public static function shouldRetry($ex, $retryAttempt = 1)
+    {
+        if (GuzzleTools::isConnectionError($ex, self::METADATA_CONNECTION_TIMEOUT_S)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -92,7 +102,7 @@ class OIDC
      */
     protected static function get_jwk_url()
     {
-        return InstanceLocalCache::remember('jwk_url__' . self::OPENID_CONFIGURATION_URI, 86400, function () {
+        return InstanceLocalCache::remember('jwk_url__'.self::OPENID_CONFIGURATION_URI, 86400, function () {
             $httpclient = new Client();
 
             $content = [
@@ -115,15 +125,15 @@ class OIDC
      */
     protected static function getFetchTokenUri()
     {
-        $base = 'http://' . self::METADATA_HOST . '/computeMetadata/';
+        $base = 'http://'.self::METADATA_HOST.'/computeMetadata/';
 
-        return $base . self::IDENTITY_TOKEN_URI_PATH;
+        return $base.self::IDENTITY_TOKEN_URI_PATH;
     }
 
     /**
      * Fetch the value of a GCE metadata server URI.
      *
-     * @param string $uri The metadata URI.
+     * @param string $uri the metadata URI
      *
      * @return string
      */
@@ -139,17 +149,8 @@ class OIDC
             ],
         ];
 
-        $response = (new ExponentialBackoff(6, [OIDC::class, 'shouldRetry']))->execute([$client, 'get'], [$uri, $content]);
+        $response = (new ExponentialBackoff(6, [self::class, 'shouldRetry']))->execute([$client, 'get'], [$uri, $content]);
 
-        return ((string) $response->getBody());
-    }
-
-    public static function shouldRetry($ex, $retryAttempt = 1)
-    {
-        if (GuzzleTools::isConnectionError($ex, self::METADATA_CONNECTION_TIMEOUT_S)) {
-            return true;
-        }
-
-        return false;
+        return (string) $response->getBody();
     }
 }

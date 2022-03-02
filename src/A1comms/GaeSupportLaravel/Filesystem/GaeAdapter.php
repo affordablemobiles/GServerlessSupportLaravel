@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Filesystem;
 
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config;
 
 /**
- * Class GaeAdapter
+ * Class GaeAdapter.
  *
  * The class overrides the existing methods in order to:
  *
@@ -25,8 +27,6 @@ use League\Flysystem\Config;
  * is used to check that it is a folder path. The check fails due to the trailing
  * slash which is not supported by GCS and an empty directory listing is returned.
  * In order to make the check pass the path has to be 'gs://bucket/storage/app/'.
- *
- * @package A1comms\GaeSupportLaravel\Filesystem
  */
 class GaeAdapter extends Local
 {
@@ -41,32 +41,20 @@ class GaeAdapter extends Local
     /**
      * {@inheritdoc}
      */
-    protected function ensureDirectory($root)
-    {
-        if (is_dir($root) === false) {
-            mkdir($root, 0755, true);
-        }
-
-        return gae_realpath($root);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function writeStream($path, $resource, Config $config)
     {
         $location = $this->applyPathPrefix($path);
-        $this->ensureDirectory(dirname($location));
+        $this->ensureDirectory(\dirname($location));
 
-        if (! $stream = fopen($location, 'w')) {
+        if (!$stream = fopen($location, 'w')) {
             return false;
         }
 
-        while (! feof($resource)) {
+        while (!feof($resource)) {
             fwrite($stream, fread($resource, 1024), 1024);
         }
 
-        if (! fclose($stream)) {
+        if (!fclose($stream)) {
             return false;
         }
 
@@ -78,12 +66,24 @@ class GaeAdapter extends Local
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function applyPathPrefix($path)
     {
         $prefixedPath = parent::applyPathPrefix($path);
 
-        return rtrim($prefixedPath, DIRECTORY_SEPARATOR);
+        return rtrim($prefixedPath, \DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function ensureDirectory($root)
+    {
+        if (false === is_dir($root)) {
+            mkdir($root, 0o755, true);
+        }
+
+        return gae_realpath($root);
     }
 }

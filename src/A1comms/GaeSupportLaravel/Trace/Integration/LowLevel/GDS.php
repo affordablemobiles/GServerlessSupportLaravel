@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
 use GDS\Gateway\GRPCv1 as Gateway;
 use GDS\Gateway\RESTv1 as GatewayREST;
-use OpenCensus\Trace\Span;
-use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Integrations\IntegrationInterface;
+use OpenCensus\Trace\Span;
 
 class GDS implements IntegrationInterface
 {
     /**
-     * Static method to add instrumentation
+     * Static method to add instrumentation.
      */
-    public static function load()
+    public static function load(): void
     {
-        if (!extension_loaded('opencensus')) {
+        if (!\extension_loaded('opencensus')) {
             trigger_error('opencensus extension required to load GDS (Datastore) integrations.', E_USER_WARNING);
+
             return;
         }
 
@@ -25,13 +27,13 @@ class GDS implements IntegrationInterface
         self::load_gRPC();
     }
 
-    public static function load_REST()
+    public static function load_REST(): void
     {
         opencensus_trace_method(GatewayREST::class, 'executePostRequest', function ($str_method, $args) {
             return [
                 'name' => 'GDS::execute/'.$str_method,
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -39,7 +41,7 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::fetchByKeyPart',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -47,7 +49,7 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::upsert',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -55,18 +57,18 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::gql',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
     }
 
-    public static function load_gRPC()
+    public static function load_gRPC(): void
     {
         opencensus_trace_method(Gateway::class, 'execute', function ($str_method, $args) {
             return [
                 'name' => 'GDS::execute/'.$str_method,
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -74,7 +76,7 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::fetchByKeyPart',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -82,7 +84,7 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::upsert',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -90,7 +92,7 @@ class GDS implements IntegrationInterface
             return [
                 'name' => 'GDS::gql',
                 'attributes' => [],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
     }

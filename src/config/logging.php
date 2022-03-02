@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Log Channel
@@ -14,7 +15,7 @@ return [
     | one of the channels defined in the "channels" configuration array.
     |
     */
-    
+
     'default' => 'gae',
 
     /*
@@ -42,5 +43,4 @@ return [
             'path' => '/var/log/emergency.log',
         ],
     ],
-
 ];

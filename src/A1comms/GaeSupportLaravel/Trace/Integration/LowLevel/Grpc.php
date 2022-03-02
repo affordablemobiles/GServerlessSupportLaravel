@@ -1,6 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright 2017 OpenCensus Authors
+ * Copyright 2017 OpenCensus Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +22,10 @@ namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
 use Grpc\BaseStub;
 use Grpc\UnaryCall;
-use OpenCensus\Trace\Span;
-use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Integrations\IntegrationInterface;
 use OpenCensus\Trace\Propagator\GrpcMetadataPropagator;
+use OpenCensus\Trace\Span;
+use OpenCensus\Trace\Tracer;
 
 /**
  * This class handles instrumenting grpc requests using the opencensus extension.
@@ -37,12 +40,13 @@ use OpenCensus\Trace\Propagator\GrpcMetadataPropagator;
 class Grpc implements IntegrationInterface
 {
     /**
-     * Static method to add instrumentation to grpc requests
+     * Static method to add instrumentation to grpc requests.
      */
-    public static function load()
+    public static function load(): void
     {
-        if (!extension_loaded('opencensus')) {
+        if (!\extension_loaded('opencensus')) {
             trigger_error('opencensus extension required to load grpc integrations.', E_USER_WARNING);
+
             return;
         }
 
@@ -54,9 +58,9 @@ class Grpc implements IntegrationInterface
                 'attributes' => [
                     'host' => $stub->getTarget(),
                     'uri' => $method,
-                    'type' => 'simpleRequest'
+                    'type' => 'simpleRequest',
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -64,9 +68,9 @@ class Grpc implements IntegrationInterface
             return [
                 'name' => 'gRPC::wait',
                 'attributes' => [
-                    'type' => 'UnaryCall'
+                    'type' => 'UnaryCall',
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -77,9 +81,9 @@ class Grpc implements IntegrationInterface
                 'name' => 'grpc/clientStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri' => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -90,9 +94,9 @@ class Grpc implements IntegrationInterface
                 'name' => 'grpc/serverStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri' => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
@@ -102,9 +106,9 @@ class Grpc implements IntegrationInterface
                 'name' => 'grpc/bidiRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri' => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
     }
@@ -125,8 +129,9 @@ class Grpc implements IntegrationInterface
      * $response = $call->wait();
      * ```
      *
-     * @param array $metadata
+     * @param array  $metadata
      * @param string $jwtAuthUri
+     *
      * @return array
      */
     public static function updateMetadata($metadata, $jwtAuthUri)
@@ -135,9 +140,10 @@ class Grpc implements IntegrationInterface
         if ($context->enabled()) {
             $propagator = new GrpcMetadataPropagator();
             $metadata += [
-                $propagator->key() => [$propagator->formatter()->serialize($context)]
+                $propagator->key() => [$propagator->formatter()->serialize($context)],
             ];
         }
+
         return $metadata;
     }
 }

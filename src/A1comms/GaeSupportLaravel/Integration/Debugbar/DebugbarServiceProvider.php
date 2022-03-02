@@ -1,14 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\Debugbar;
 
-use Illuminate\Support\ServiceProvider;
 use Barryvdh\Debugbar\Facades\Debugbar;
+use Illuminate\Support\ServiceProvider;
 
 /**
- * Class DebugbarServiceProvider
- *
- * @package A1comms\GaeSupportLaravel
+ * Class DebugbarServiceProvider.
  */
 class DebugbarServiceProvider extends ServiceProvider
 {
@@ -21,10 +21,8 @@ class DebugbarServiceProvider extends ServiceProvider
 
     /**
      * Register bindings in the container.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         if (class_exists(Debugbar::class)) {
             Debugbar::addCollector(new TimeDataCollector());
@@ -33,12 +31,9 @@ class DebugbarServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Queue;
 
 use A1comms\GaeSupportLaravel\Integration\TaskQueue\PushTask;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class GaeQueue extends Queue implements QueueContract
 {
-    const PAYLOAD_REQ_PARAM_NAME = 'data';
+    public const PAYLOAD_REQ_PARAM_NAME = 'data';
 
     /**
      * The current request instance.
@@ -42,7 +44,7 @@ class GaeQueue extends Queue implements QueueContract
     protected $shouldEncrypt;
 
     /**
-     * Indicates is the messages should be compressed (useful when using ::withChain and/or larger job sizes)
+     * Indicates is the messages should be compressed (useful when using ::withChain and/or larger job sizes).
      *
      * @var bool
      */
@@ -58,7 +60,6 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * GaeQueue constructor.
      *
-     * @param Request $request
      * @param $default
      * @param $url
      * @param bool $shouldEncrypt
@@ -84,7 +85,7 @@ class GaeQueue extends Queue implements QueueContract
      * Push a new job onto the queue.
      *
      * @param string $job
-     * @param mixed $data
+     * @param mixed  $data
      * @param string $queue
      *
      * @return mixed
@@ -99,7 +100,6 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param string $payload
      * @param string $queue
-     * @param array $options
      *
      * @return mixed
      */
@@ -128,11 +128,11 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param string $payload
      * @param string $queue
-     * @param int $delay
+     * @param int    $delay
      *
      * @return mixed
      */
-    public function recreate($payload, $queue = null, $delay)
+    public function recreate($payload, $queue, $delay)
     {
         $options = ['delay_seconds' => $this->getSeconds($delay)];
 
@@ -143,9 +143,9 @@ class GaeQueue extends Queue implements QueueContract
      * Push a new job onto the queue after a delay.
      *
      * @param \DateTime|int $delay
-     * @param string $job
-     * @param mixed $data
-     * @param string $queue
+     * @param string        $job
+     * @param mixed         $data
+     * @param string        $queue
      *
      * @return mixed
      */
@@ -163,11 +163,11 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param string $queue
      *
-     * @return \Illuminate\Queue\Jobs\Job|null
+     * @return null|\Illuminate\Queue\Jobs\Job
      */
     public function pop($queue = null)
     {
-        throw new \RuntimeException("Pop is not supported by GaeQueue.");
+        throw new \RuntimeException('Pop is not supported by GaeQueue.');
     }
 
     /**
@@ -187,12 +187,10 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param string $queue
      * @param string $id
-     *
-     * @return void
      */
-    public function deleteMessage($queue, $id)
+    public function deleteMessage($queue, $id): void
     {
-        throw new \RuntimeException("Delete is not supported by GaeQueue.");
+        throw new \RuntimeException('Delete is not supported by GaeQueue.');
     }
 
     /**
@@ -209,7 +207,7 @@ class GaeQueue extends Queue implements QueueContract
             // So if we are being hacked
             // the hacker would think it went OK.
             Log::warning(
-                'Marshalling Queue Request: Invalid job. ' . $e->getMessage(),
+                'Marshalling Queue Request: Invalid job. '.$e->getMessage(),
                 [
                     'exception' => $e,
                 ]
@@ -225,6 +223,36 @@ class GaeQueue extends Queue implements QueueContract
         }
 
         return new Response('OK');
+    }
+
+    /**
+     * Get the queue or return the default.
+     *
+     * @param null|string $queue
+     *
+     * @return string
+     */
+    public function getQueue($queue)
+    {
+        return $queue ?: $this->default;
+    }
+
+    /**
+     * Get the request instance.
+     *
+     * @return \Illuminate\Http\Request
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * Set the request instance.
+     */
+    public function setRequest(Request $request): void
+    {
+        $this->request = $request;
     }
 
     /**
@@ -267,7 +295,7 @@ class GaeQueue extends Queue implements QueueContract
     protected function parseJobBody($body)
     {
         if ($this->shouldCompress) {
-            $body = gzdecode(base64_decode($body));
+            $body = gzdecode(base64_decode($body, true));
         }
 
         if ($this->shouldEncrypt) {
@@ -275,37 +303,5 @@ class GaeQueue extends Queue implements QueueContract
         }
 
         return $body;
-    }
-
-    /**
-     * Get the queue or return the default.
-     *
-     * @param string|null $queue
-     *
-     * @return string
-     */
-    public function getQueue($queue)
-    {
-        return $queue ?: $this->default;
-    }
-
-    /**
-     * Get the request instance.
-     *
-     * @return \Illuminate\Http\Request
-     */
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    /**
-     * Set the request instance.
-     *
-     * @param \Illuminate\Http\Request $request
-     */
-    public function setRequest(Request $request)
-    {
-        $this->request = $request;
     }
 }

@@ -1,19 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\JWT\Signer;
 
 use Exception;
-use InvalidArgumentException;
-use Lcobucci\JWT\Signer\BaseSigner;
-use Lcobucci\JWT\Signer\Key;
-use Lcobucci\JWT\Signer;
-use Lcobucci\JWT\Signature;
 use Google_Client;
 use Google_Service_IAMCredentials;
 use Google_Service_IAMCredentials_SignBlobRequest;
+use InvalidArgumentException;
+use Lcobucci\JWT\Signature;
+use Lcobucci\JWT\Signer;
+use Lcobucci\JWT\Signer\Key;
 
 /**
- * Sign with a Google Service Account using the IAM API
+ * Sign with a Google Service Account using the IAM API.
  *
  * You can grab the JWKS public key definition for a service account
  * by visiting:
@@ -23,34 +24,32 @@ use Google_Service_IAMCredentials_SignBlobRequest;
 class IAMSigner implements Signer
 {
     /**
-     * Returns the algorithm id
+     * Returns the algorithm id.
      *
      * @return string
      */
     public function getAlgorithmId()
     {
-        return "RS256";
+        return 'RS256';
     }
 
     /**
-     * Apply changes on headers according with algorithm
-     *
-     * @param array $headers
+     * Apply changes on headers according with algorithm.
      */
-    public function modifyHeader(array &$headers)
+    public function modifyHeader(array &$headers): void
     {
         $headers['alg'] = $this->getAlgorithmId();
     }
 
     /**
-     * Returns a signature for given data
+     * Returns a signature for given data.
      *
      * @param string $payload
      * @param string $key
      *
-     * @return Signature
-     *
      * @throws InvalidArgumentException When given key is invalid
+     *
+     * @return Signature
      */
     public function sign($payload, $key)
     {
@@ -58,15 +57,15 @@ class IAMSigner implements Signer
     }
 
     /**
-     * Returns if the expected hash matches with the data and key
+     * Returns if the expected hash matches with the data and key.
      *
      * @param string $expected
      * @param string $payload
      * @param string $key
      *
-     * @return boolean
-     *
      * @throws InvalidArgumentException When given key is invalid
+     *
+     * @return bool
      */
     public function verify($expected, $payload, $key)
     {
@@ -74,12 +73,11 @@ class IAMSigner implements Signer
     }
 
     /**
-     * Creates a hash with the given data
+     * Creates a hash with the given data.
      *
      * @internal
      *
      * @param string $payload
-     * @param Key $key
      *
      * @return string
      */
@@ -101,22 +99,21 @@ class IAMSigner implements Signer
 
         $response = $service->projects_serviceAccounts->signBlob($keyID, $requestBody);
 
-        return base64_decode($response->getSignedBlob());
+        return base64_decode($response->getSignedBlob(), true);
     }
 
     /**
-     * Performs the signature verification
+     * Performs the signature verification.
      *
      * @internal
      *
      * @param string $expected
      * @param string $payload
-     * @param Key $key
      *
-     * @return boolean
+     * @return bool
      */
     public function doVerify($expected, $payload, Key $key)
     {
-        throw new Exception("signature verification is currently unsupported");
+        throw new Exception('signature verification is currently unsupported');
     }
 }

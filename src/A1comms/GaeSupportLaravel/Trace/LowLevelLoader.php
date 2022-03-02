@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace;
 
 /**
@@ -9,7 +11,6 @@ class LowLevelLoader implements LowLevelLoaderInterface
 {
     /**
      * Static method to get the list of trace modules to load.
-
      */
     public static function getList()
     {

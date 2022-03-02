@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file was part of the Monolog package (modified).
  *
@@ -11,16 +13,16 @@
 
 namespace A1comms\GaeSupportLaravel\Log;
 
-use Throwable;
 use DateTimeInterface;
-use Monolog\Utils;
 use Monolog\Formatter\NormalizerFormatter;
+use Monolog\Utils;
 use OpenCensus\Trace\Tracer;
+use Throwable;
 
 class JsonFormatter extends NormalizerFormatter
 {
-    const BATCH_MODE_JSON = 1;
-    const BATCH_MODE_NEWLINES = 2;
+    public const BATCH_MODE_JSON = 1;
+    public const BATCH_MODE_NEWLINES = 2;
 
     protected $batchMode;
     protected $appendNewline;
@@ -54,7 +56,7 @@ class JsonFormatter extends NormalizerFormatter
     }
 
     /**
-     * True if newlines are appended to every formatted record
+     * True if newlines are appended to every formatted record.
      */
     public function isAppendingNewlines(): bool
     {
@@ -71,11 +73,11 @@ class JsonFormatter extends NormalizerFormatter
         $this->message = $record['message'];
 
         $normalized = $this->normalize($record);
-        if (isset($normalized['context']) && $normalized['context'] === []) {
-            $normalized['context'] = new \stdClass;
+        if (isset($normalized['context']) && [] === $normalized['context']) {
+            $normalized['context'] = new \stdClass();
         }
-        if (isset($normalized['extra']) && $normalized['extra'] === []) {
-            $normalized['extra'] = new \stdClass;
+        if (isset($normalized['extra']) && [] === $normalized['extra']) {
+            $normalized['extra'] = new \stdClass();
         }
 
         $normalized['message'] = $this->normalize($this->message);
@@ -83,13 +85,11 @@ class JsonFormatter extends NormalizerFormatter
         $normalized['logging.googleapis.com/trace'] = 'projects/'.gae_project().'/traces/'.Tracer::spanContext()->traceId();
         $normalized['time'] = $normalized['datetime']->format(DateTimeInterface::RFC3339_EXTENDED);
 
-        unset($normalized['level']);
-        unset($normalized['level_name']);
-        unset($normalized['datetime']);
+        unset($normalized['level'], $normalized['level_name'], $normalized['datetime']);
 
         $this->message = null;
 
-        return $this->toJson($normalized, true) . ($this->appendNewline ? "\n" : '');
+        return $this->toJson($normalized, true).($this->appendNewline ? "\n" : '');
     }
 
     /**
@@ -107,7 +107,7 @@ class JsonFormatter extends NormalizerFormatter
         }
     }
 
-    public function includeStacktraces(bool $include = true)
+    public function includeStacktraces(bool $include = true): void
     {
         $this->includeStacktraces = $include;
     }
@@ -130,7 +130,7 @@ class JsonFormatter extends NormalizerFormatter
 
         $oldNewline = $this->appendNewline;
         $this->appendNewline = false;
-        array_walk($records, function (&$value, $key) use ($instance) {
+        array_walk($records, function (&$value, $key) use ($instance): void {
             $value = $instance->format($value);
         });
         $this->appendNewline = $oldNewline;
@@ -142,6 +142,7 @@ class JsonFormatter extends NormalizerFormatter
      * Normalizes given $data.
      *
      * @param mixed $data
+     * @param mixed $depth
      *
      * @return mixed
      */
@@ -151,13 +152,14 @@ class JsonFormatter extends NormalizerFormatter
             return 'Over '.$this->maxNormalizeDepth.' levels deep, aborting normalization';
         }
 
-        if (is_array($data) || $data instanceof \Traversable) {
+        if (\is_array($data) || $data instanceof \Traversable) {
             $normalized = [];
 
             $count = 1;
             foreach ($data as $key => $value) {
                 if ($count++ > $this->maxNormalizeItemCount) {
-                    $normalized['...'] = 'Over '.$this->maxNormalizeItemCount.' items ('.count($data).' total), aborting normalization';
+                    $normalized['...'] = 'Over '.$this->maxNormalizeItemCount.' items ('.\count($data).' total), aborting normalization';
+
                     break;
                 }
 
@@ -177,6 +179,9 @@ class JsonFormatter extends NormalizerFormatter
     /**
      * Normalizes given exception with or without its own stack trace based on
      * `includeStacktraces` property.
+     *
+     * @param mixed $e
+     * @param mixed $depth
      */
     protected function normalizeException($e, $depth = 0)
     {
@@ -193,7 +198,7 @@ class JsonFormatter extends NormalizerFormatter
                 foreach ($trace as $frame) {
                     if (isset($frame['file'])) {
                         $data['trace'][] = $frame['file'].':'.$frame['line'];
-                    } elseif (isset($frame['function']) && $frame['function'] === '{closure}') {
+                    } elseif (isset($frame['function']) && '{closure}' === $frame['function']) {
                         // We should again normalize the frames, because it might contain invalid items
                         $data['trace'][] = $frame['function'];
                     } else {
@@ -202,7 +207,7 @@ class JsonFormatter extends NormalizerFormatter
                     }
                 }
             } else {
-                $this->message = 'EXCEPTION: (' . $data['code'] . ') ' . $data['message'] . "\n\n" . $e->getTraceAsString();
+                $this->message = 'EXCEPTION: ('.$data['code'].') '.$data['message']."\n\n".$e->getTraceAsString();
             }
         }
 

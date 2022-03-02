@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth\Token\Middleware;
 
+use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
+use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
 use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
-use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
-use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
 
 /**
  * AuthTokenMiddleware is a Guzzle Middleware that adds an Authorization header
@@ -31,7 +33,7 @@ class AuthTokenMiddleware
     /**
      * Creates a new AuthTokenMiddleware.
      *
-     * @param callable $audienceSource (optional) function to be called to return the target_audience for OIDC.
+     * @param callable $audienceSource (optional) function to be called to return the target_audience for OIDC
      */
     public function __construct(callable $audienceSource = null, callable $tokenTypeSource = null)
     {
@@ -63,8 +65,6 @@ class AuthTokenMiddleware
      *
      *   $res = $client->get('https://my-super-secure-app.appspot.com/tasks/list');
      *
-     * @param callable $handler
-     *
      * @return \Closure
      */
     public function __invoke(callable $handler)
@@ -73,17 +73,21 @@ class AuthTokenMiddleware
             if (!empty($options['auth'])) {
                 switch ($options['auth']) {
                     case 'google_oidc':
-                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchOIDCToken(
+                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOIDCToken(
                             $request->getUri()
                         ));
+
                         break;
+
                     case 'google_oauth2':
-                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchOAuth2Token(
+                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOAuth2Token(
                             $request->getUri()
                         ));
+
                         break;
+
                     case 'google_dynamic':
-                        $request = $request->withHeader('authorization', 'Bearer ' . $this->fetchDynamicToken(
+                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchDynamicToken(
                             $request->getUri()
                         ));
                         // no break
@@ -103,18 +107,20 @@ class AuthTokenMiddleware
      */
     protected function fetchDynamicToken(UriInterface $request_uri)
     {
-        $tokenType = call_user_func($this->tokenTypeSource, $request_uri);
+        $tokenType = \call_user_func($this->tokenTypeSource, $request_uri);
 
         switch ($tokenType) {
-            case "oidc":
+            case 'oidc':
                 return $this->fetchOIDCToken($request_uri);
-            case "oauth2":
+
+            case 'oauth2':
                 return $this->fetchOAuth2Token($request_uri);
+
             default:
-                throw new Exception("Invalid Token Type from callback");
+                throw new Exception('Invalid Token Type from callback');
         }
     }
-    
+
     /**
      * Call OIDC handler to fetch the token.
      *
@@ -122,8 +128,8 @@ class AuthTokenMiddleware
      */
     protected function fetchOIDCToken(UriInterface $request_uri)
     {
-        $target_audience = call_user_func($this->audienceSource, $request_uri);
-        
+        $target_audience = \call_user_func($this->audienceSource, $request_uri);
+
         return OIDC::fetchToken($target_audience);
     }
 

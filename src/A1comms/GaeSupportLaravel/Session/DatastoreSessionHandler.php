@@ -1,97 +1,81 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Session;
 
-use GDS;
-use Carbon\Carbon;
-use SessionHandlerInterface;
-use Illuminate\Support\Facades\Log;
-use Google\Cloud\Core\ExponentialBackoff;
 use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
+use Carbon\Carbon;
+use GDS;
+use Google\Cloud\Core\ExponentialBackoff;
+use Illuminate\Support\Facades\Log;
+use SessionHandlerInterface;
 
 /**
- * class DataStoreSessionHandler
+ * class DataStoreSessionHandler.
  *
  * @uses SessionHandlerInterface
- *
- * @package A1comms\GaeSupportLaravel\Session
  */
 class DatastoreSessionHandler implements SessionHandlerInterface
 {
     /**
-     * $expire
+     * $expire.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $expire;
 
     /**
-     * $lastaccess
+     * $lastaccess.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $lastaccess;
 
     /**
-     * $deleteTime
+     * $deleteTime.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $deleteTime;
 
     /**
-     * $obj_schema
+     * $obj_schema.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $obj_schema;
 
     /**
-     * $obj_store
+     * $obj_store.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $obj_store;
 
     /**
-     * $orig_data
+     * $orig_data.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $orig_data;
 
     /**
-     * $orig_id
+     * $orig_id.
      *
      * @var mixed
-     *
-     * @access private
      */
     private $orig_id;
 
     /**
-     * __construct
+     * __construct.
      *
-     * @access public
-     *
-     * @return mixed Value.
+     * @return mixed value
      */
     public function __construct()
     {
         // Get session max lifetime to leverage Memcache expire functionality.
-        $this->expire = ini_get("session.gc_maxlifetime");
+        $this->expire = ini_get('session.gc_maxlifetime');
         $this->lastaccess = $this->getTimeStamp();
         $this->deleteTime = Carbon::now()->subSeconds($this->expire)->toDateTimeString();
 
@@ -99,7 +83,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
         $this->obj_schema = (new GDS\Schema('sessions'))
             ->addString('data', false)
-            ->addDateTime('lastaccess');
+            ->addDateTime('lastaccess')
+        ;
 
         $this->obj_store = new GDS\Store($this->obj_schema, $obj_gateway);
     }
@@ -109,8 +94,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      *
      * @param string $savePath    Save path
      * @param string $sessionName Session name
-     *
-     * @access public
      *
      * @return bool
      */
@@ -122,8 +105,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /**
      * close - Closes the current session.
      *
-     * @access public
-     *
      * @return bool
      */
     public function close()
@@ -134,9 +115,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /**
      * read - Reads the session data.
      *
-     * @param string $id Session ID.
-     *
-     * @access public
+     * @param string $id session ID
      *
      * @return string
      */
@@ -151,27 +130,25 @@ class DatastoreSessionHandler implements SessionHandlerInterface
             return $obj_sess->data;
         }
 
-        return "";
+        return '';
     }
 
     /**
-     * write - Writes the session data to the storage
+     * write - Writes the session data to the storage.
      *
      * @param string $id   Session ID
      * @param string $data Serialized session data to save
-     *
-     * @access public
      *
      * @return string
      */
     public function write($id, $data)
     {
         $obj_sess = $this->obj_store->createEntity([
-            'data'          => $data,
-            'lastaccess'    => $this->lastaccess
+            'data' => $data,
+            'lastaccess' => $this->lastaccess,
         ])->setKeyName($id);
 
-        if (($this->orig_id != $id) || ($this->orig_data != $data)) {
+        if (($this->orig_id !== $id) || ($this->orig_data !== $data)) {
             /**
              * If Datastore returns too much contention on write,
              * keep retrying with exponential backoff, 6 times until we fail.
@@ -186,8 +163,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      * destroy - Destroys a session.
      *
      * @param tring $id Session ID
-     *
-     * @access public
      *
      * @return bool
      */
@@ -205,9 +180,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /**
      * gc - Cleans up expired sessions (garbage collection).
      *
-     * @param string|int $maxlifetime Sessions that have not updated for the last maxlifetime seconds will be removed
-     *
-     * @access public
+     * @param int|string $maxlifetime Sessions that have not updated for the last maxlifetime seconds will be removed
      *
      * @return bool
      */
@@ -219,17 +192,15 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /**
      * googlegc - Cleans up expired sessions in GAE datastore (garbage collection).
      *
-     * @access public
-     *
-     * @return mixed Value.
+     * @return mixed value
      */
     public function googlegc()
     {
-        $this->obj_store->query("SELECT * FROM sessions WHERE lastaccess < @old", ['old' => $this->deleteTime]);
+        $this->obj_store->query('SELECT * FROM sessions WHERE lastaccess < @old', ['old' => $this->deleteTime]);
 
         while ($arr_page = $this->obj_store->fetchPage(100)) {
-            Log::info('Processing page of ' . count($arr_page) . ' records...');
-            
+            Log::info('Processing page of '.\count($arr_page).' records...');
+
             if (!empty($arr)) {
                 $this->obj_store->delete($arr_page);
             }
@@ -238,7 +209,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
     private function getTimeStamp()
     {
-        $timeStamp = Carbon::now()->toDateTimeString();
-        return $timeStamp;
+        return Carbon::now()->toDateTimeString();
     }
 }

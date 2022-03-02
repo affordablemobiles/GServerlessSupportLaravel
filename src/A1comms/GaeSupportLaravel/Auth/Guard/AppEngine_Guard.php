@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
-use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Http\Request;
 
 class AppEngine_Guard extends BaseGuard
 {
@@ -11,8 +13,7 @@ class AppEngine_Guard extends BaseGuard
      * Authenticate a user based on request information,
      * return a valid user object if successful, or null.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     * @return null|\Illuminate\Contracts\Auth\Authenticatable
      */
     public static function validate(Request $request, UserProvider $provider = null)
     {
@@ -21,8 +22,9 @@ class AppEngine_Guard extends BaseGuard
 
         if (!empty($cron)) {
             return static::returnUser($provider, 'cron@appengine.google.internal');
-        } elseif (!empty($queueName)) {
-            return static::returnUser($provider, $queueName . '@appengine.google.internal');
+        }
+        if (!empty($queueName)) {
+            return static::returnUser($provider, $queueName.'@appengine.google.internal');
         }
 
         return null;

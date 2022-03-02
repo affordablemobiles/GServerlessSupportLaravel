@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
-use DateTime;
 use DateInterval;
-use Google\Protobuf;
-use Google\Cloud\Tasks\V2\Task;
-use Google\Cloud\Tasks\V2\OidcToken;
+use DateTime;
+use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
+use Google\Cloud\Tasks\V2\AppEngineRouting;
 use Google\Cloud\Tasks\V2\HttpMethod;
 use Google\Cloud\Tasks\V2\HttpRequest;
-use Google\Cloud\Tasks\V2\AppEngineRouting;
-use Google\Cloud\Tasks\V2\AppEngineHttpRequest;
+use Google\Cloud\Tasks\V2\OidcToken;
+use Google\Cloud\Tasks\V2\Task;
+use Google\Protobuf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
@@ -49,7 +51,7 @@ class PushTask
 
                 $this->pushTask->setAppEngineRouting($routing);
             } elseif (is_gae_development()) {
-                /**
+                /*
                  * Support our development environment,
                  * which runs working copies on live
                  * App Engine containers via rsync to /tmp.
@@ -59,16 +61,18 @@ class PushTask
                  * in the version name, send tasks back
                  * to that specific version.
                  */
-                Log::info('Detected development environment, routing to ' . gae_service() . ':' . gae_version());
+                Log::info('Detected development environment, routing to '.gae_service().':'.gae_version());
 
                 $routing = (new AppEngineRouting())
                     ->setService(gae_service())
-                    ->setVersion(gae_version());
+                    ->setVersion(gae_version())
+                ;
 
                 $this->pushTask->setAppEngineRouting($routing);
-            } elseif (gae_service() != "default") {
+            } elseif ('default' !== gae_service()) {
                 $routing = (new AppEngineRouting())
-                    ->setService(gae_service());
+                    ->setService(gae_service())
+                ;
 
                 $this->pushTask->setAppEngineRouting($routing);
             }
@@ -109,6 +113,7 @@ class PushTask
     public function add($queue_name = 'default')
     {
         $queue = new PushQueue($queue_name);
+
         return $queue->addTasks([$this])[0];
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Http\Middleware;
 
 use Closure;
@@ -9,8 +11,6 @@ class TaskCronAuthentication
 {
     /**
      * Create a new middleware instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -19,18 +19,18 @@ class TaskCronAuthentication
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param \Illuminate\Http\Request $request
+     *
      * @return mixed
      */
     public function handle($request, Closure $next)
     {
         if (!is_gae()) {
-            Log::info("App Engine Authentication Middleware: Not on App Engine, Bypassing...");
+            Log::info('App Engine Authentication Middleware: Not on App Engine, Bypassing...');
         } elseif ($request->header('X_APPENGINE_CRON', false)) {
-            Log::info("App Engine Authentication Middleware: Cron Detected, OK");
+            Log::info('App Engine Authentication Middleware: Cron Detected, OK');
         } elseif ($request->header('X_APPENGINE_QUEUENAME', false)) {
-            Log::info("App Engine Authentication Middleware: Queue Task Detected (Queue Name: " . $request->header('X_APPENGINE_QUEUENAME', false) . "), OK");
+            Log::info('App Engine Authentication Middleware: Queue Task Detected (Queue Name: '.$request->header('X_APPENGINE_QUEUENAME', false).'), OK');
         } else {
             return response('Unauthorized.', 401);
         }

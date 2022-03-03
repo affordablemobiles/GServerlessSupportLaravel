@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Foundation\Exceptions;
 
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
-use Exception;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
+use Throwable;
 
 class LumenHandler extends ExceptionHandler
 {
@@ -23,7 +23,7 @@ class LumenHandler extends ExceptionHandler
         if ($this->shouldReport($exception)) {
             try {
                 ErrorBootstrap::exceptionHandler($exception);
-            } catch (Exception $ex) {
+            } catch (Throwable $ex) {
             }
         }
     }

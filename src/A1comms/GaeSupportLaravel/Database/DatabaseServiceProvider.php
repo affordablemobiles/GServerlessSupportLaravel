@@ -6,6 +6,7 @@ namespace A1comms\GaeSupportLaravel\Database;
 
 use A1comms\GaeSupportLaravel\Database\Connectors\ConnectionFactory;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\DatabaseServiceProvider as LaravelDatabaseServiceProvider;
 
 class DatabaseServiceProvider extends LaravelDatabaseServiceProvider
@@ -26,5 +27,13 @@ class DatabaseServiceProvider extends LaravelDatabaseServiceProvider
         $this->app->singleton('db', fn ($app) => new DatabaseManager($app, $app['db.factory']));
 
         $this->app->bind('db.connection', fn ($app) => $app['db']->connection());
+
+        $this->app->bind('db.schema', function ($app) {
+            return $app['db']->connection()->getSchemaBuilder();
+        });
+
+        $this->app->singleton('db.transactions', function ($app) {
+            return new DatabaseTransactionsManager;
+        });
     }
 }

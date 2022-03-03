@@ -15,7 +15,7 @@ class LumenHandler extends ExceptionHandler
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      */
-    public function report(Exception $exception): void
+    public function report(Throwable $exception): void
     {
         parent::report($exception);
 

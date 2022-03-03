@@ -69,8 +69,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
     /**
      * __construct.
-     *
-     * @return mixed value
      */
     public function __construct()
     {
@@ -94,20 +92,16 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      *
      * @param string $savePath    Save path
      * @param string $sessionName Session name
-     *
-     * @return bool
      */
-    public function open($savePath, $sessionName)
+    public function open($savePath, $sessionName): bool
     {
         return true;
     }
 
     /**
      * close - Closes the current session.
-     *
-     * @return bool
      */
-    public function close()
+    public function close(): bool
     {
         return true;
     }
@@ -116,10 +110,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      * read - Reads the session data.
      *
      * @param string $id session ID
-     *
-     * @return string
      */
-    public function read($id)
+    public function read($id): string|false
     {
         $obj_sess = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'fetchByName'], [$id]);
 
@@ -138,10 +130,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      *
      * @param string $id   Session ID
      * @param string $data Serialized session data to save
-     *
-     * @return string
      */
-    public function write($id, $data)
+    public function write($id, $data): bool
     {
         $obj_sess = $this->obj_store->createEntity([
             'data'       => $data,
@@ -162,11 +152,9 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /**
      * destroy - Destroys a session.
      *
-     * @param tring $id Session ID
-     *
-     * @return bool
+     * @param string $id Session ID
      */
-    public function destroy($id)
+    public function destroy($id): bool
     {
         $obj_sess = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->obj_store, 'fetchByName'], [$id]);
 
@@ -181,20 +169,16 @@ class DatastoreSessionHandler implements SessionHandlerInterface
      * gc - Cleans up expired sessions (garbage collection).
      *
      * @param int|string $maxlifetime Sessions that have not updated for the last maxlifetime seconds will be removed
-     *
-     * @return bool
      */
-    public function gc($maxlifetime)
+    public function gc($maxlifetime): int
     {
-        return true;
+        return 0;
     }
 
     /**
      * googlegc - Cleans up expired sessions in GAE datastore (garbage collection).
-     *
-     * @return mixed value
      */
-    public function googlegc()
+    public function googlegc(): void
     {
         $this->obj_store->query('SELECT * FROM sessions WHERE lastaccess < @old', ['old' => $this->deleteTime]);
 
@@ -207,7 +191,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         }
     }
 
-    private function getTimeStamp()
+    private function getTimeStamp(): string
     {
         return Carbon::now()->toDateTimeString();
     }

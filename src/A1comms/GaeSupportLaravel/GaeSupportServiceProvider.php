@@ -6,6 +6,7 @@ namespace A1comms\GaeSupportLaravel;
 
 use A1comms\GaeSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
 use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
@@ -53,7 +54,15 @@ class GaeSupportServiceProvider extends ServiceProvider
         // Register the DatastoreSessionHandler
         Session::extend('gae', fn ($app) => new DatastoreSessionHandler());
 
-        Storage::extend('gae', fn ($app, $config) => new Flysystem(new GaeFilesystemAdapter($config['root'])));
+        Storage::extend('gae', function ($app, $config) {
+            $adapter = new GaeFilesystemAdapter($config['root']);
+
+            return new FilesystemAdapter(
+                new Flysystem($adapter, $config),
+                $adapter,
+                $config,
+            );
+        });
 
         // register the package's routes
         require __DIR__.'/Http/routes.php';

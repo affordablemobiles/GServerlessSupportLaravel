@@ -55,7 +55,7 @@ class GaeViewCompileCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(): int
     {
         $this->info('Blade Compiler: Startup...');
 
@@ -102,6 +102,8 @@ class GaeViewCompileCommand extends Command
         }
 
         $this->writeManifest($compiledDirectory);
+
+        return 0;
     }
 
     public function writeManifest($compiledDirectory): void

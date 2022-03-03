@@ -45,7 +45,7 @@ class GaePrepareCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(): int
     {
         $this->info($this->logPrefix.'Starting...');
 
@@ -56,6 +56,8 @@ class GaePrepareCommand extends Command
         $this->runRefreshManifest();
 
         $this->info($this->logPrefix.'Ready to Deploy!');
+
+        return 0;
     }
 
     public function runViewCompiler(): void

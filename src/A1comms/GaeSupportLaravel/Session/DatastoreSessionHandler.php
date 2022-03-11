@@ -10,7 +10,6 @@ use DateTimeInterface;
 use Google\Cloud\Core\ExponentialBackoff;
 use Google\Cloud\Datastore\DatastoreClient;
 use Google\Cloud\Datastore\Key;
-use Google\Cloud\Datastore\Transaction;
 use LogicException;
 use SessionHandlerInterface;
 
@@ -23,9 +22,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
     /** @var DatastoreClient */
     private $datastore;
-
-    /** @var Transaction */
-    private $transaction;
 
     /** @var string */
     private $namespaceId;
@@ -60,7 +56,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key    = $this->getKey($id);
-            $entity = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'lookup'], [$key]);
+            $entity = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'lookup'], [$key]);
             if (null !== $entity && isset($entity['data'])) {
                 $this->orig_id   = $id;
                 $this->orig_data = $entity['data'];
@@ -90,9 +86,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
                     ],
                     $this->getQueryOptions(),
                 );
-                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'upsert'], [$entity]);
-                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'commit'], []);
-                $this->clearTransaction();
+                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'upsert'], [$entity]);
             } catch (Exception $e) {
                 trigger_error(
                     sprintf('Datastore upsert failed: %s', $e->getMessage()),
@@ -110,9 +104,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key = $this->getKey($id);
-            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'delete'], [$key]);
-            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'commit'], []);
-            $this->clearTransaction();
+            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'delete'], [$key]);
         } catch (Exception $e) {
             trigger_error(
                 sprintf('Datastore delete failed: %s', $e->getMessage()),
@@ -133,20 +125,6 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     public function googlegc(): void
     {
         throw new LogicException('PHP based Session GC is deprecated, please use the Go app in Cloud Functions');
-    }
-
-    protected function getTransaction(): Transaction
-    {
-        if (null === $this->transaction) {
-            $this->transaction = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'transaction'], []);
-        }
-
-        return $this->transaction;
-    }
-
-    protected function clearTransaction(): void
-    {
-        $this->transaction = null;
     }
 
     protected function getKey($id): Key

@@ -12,7 +12,6 @@
         "php": "^8.1",
         "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "^7.4.1",
-        "a1comms/php-gds": "^4.2",
         "google/cloud": ">=0.175.0 <1.0.0",
         "kelvinmo/simplejwt": "^0.6.2",
         "illuminate/support": "^9",
@@ -30,6 +29,9 @@
     "require-dev": {
         "phpmd/phpmd" : "@stable",
         "friendsofphp/php-cs-fixer": "^3.6"
+    },
+    "suggest": {
+        "a1comms/php-gds": "Provides legacy Datastore support"
     },
     "autoload": {
         "psr-4": {

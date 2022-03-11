@@ -81,7 +81,7 @@ if (!function_exists('ipv4_in_range')) {
             $ip_dec          = ip2long($ip);
 
             // Strategy 1 - Create the netmask with 'netmask' 1s and then fill it to 32 with 0s
-            //$netmask_dec = bindec(str_pad('', $netmask, '1') . str_pad('', 32-$netmask, '0'));
+            // $netmask_dec = bindec(str_pad('', $netmask, '1') . str_pad('', 32-$netmask, '0'));
 
             // Strategy 2 - Use math to create it
             $wildcard_dec = 2 ** (32 - $netmask) - 1;

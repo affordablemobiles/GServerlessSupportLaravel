@@ -166,7 +166,7 @@ class Report
                 ],
             ]);
         }
-        //fwrite(STDERR, $message . PHP_EOL);
+        // fwrite(STDERR, $message . PHP_EOL);
     }
 
     /**

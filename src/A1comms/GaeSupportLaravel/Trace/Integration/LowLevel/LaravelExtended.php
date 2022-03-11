@@ -146,7 +146,7 @@ class LaravelExtended implements IntegrationInterface
                 // Disable this as it's causing segfaults, see:
                 // https://github.com/census-instrumentation/opencensus-php/issues/200
                 // ---
-                //opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
+                // opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
             }
             // Can't handle already objects yet.
         }

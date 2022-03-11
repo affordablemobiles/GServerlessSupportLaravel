@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Session;
 
+use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
 use Carbon\Carbon;
 use DateTimeInterface;
+use Google\Cloud\Core\ExponentialBackoff;
 use Google\Cloud\Datastore\DatastoreClient;
 use Google\Cloud\Datastore\Key;
 use Google\Cloud\Datastore\Transaction;
@@ -58,7 +60,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key    = $this->getKey($id);
-            $entity = $this->getTransaction()->lookup($key);
+            $entity = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'lookup'], [$key]);
             if (null !== $entity && isset($entity['data'])) {
                 $this->orig_id   = $id;
                 $this->orig_data = $entity['data'];
@@ -88,8 +90,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
                     ],
                     $this->getQueryOptions(),
                 );
-                $this->getTransaction()->upsert($entity);
-                $this->getTransaction()->commit();
+                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'upsert'], [$entity]);
+                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'commit'], []);
                 $this->clearTransaction();
             } catch (Exception $e) {
                 trigger_error(
@@ -108,8 +110,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key = $this->getKey($id);
-            $this->getTransaction()->delete($key);
-            $this->getTransaction()->commit();
+            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'delete'], [$key]);
+            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->getTransaction(), 'commit'], []);
             $this->clearTransaction();
         } catch (Exception $e) {
             trigger_error(
@@ -136,7 +138,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     protected function getTransaction(): Transaction
     {
         if (null === $this->transaction) {
-            $this->transaction = $this->datastore->transaction();
+            $this->transaction = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'transaction'], []);
         }
 
         return $this->transaction;

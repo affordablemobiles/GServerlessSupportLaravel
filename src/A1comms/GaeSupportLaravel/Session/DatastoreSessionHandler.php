@@ -90,6 +90,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
                 );
                 $this->getTransaction()->upsert($entity);
                 $this->getTransaction()->commit();
+                $this->clearTransaction();
             } catch (Exception $e) {
                 trigger_error(
                     sprintf('Datastore upsert failed: %s', $e->getMessage()),
@@ -109,6 +110,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
             $key = $this->getKey($id);
             $this->getTransaction()->delete($key);
             $this->getTransaction()->commit();
+            $this->clearTransaction();
         } catch (Exception $e) {
             trigger_error(
                 sprintf('Datastore delete failed: %s', $e->getMessage()),
@@ -121,9 +123,9 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    public function gc($maxlifetime): bool
+    public function gc($maxlifetime): int|false
     {
-        return true;
+        return false;
     }
 
     public function googlegc(): void
@@ -138,6 +140,11 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         }
 
         return $this->transaction;
+    }
+
+    protected function clearTransaction(): void
+    {
+        $this->transaction = null;
     }
 
     protected function getKey($id): Key

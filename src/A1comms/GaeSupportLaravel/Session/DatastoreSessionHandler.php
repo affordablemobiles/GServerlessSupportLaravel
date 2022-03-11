@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use DateTimeInterface;
 use Google\Cloud\Datastore\DatastoreClient;
 use Google\Cloud\Datastore\Key;
+use Google\Cloud\Datastore\Transaction;
 use LogicException;
 use SessionHandlerInterface;
 
@@ -38,16 +39,13 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
     public function __construct($kind = 'sessions', $namespaceId = null)
     {
-        $this->datastore = new DatastoreClient();
-
+        $this->datastore   = new DatastoreClient();
         $this->kind        = $kind;
         $this->namespaceId = $namespaceId;
     }
 
     public function open(string $savePath, string $sessionName): bool
     {
-        $this->transaction = $this->datastore->transaction();
-
         return true;
     }
 
@@ -60,7 +58,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key    = $this->getKey($id);
-            $entity = $this->transaction->lookup($key);
+            $entity = $this->getTransaction()->lookup($key);
             if (null !== $entity && isset($entity['data'])) {
                 $this->orig_id   = $id;
                 $this->orig_data = $entity['data'];
@@ -90,8 +88,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
                     ],
                     $this->getQueryOptions(),
                 );
-                $this->transaction->upsert($entity);
-                $this->transaction->commit();
+                $this->getTransaction()->upsert($entity);
+                $this->getTransaction()->commit();
             } catch (Exception $e) {
                 trigger_error(
                     sprintf('Datastore upsert failed: %s', $e->getMessage()),
@@ -109,8 +107,8 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     {
         try {
             $key = $this->getKey($id);
-            $this->transaction->delete($key);
-            $this->transaction->commit();
+            $this->getTransaction()->delete($key);
+            $this->getTransaction()->commit();
         } catch (Exception $e) {
             trigger_error(
                 sprintf('Datastore delete failed: %s', $e->getMessage()),
@@ -131,6 +129,15 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     public function googlegc(): void
     {
         throw new LogicException('PHP based Session GC is deprecated, please use the Go app in Cloud Functions');
+    }
+
+    protected function getTransaction(): Transaction
+    {
+        if (null === $this->transaction) {
+            $this->transaction = $this->datastore->transaction();
+        }
+
+        return $this->transaction;
     }
 
     protected function getKey($id): Key

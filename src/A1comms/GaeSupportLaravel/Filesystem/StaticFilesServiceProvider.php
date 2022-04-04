@@ -9,7 +9,9 @@ class StaticFilesServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->map();
+        if (is_cloud_run()) {
+            $this->map();
+        }
     }
 
     public function register()

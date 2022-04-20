@@ -33,6 +33,31 @@ class Firebase extends BaseController
         );
     }
 
+     /**
+     * fetchLoginToken
+     *
+     * @access public
+     */
+    public function fetchLoginToken()
+    {
+        return Token::fetchToken(
+            env('FIREBASE_PROJECT'),
+            request()->input('idToken')
+        );
+    }
+
+    /**
+     * fetchLoginCookie
+     *
+     * @access public
+     */
+    public function fetchLoginCookie($token)
+    {
+        return response('OK')->cookie(
+            config('gaesupport.auth.firebase.cookie_name'), $token, 2628000, null, null, true, true, false, 'strict'
+        );
+    }
+
     /**
      * logout.
      */

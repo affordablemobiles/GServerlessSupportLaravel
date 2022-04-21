@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers\Concerns;
 
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase as Token;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cookie;
 
@@ -56,7 +57,7 @@ trait HandlesFirebaseLogin
     /**
      * logoutRedirect.
      */
-    protected function logoutRedirect(): Response
+    protected function logoutRedirect(): RedirectResponse
     {
         return redirect(
             config('gaesupport.auth.firebase.logout_redirect')

@@ -4,73 +4,36 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers;
 
-use A1comms\GaeSupportLaravel\Auth\Token\Firebase as Token;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Cookie;
 
 class Firebase extends BaseController
 {
+    use Concerns\HandlesFirebaseLogin;
+
     /**
      * login.
      */
-    public function login()
+    public function login(Request $request): Response
     {
-        $cookie = Token::fetchToken(
-            env('FIREBASE_PROJECT'),
-            request()->input('idToken')
+        $token = $this->fetchSessionToken(
+            $request->input('idToken'),
         );
 
-        return response('OK')->cookie(
-            config('gaesupport.auth.firebase.cookie_name'),
-            $cookie,
-            2628000,
-            null,
-            null,
-            true,
-            true,
-            false,
-            'strict'
-        );
-    }
-
-     /**
-     * fetchLoginToken
-     *
-     * @access public
-     */
-    public function fetchLoginToken()
-    {
-        return Token::fetchToken(
-            env('FIREBASE_PROJECT'),
-            request()->input('idToken')
-        );
-    }
-
-    /**
-     * fetchLoginCookie
-     *
-     * @access public
-     */
-    public function fetchLoginCookie($token)
-    {
-        return response('OK')->cookie(
-            config('gaesupport.auth.firebase.cookie_name'), $token, 2628000, null, null, true, true, false, 'strict'
+        return $this->attachLoginCookie(
+            response('OK'),
+            $token,
         );
     }
 
     /**
      * logout.
      */
-    public function logout()
+    public function logout(): Response
     {
-        Cookie::queue(
-            Cookie::forget(
-                config('gaesupport.auth.firebase.cookie_name')
-            )
-        );
+        $this->forgetLoginCookie();
 
-        return redirect(
-            config('gaesupport.auth.firebase.logout_redirect')
-        );
+        return $this->logoutRedirect();
     }
 }

@@ -72,11 +72,13 @@ trait HandlesFirebaseLogin
     /**
      * forgetLoginCookie.
      */
-    protected function forgetLoginCookie(): void
+    protected function forgetLoginCookie(string|null $path = null, string|null $domain = null): void
     {
         CookieHelper::queue(
             CookieHelper::forget(
-                config('gaesupport.auth.firebase.cookie_name')
+                config('gaesupport.auth.firebase.cookie_name'),
+                $path,
+                $domain,
             )
         );
     }

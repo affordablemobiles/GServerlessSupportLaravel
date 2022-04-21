@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller as BaseController;
@@ -30,7 +31,7 @@ class Firebase extends BaseController
     /**
      * logout.
      */
-    public function logout(): Response
+    public function logout(): RedirectResponse
     {
         $this->forgetLoginCookie();
 

@@ -27,18 +27,18 @@ trait HandlesFirebaseLogin
     /**
      * attachLoginCookie.
      */
-    protected function attachLoginCookie(Response $response, string $token): Response
+    protected function attachLoginCookie(Response $response, string $token, int $expiryMinutes = 2628000, string|null $path = null, string|null $domain = null): Response
     {
         return $response->cookie(
-            config('gaesupport.auth.firebase.cookie_name'),
-            $token,
-            2628000,
-            null,
-            null,
-            true,
-            true,
-            false,
-            'strict'
+            config('gaesupport.auth.firebase.cookie_name'), // name
+            $token,                                         // value
+            $expiryMinutes,                                 // expiry
+            $path,                                          // path
+            $domain,                                        // domain
+            true,                                           // secure
+            true,                                           // httpOnly
+            false,                                          // raw
+            'strict'                                        // sameSite
         );
     }
 

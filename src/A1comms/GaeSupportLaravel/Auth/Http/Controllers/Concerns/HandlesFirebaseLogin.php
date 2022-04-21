@@ -6,8 +6,8 @@ namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers\Concerns;
 
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase as Token;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Cookie as CookieHelper;
+use Symfony\Component\HttpFoundation\Cookie;
 
 trait HandlesFirebaseLogin
 {
@@ -27,19 +27,30 @@ trait HandlesFirebaseLogin
     /**
      * attachLoginCookie.
      */
-    protected function attachLoginCookie(Response $response, string $token): Response
+    protected function attachLoginCookie(string $token, int $expiryMinutes = 2628000, string|null $path = null, string|null $domain = null): void
     {
-        return $response->cookie(
-            config('gaesupport.auth.firebase.cookie_name'),
-            $token,
-            2628000,
-            null,
-            null,
-            true,
-            true,
-            false,
-            'strict'
+        CookieHelper::queue(
+            $this->fetchLoginCookie($token, $expiryMinutes, $path, $domain),
         );
+    }
+
+    /**
+     * refreshLoginCookie.
+     */
+    protected function refreshLoginCookie(Request $request, int $expiryMinutes = 2628000, string|null $path = null, string|null $domain = null): void
+    {
+        $cookieName = config('gaesupport.auth.firebase.cookie_name');
+
+        if ($request->hasCookie($cookieName)) {
+            CookieHelper::queue(
+                $this->fetchLoginCookie(
+                    $request->cookie($cookieName),
+                    $expiryMinutes,
+                    $path,
+                    $domain,
+                )
+            );
+        }
     }
 
     /**
@@ -47,8 +58,8 @@ trait HandlesFirebaseLogin
      */
     protected function forgetLoginCookie(): void
     {
-        Cookie::queue(
-            Cookie::forget(
+        CookieHelper::queue(
+            CookieHelper::forget(
                 config('gaesupport.auth.firebase.cookie_name')
             )
         );
@@ -61,6 +72,21 @@ trait HandlesFirebaseLogin
     {
         return redirect(
             config('gaesupport.auth.firebase.logout_redirect')
+        );
+    }
+
+    private function fetchLoginCookie(string $token, int $expiryMinutes = 2628000, string|null $path = null, string|null $domain = null): Cookie
+    {
+        return CookieHelper::make(
+            config('gaesupport.auth.firebase.cookie_name'), // name
+            $token,                                         // value
+            $expiryMinutes,                                 // expiry
+            $path,                                          // path
+            $domain,                                        // domain
+            true,                                           // secure
+            true,                                           // httpOnly
+            false,                                          // raw
+            'strict'                                        // sameSite
         );
     }
 }

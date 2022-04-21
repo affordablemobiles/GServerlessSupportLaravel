@@ -18,10 +18,7 @@ $config
         '@PhpCsFixer' => true,
         '@PhpCsFixer:risky' => true,
         'binary_operator_spaces' => [
-            'operators' => [
-                '=' => 'align',
-                '=>' => 'align',
-            ]
+            'default' => 'align',
         ],
     ])
     ->setFinder($finder)

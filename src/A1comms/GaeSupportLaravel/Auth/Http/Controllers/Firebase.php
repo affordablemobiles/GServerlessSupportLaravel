@@ -22,10 +22,9 @@ class Firebase extends BaseController
             $request->input('idToken'),
         );
 
-        return $this->attachLoginCookie(
-            response('OK'),
-            $token,
-        );
+        $this->attachLoginCookie($token);
+
+        return response('OK');
     }
 
     /**

@@ -17,7 +17,7 @@ require __DIR__.'/ip_in_range.php';
 // Only run if we're on GAE
 if (is_gae()) {
     // Check if it's an allowed App Engine internal request and run our checks if not.
-    $gaeCRON = 'true' === @$_SERVER['HTTP_X_APPENGINE_CRON'] ? true : false;
+    $gaeCRON = 'true'        === @$_SERVER['HTTP_X_APPENGINE_CRON'] ? true : false;
     $gaeWARM = '/_ah/warmup' === @$_SERVER['REQUEST_URI'] ? true : false;
 
     // If it isn't coming from a supported AppIdentity, or isn't a CRON.

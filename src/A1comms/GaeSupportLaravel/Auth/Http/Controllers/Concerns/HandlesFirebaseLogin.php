@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers\Concerns;
 
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase as Token;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie as CookieHelper;
 use Symfony\Component\HttpFoundation\Cookie;
 
@@ -22,6 +24,20 @@ trait HandlesFirebaseLogin
             (3600 * 24 * 7),
             $tenantId,
         );
+    }
+
+    /**
+     * fetchSessionTokenFromCookie.
+     */
+    protected function fetchSessionTokenFromCookie(Request $request): string
+    {
+        $cookieName = config('gaesupport.auth.firebase.cookie_name');
+
+        if ($request->hasCookie($cookieName)) {
+            return $request->cookie($cookieName);
+        }
+
+        throw new InvalidTokenException('Cookie Not Found', 0);
     }
 
     /**

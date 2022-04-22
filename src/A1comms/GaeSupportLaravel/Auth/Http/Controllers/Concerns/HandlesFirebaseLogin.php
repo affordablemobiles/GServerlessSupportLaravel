@@ -96,15 +96,15 @@ trait HandlesFirebaseLogin
     private function fetchLoginCookie(string $token, int $expiryMinutes = 2628000, string|null $path = null, string|null $domain = null): Cookie
     {
         return CookieHelper::make(
-            config('gaesupport.auth.firebase.cookie_name'), // name
-            $token,                                         // value
-            $expiryMinutes,                                 // expiry
-            $path,                                          // path
-            $domain,                                        // domain
-            true,                                           // secure
-            true,                                           // httpOnly
-            false,                                          // raw
-            'strict'                                        // sameSite
+            config('gaesupport.auth.firebase.cookie_name'),     // name
+            $token,                                             // value
+            $expiryMinutes,                                     // expiry
+            $path,                                              // path
+            $domain,                                            // domain
+            true,                                               // secure
+            config('gaesupport.auth.firebase.cookie_httpOnly'), // httpOnly
+            false,                                              // raw
+            config('gaesupport.auth.firebase.cookie_sameSite'), // sameSite
         );
     }
 }

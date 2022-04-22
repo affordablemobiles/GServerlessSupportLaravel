@@ -28,8 +28,10 @@ return [
     // Authentication Settings
     'auth' => [
         'firebase' => [
-            'cookie_name'     => '__identity_session',
-            'logout_redirect' => '/',
+            'cookie_name'         => '__identity_session',
+            'cookie_httpOnly'     => true,
+            'cookie_sameSite'     => 'strict',
+            'logout_redirect'     => '/',
         ],
     ],
 ];

@@ -6,6 +6,7 @@ namespace A1comms\GaeSupportLaravel\Filesystem;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Mimey\MimeTypes;
 
 class StaticFilesServiceProvider extends ServiceProvider
 {
@@ -29,7 +30,11 @@ class StaticFilesServiceProvider extends ServiceProvider
                 throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
             }
 
-            return response()->file($path);
+            return response()->file($path, [
+                'Content-Type' => (new MimeTypes())->getMimeType(
+                    pathinfo($path, PATHINFO_EXTENSION)
+                ),
+            ]);
         });
     }
 }

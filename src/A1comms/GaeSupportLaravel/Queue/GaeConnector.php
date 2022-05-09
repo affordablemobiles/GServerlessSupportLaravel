@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Queue;
 
 use Illuminate\Contracts\Encryption\Encrypter as EncrypterContract;
@@ -25,22 +27,17 @@ class GaeConnector implements ConnectorInterface
 
     /**
      * Create a new GAE connector instance.
-     *
-     * @param \Illuminate\Contracts\Encryption\Encrypter $crypt
-     * @param \Illuminate\Http\Request $request
      */
     public function __construct(
         EncrypterContract $crypt,
         Request $request
     ) {
-        $this->crypt = $crypt;
+        $this->crypt   = $crypt;
         $this->request = $request;
     }
 
     /**
      * Establish a queue connection.
-     *
-     * @param array $config
      *
      * @return \Illuminate\Queue\QueueInterface
      */

@@ -1,19 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth\Http\Controllers;
 
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Routing\Controller as BaseController;
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase as Token;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Cookie;
 
 class Firebase extends BaseController
 {
     /**
-     * login
-     *
-     * @access public
-     *
-     * @return void
+     * login.
      */
     public function login()
     {
@@ -21,43 +19,35 @@ class Firebase extends BaseController
             env('FIREBASE_PROJECT'),
             request()->input('idToken')
         );
-    
+
         return response('OK')->cookie(
-            config('gaesupport.auth.firebase.cookie_name'), $cookie, 2628000, null, null, true, true, false, 'strict'
+            config('gaesupport.auth.firebase.cookie_name'),
+            $cookie,
+            2628000,
+            null,
+            null,
+            true,
+            true,
+            false,
+            'strict'
         );
     }
 
     /**
-     * fetchLoginToken
-     *
-     * @access public
+     * fetchUserData.
      */
-    public function fetchLoginToken()
+    protected function fetchUserData(string $idToken, string $uid, string|null $tenantId = null): array
     {
-        return Token::fetchToken(
+        return Token::userLookup(
             env('FIREBASE_PROJECT'),
-            request()->input('idToken')
+            $idToken,
+            $uid,
+            $tenantId,
         );
     }
 
     /**
-     * fetchLoginCookie
-     *
-     * @access public
-     */
-    public function fetchLoginCookie($token)
-    {
-        return response('OK')->cookie(
-            config('gaesupport.auth.firebase.cookie_name'), $token, 2628000, null, null, true, true, false, 'strict'
-        );
-    }
-
-    /**
-     * logout
-     *
-     * @access public
-     *
-     * @return void
+     * logout.
      */
     public function logout()
     {
@@ -66,7 +56,7 @@ class Firebase extends BaseController
                 config('gaesupport.auth.firebase.cookie_name')
             )
         );
-    
+
         return redirect(
             config('gaesupport.auth.firebase.logout_redirect')
         );

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\Guzzle;
 
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Client as GuzzleClient;
 use A1comms\GaeSupportLaravel\Trace\Integration\Guzzle\Middleware as TraceMiddleware;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\HandlerStack;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -22,11 +24,11 @@ class Client extends GuzzleClient
      *                  ...auth config placeholder...,
      *              ],
      *          ],
-     *      ]);
+     *      ]);.
      */
     public function __construct(array $config = [])
     {
-        if ((!is_gae()) || (php_sapi_name() == 'cli')) {
+        if ((!is_gae()) || (\PHP_SAPI === 'cli')) {
             return parent::__construct($config);
         }
 
@@ -39,7 +41,7 @@ class Client extends GuzzleClient
             // We are able to modify the handler stack, continue...
 
             // Unless disabled, add TraceMiddleware for sub-request trace merging in StackDriver.
-            if (@$config['gaesupport']['trace'] !== false) {
+            if (false !== @$config['gaesupport']['trace']) {
                 $config['handler']->push(new TraceMiddleware());
             }
         } else {

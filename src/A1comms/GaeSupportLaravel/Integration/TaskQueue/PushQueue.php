@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 class PushQueue
@@ -9,7 +11,7 @@ class PushQueue
 
     public function __construct($name = 'default')
     {
-        $this->name = $name;
+        $this->name      = $name;
         $this->full_name = Client::instance()->getQueueName($name);
     }
 
@@ -20,8 +22,8 @@ class PushQueue
 
     public function addTasks($tasks)
     {
-        if (!is_array($tasks)) {
-            throw new \InvalidArgumentException('$tasks must be an array. Actual type: ' . gettype($tasks));
+        if (!\is_array($tasks)) {
+            throw new \InvalidArgumentException('$tasks must be an array. Actual type: '.\gettype($tasks));
         }
 
         if (empty($tasks)) {

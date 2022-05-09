@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace;
 
-use OpenCensus\Trace\Tracer;
 use Illuminate\Support\ServiceProvider;
+use OpenCensus\Trace\Tracer;
 
 class TraceServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
-        if ((!is_gae()) || (php_sapi_name() == 'cli')) {
+        if ((!is_gae()) || (\PHP_SAPI === 'cli')) {
             return;
         }
 
@@ -20,10 +22,10 @@ class TraceServiceProvider extends ServiceProvider
         //       Need to wait for rootSpan visibility to be changed to public.
         //       https://github.com/census-instrumentation/opencensus-php/issues/199
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => $_SERVER['REQUEST_TIME_FLOAT']], function () {
+            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => $_SERVER['REQUEST_TIME_FLOAT']], function (): void {
             });
-        } else if (defined('LARAVEL_START')) {
-            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function () {
+        } elseif (\defined('LARAVEL_START')) {
+            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function (): void {
             });
         }
 

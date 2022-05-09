@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Queue;
 
 use Illuminate\Container\Container;
-use Illuminate\Queue\Jobs\Job;
 use Illuminate\Contracts\Queue\Job as JobContract;
+use Illuminate\Queue\Jobs\Job;
 
 class GaeJob extends Job implements JobContract
 {
@@ -32,10 +34,9 @@ class GaeJob extends Job implements JobContract
     /**
      * Create a new job instance.
      *
-     * @param  \Illuminate\Container\Container  $container
-     * @param  \A1comms\GaeSupportLaravel\Queue\GaeQueue  $gaeQueue
-     * @param  object  $job
-     * @param  bool    $pushed
+     * @param \A1comms\GaeSupportLaravel\Queue\GaeQueue $gaeQueue
+     * @param object                                    $job
+     * @param bool                                      $pushed
      */
     public function __construct(
         Container $container,
@@ -43,9 +44,9 @@ class GaeJob extends Job implements JobContract
         $job,
         $pushed = false
     ) {
-        $this->job = $job;
-        $this->gaeQueue = $gaeQueue;
-        $this->pushed = $pushed;
+        $this->job       = $job;
+        $this->gaeQueue  = $gaeQueue;
+        $this->pushed    = $pushed;
         $this->container = $container;
     }
 
@@ -61,10 +62,8 @@ class GaeJob extends Job implements JobContract
 
     /**
      * Delete the job from the queue.
-     *
-     * @return void
      */
-    public function delete()
+    public function delete(): void
     {
         parent::delete();
 
@@ -76,27 +75,15 @@ class GaeJob extends Job implements JobContract
     /**
      * Release the job back into the queue.
      *
-     * @param  int   $delay
-     * @return void
+     * @param int $delay
      */
-    public function release($delay = 0)
+    public function release($delay = 0): void
     {
-        if (! $this->pushed) {
+        if (!$this->pushed) {
             $this->delete();
         }
 
         $this->recreateJob($delay);
-    }
-
-    /**
-     * Release a pushed job back onto the queue.
-     *
-     * @param  int  $delay
-     * @return void
-     */
-    protected function recreateJob($delay)
-    {
-        $this->gaeQueue->recreate($this->getRawBody(), $this->getQueue(), $delay);
     }
 
     /**
@@ -147,5 +134,15 @@ class GaeJob extends Job implements JobContract
     public function getGaeJob()
     {
         return $this->job;
+    }
+
+    /**
+     * Release a pushed job back onto the queue.
+     *
+     * @param int $delay
+     */
+    protected function recreateJob($delay): void
+    {
+        $this->gaeQueue->recreate($this->getRawBody(), $this->getQueue(), $delay);
     }
 }

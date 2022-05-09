@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\Datastore;
 
 use GDS;
@@ -14,14 +16,19 @@ class DatastoreFactory
 
     public static function shouldRetry($ex, $retryAttempt = 1)
     {
-        if (strpos((string)$ex, 'too much contention on these datastore entities') !== false) {
+        if (str_contains((string) $ex, 'too much contention on these datastore entities')) {
             Log::info('ExponentialBackoff: retrying datastore operation: too much contention on these datastore entities');
+
             return true;
-        } elseif (strpos((string)$ex, 'Connection reset by peer') !== false) {
+        }
+        if (str_contains((string) $ex, 'Connection reset by peer')) {
             Log::info('ExponentialBackoff: retrying datastore operation: Connection reset by peer');
+
             return true;
-        } elseif (strpos((string)$ex, '"status": "UNAVAILABLE"') !== false) {
+        }
+        if (str_contains((string) $ex, '"status": "UNAVAILABLE"')) {
             Log::info('ExponentialBackoff: retrying datastore operation: UNAVAILABLE');
+
             return true;
         }
 

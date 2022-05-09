@@ -1,7 +1,8 @@
 <?php
 
-return [
+declare(strict_types=1);
 
+return [
     /*
     |--------------------------------------------------------------------------
     | Trace Providers
@@ -16,7 +17,6 @@ return [
     */
 
     'trace_providers' => [
-
     ],
 
     'dev-prefix' => 'dev-',
@@ -25,12 +25,10 @@ return [
         'region' => env('GCT_REGION'),
     ],
 
-    /**
-     * Authentication Settings
-     */
+    // Authentication Settings
     'auth' => [
         'firebase' => [
-            'cookie_name' => '__identity_session',
+            'cookie_name'     => '__identity_session',
             'logout_redirect' => '/',
         ],
     ],

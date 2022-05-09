@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace\Integration\Guzzle;
 
-use OpenCensus\Trace\Integrations\IntegrationInterface;
 use GuzzleHttp\Client as GuzzleClient;
+use OpenCensus\Trace\Integrations\IntegrationInterface;
 
 class TraceProvider implements IntegrationInterface
 {
-    public static function load()
+    public static function load(): void
     {
-        if (!extension_loaded('opencensus')) {
+        if (!\extension_loaded('opencensus')) {
             trigger_error('opencensus extension required to load Laravel integrations.', E_USER_WARNING);
+
             return;
         }
 
@@ -21,7 +24,7 @@ class TraceProvider implements IntegrationInterface
     {
         $uri = '';
 
-        if (count($args) < 1) {
+        if (\count($args) < 1) {
             $uri = 'invalid';
         } else {
             // Make sure we remove the query string,
@@ -30,10 +33,10 @@ class TraceProvider implements IntegrationInterface
         }
 
         return [
-            'name' => 'GuzzleHttp::request',
+            'name'       => 'GuzzleHttp::request',
             'attributes' => [
                 'method' => $method,
-                'uri' => $uri,
+                'uri'    => $uri,
             ],
         ];
     }

@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\JWT\TokenSource;
 
-use Google\Auth\OAuth2;
+use A1comms\GaeSupportLaravel\Integration\JWT\Signer\IAMSigner;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Auth\Credentials\ServiceAccountCredentials;
-use Lcobucci\JWT\Signer\Key;
+use Google\Auth\OAuth2;
 use Lcobucci\JWT\Builder;
-use A1comms\GaeSupportLaravel\Integration\JWT\Signer\IAMSigner;
+use Lcobucci\JWT\Signer\Key;
 
 class DWDTokenSource extends OAuth2
 {
@@ -19,8 +21,8 @@ class DWDTokenSource extends OAuth2
     {
         $this->subject = $subject;
 
-        if (!is_array($scopes)) {
-            throw new Exception("Invalid scopes: must be an array");
+        if (!\is_array($scopes)) {
+            throw new Exception('Invalid scopes: must be an array');
         }
         $this->scopes = $scopes;
     }
@@ -37,7 +39,7 @@ class DWDTokenSource extends OAuth2
 
     public function toJwt(array $config = [])
     {
-        $gce_creds = new GCECredentials();
+        $gce_creds    = new GCECredentials();
         $client_email = $gce_creds->getClientName();
 
         $time = time();
@@ -53,8 +55,9 @@ class DWDTokenSource extends OAuth2
             ->issuedAt($time)                                   // Configures the time that the token was issue (iat claim)
             ->expiresAt($time + 3600)                           // Configures the expiration time of the token (exp claim)
             ->withClaim('scope', implode(' ', $this->scopes))   // scopes claim
-            ->getToken($signer, $keyID);
+            ->getToken($signer, $keyID)
+        ;
 
-        return (string)$token;
+        return (string) $token;
     }
 }

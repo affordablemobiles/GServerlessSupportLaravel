@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\ErrorReporting;
 
 use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
+use Throwable;
 
 /**
  * Static methods for bootstrapping Stackdriver Error Reporting.
  */
 class Report
 {
-    const DEFAULT_LOGNAME = 'exception';
+    public const DEFAULT_LOGNAME = 'exception';
 
     /** @var PsrLogger */
     public static $psrLogger;
@@ -20,21 +23,21 @@ class Report
      * Register hooks for error reporting.
      *
      * @param PsrLogger $psrLogger
-     * @return void
      * @codeCoverageIgnore
      */
-    public static function init(PsrLogger $psrLogger = null)
+    public static function init(PsrLogger $psrLogger = null): void
     {
         $options = ['batchEnabled' => false];
 
         if (is_cloud_run()) {
-            self::$psrLogger = (new CreateLoggingDriver)([
+            self::$psrLogger = (new CreateLoggingDriver())([
                 'logName'   => self::DEFAULT_LOGNAME,
                 'formatter' => 'exception',
             ]);
         } else {
             self::$psrLogger = $psrLogger ?: (new LoggingClient())
-                ->psrLogger(self::DEFAULT_LOGNAME, $options);
+                ->psrLogger(self::DEFAULT_LOGNAME, $options)
+            ;
         }
 
         register_shutdown_function([self::class, 'shutdownHandler']);
@@ -46,39 +49,53 @@ class Report
      * Return a string prefix for the given error level.
      *
      * @param int $level
-     * @return string A string prefix for reporting the error.
+     *
+     * @return string a string prefix for reporting the error
      */
     public static function getErrorPrefix($level)
     {
         switch ($level) {
             case E_PARSE:
                 $prefix = 'PHP Parse error';
+
                 break;
+
             case E_ERROR:
             case E_CORE_ERROR:
             case E_COMPILE_ERROR:
                 $prefix = 'PHP Fatal error';
+
                 break;
+
             case E_USER_ERROR:
             case E_RECOVERABLE_ERROR:
                 $prefix = 'PHP error';
+
                 break;
+
             case E_WARNING:
             case E_CORE_WARNING:
             case E_COMPILE_WARNING:
             case E_USER_WARNING:
                 $prefix = 'PHP Warning';
+
                 break;
+
             case E_NOTICE:
             case E_USER_NOTICE:
                 $prefix = 'PHP Notice';
+
                 break;
+
             case E_STRICT:
                 $prefix = 'PHP Debug';
+
                 break;
+
             default:
                 $prefix = 'PHP Notice';
         }
+
         return $prefix;
     }
 
@@ -86,83 +103,84 @@ class Report
      * Return an error level string for the given PHP error level.
      *
      * @param int $level
-     * @return string An error level string.
+     *
+     * @return string an error level string
      */
     public static function getErrorLevelString($level)
     {
         switch ($level) {
             case E_PARSE:
                 return 'CRITICAL';
+
             case E_ERROR:
             case E_CORE_ERROR:
             case E_COMPILE_ERROR:
             case E_USER_ERROR:
             case E_RECOVERABLE_ERROR:
                 return 'ERROR';
+
             case E_WARNING:
             case E_CORE_WARNING:
             case E_COMPILE_WARNING:
             case E_USER_WARNING:
                 return 'WARNING';
+
             case E_NOTICE:
             case E_USER_NOTICE:
                 return 'NOTICE';
+
             case E_STRICT:
                 return 'DEBUG';
+
             default:
                 return 'NOTICE';
         }
     }
 
-    /**
-     * @param mixed $ex \Throwable (PHP 7) or \Exception (PHP 5)
-     */
-    public static function exceptionHandler($ex, $status_code = 500, $context = [])
+    public static function exceptionHandler(Throwable $ex, int $status_code = 500, array $context = []): void
     {
-        $message = sprintf('PHP Notice: %s', (string)$ex);
+        $message = sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {
             $service = gae_service();
             $version = gae_version();
             self::$psrLogger->error($message, [
                 'context' => array_merge($context, [
                     'reportLocation' => [
-                        'filePath' => $ex->getFile(),
-                        'lineNumber' => $ex->getLine(),
-                        'functionName' =>
-                            self::getFunctionNameForReport($ex->getTrace()),
+                        'filePath'     => $ex->getFile(),
+                        'lineNumber'   => $ex->getLine(),
+                        'functionName' => self::getFunctionNameForReport($ex->getTrace()),
                     ],
                     'httpRequest' => [
-                        'method'                => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                        'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                        'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                        'referrer'              => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
-                        "responseStatusCode"    => $status_code,
-                        "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                        'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                        'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                        'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                        'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                        'responseStatusCode' => $status_code,
+                        'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                     ],
                     'user' => self::getUserNameForReport(),
                 ]),
                 'serviceContext' => [
                     'service' => $service,
                     'version' => $version,
-                ]
+                ],
             ]);
-        } else {
-            //fwrite(STDERR, $message . PHP_EOL);
         }
+        // fwrite(STDERR, $message . PHP_EOL);
     }
 
     /**
-     * @param int $level The error level.
-     * @param string $message The error message.
-     * @param string $file The filename that the error was raised in.
-     * @param int $line The line number that the error was raised at.
+     * @param int    $level   the error level
+     * @param string $message the error message
+     * @param string $file    the filename that the error was raised in
+     * @param int    $line    the line number that the error was raised at
      */
-    public static function errorHandler($level, $message, $file, $line)
+    public static function errorHandler(int $level, string $message, string $file, int $line): bool
     {
         if (!($level & error_reporting())) {
             return true;
         }
-        $message =  sprintf(
+        $message = sprintf(
             '%s: %s in %s on line %d',
             self::getErrorPrefix($level),
             $message,
@@ -177,38 +195,39 @@ class Report
         $context = [
             'context' => [
                 'reportLocation' => [
-                    'filePath' => $file,
-                    'lineNumber' => $line,
-                    'functionName' =>
-                        self::getFunctionNameForReport(),
+                    'filePath'     => $file,
+                    'lineNumber'   => $line,
+                    'functionName' => self::getFunctionNameForReport(),
                 ],
                 'httpRequest' => [
-                    'method'                => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                    'url'                   => (empty($_SERVER['HTTP_HOST']) ? '' :  $_SERVER['HTTP_HOST']). (empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                    'userAgent'             => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                    'referrer'              => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
-                    "responseStatusCode"    => null,
-                    "remoteIp"              => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                    'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
+                    'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
+                    'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
+                    'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                    'responseStatusCode' => null,
+                    'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
                 ],
                 'user' => self::getUserNameForReport(),
             ],
             'serviceContext' => [
                 'service' => $service,
-                'version' => $version
-            ]
+                'version' => $version,
+            ],
         ];
         self::$psrLogger->log(
             self::getErrorLevelString($level),
             $message,
             $context
         );
+
+        return true;
     }
 
     /**
      * Called at exit, to check there's a fatal error and report the error if
      * any.
      */
-    public static function shutdownHandler()
+    public static function shutdownHandler(): void
     {
         if ($err = error_get_last()) {
             switch ($err['type']) {
@@ -228,16 +247,15 @@ class Report
                     $context = [
                         'context' => [
                             'reportLocation' => [
-                                'filePath' => $err['file'],
-                                'lineNumber' => $err['line'],
-                                'functionName' =>
-                                    self::getFunctionNameForReport(),
-                            ]
+                                'filePath'     => $err['file'],
+                                'lineNumber'   => $err['line'],
+                                'functionName' => self::getFunctionNameForReport(),
+                            ],
                         ],
                         'serviceContext' => [
                             'service' => $service,
-                            'version' => $version
-                        ]
+                            'version' => $version,
+                        ],
                     ];
                     if (self::$psrLogger) {
                         self::$psrLogger->log(
@@ -246,6 +264,7 @@ class Report
                             $context
                         );
                     }
+
                     break;
             }
         }
@@ -273,12 +292,13 @@ class Report
         if (isset($trace[0]['class'])) {
             $functionName[] = $trace[0]['class'];
         }
+
         return implode('', array_reverse($functionName));
     }
 
     private static function getUserNameForReport()
     {
-        if (defined('ERROR_REPORTING_USER')) {
+        if (\defined('ERROR_REPORTING_USER')) {
             return ERROR_REPORTING_USER;
         }
 

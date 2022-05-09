@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Log;
 
 use Google\Cloud\Logging\LoggingClient;
-use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Handler\PsrHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -11,23 +12,25 @@ use Monolog\Logger;
 class CreateLoggingDriver
 {
     /**
-     * @param array $config
-     *
      * @throws \Exception
+     *
      * @return Logger
      */
     public function __invoke(array $config)
     {
-        $logName = isset($config['logName']) ? $config['logName'] : 'app';
-        
+        $logName = $config['logName'] ?? 'app';
+
         $formatter = new JsonFormatter();
         if (isset($config['formatter'])) {
             switch ($config['formatter']) {
-                case "exception":
+                case 'exception':
                     $formatter = new ExceptionJsonFormatter();
+
                     break;
+
                 default:
                     $formatter = new JsonFormatter();
+
                     break;
             }
         }
@@ -38,13 +41,13 @@ class CreateLoggingDriver
             $logger = new Logger($logName, [$handler]);
         } elseif (is_gae_flex()) {
             $psrLogger = LoggingClient::psrBatchLogger($logName);
-            $handler = new PsrHandler($psrLogger);
-            $logger = new Logger($logName, [$handler]);
+            $handler   = new PsrHandler($psrLogger);
+            $logger    = new Logger($logName, [$handler]);
         } elseif (is_gae()) {
-            if (env('GAE_SYNC_LOGS', 'false') === 'true') {
+            if ('true' === env('GAE_SYNC_LOGS', 'false')) {
                 $psrLogger = (new LoggingClient())->psrLogger($logName);
-                $handler = new PsrHandler($psrLogger);
-                $logger = new Logger($logName, [$handler]);
+                $handler   = new PsrHandler($psrLogger);
+                $logger    = new Logger($logName, [$handler]);
             } else {
                 // Log via structured logs in /var/log, which get dumped async into StackDriver by the runtime.
                 //

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
 use Exception;
@@ -13,22 +15,22 @@ class Client
     private $project;
     private $location;
 
-    private static $myInstance = null;
-
-    public static function instance()
-    {
-        if (is_null(self::$myInstance)) {
-            self::$myInstance = new Client();
-        }
-
-        return self::$myInstance;
-    }
+    private static $myInstance;
 
     public function __construct()
     {
-        $this->client = new CloudTasksClient();
-        $this->project = gae_project();
+        $this->client   = new CloudTasksClient();
+        $this->project  = gae_project();
         $this->location = $this->fetchLocation();
+    }
+
+    public static function instance()
+    {
+        if (null === self::$myInstance) {
+            self::$myInstance = new self();
+        }
+
+        return self::$myInstance;
     }
 
     public function getClient()
@@ -49,8 +51,8 @@ class Client
     private function fetchLocation()
     {
         $metadata = new Metadata();
-        $zone = explode(
-            "/",
+        $zone     = explode(
+            '/',
             $metadata->get('instance/zone')
         );
         $zone = array_pop($zone);
@@ -65,16 +67,18 @@ class Client
         }
 
         switch ($zone) {
-            case "eu2":
-            case "eu4":
-            case "eu5":
-            case "eu6":
-                return "europe-west1";
-            case "us6":
-            case "us14":
-                return "us-central1";
+            case 'eu2':
+            case 'eu4':
+            case 'eu5':
+            case 'eu6':
+                return 'europe-west1';
+
+            case 'us6':
+            case 'us14':
+                return 'us-central1';
+
             default:
-                throw new Exception("Unknown App Engine Region Code: " . $zone);
+                throw new Exception('Unknown App Engine Region Code: '.$zone);
         }
     }
 }

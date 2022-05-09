@@ -1,18 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Session;
-use League\Flysystem\Filesystem as Flysystem;
-use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
 use A1comms\GaeSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
+use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\ServiceProvider;
+use League\Flysystem\Filesystem as Flysystem;
 
 /**
- * Class GaeSupportServiceProvider
- *
- * @package A1comms\GaeSupportLaravel
+ * Class GaeSupportServiceProvider.
  */
 class GaeSupportServiceProvider extends ServiceProvider
 {
@@ -25,10 +26,8 @@ class GaeSupportServiceProvider extends ServiceProvider
 
     /**
      * Register bindings in the container.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(
             __DIR__.'/../../config/gaesupport.php',
@@ -38,10 +37,8 @@ class GaeSupportServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         // Publish our config file when the user runs "artisan vendor:publish".
         $this->publishes([
@@ -55,12 +52,16 @@ class GaeSupportServiceProvider extends ServiceProvider
         }
 
         // Register the DatastoreSessionHandler
-        Session::extend('gae', function ($app) {
-            return new DatastoreSessionHandler;
-        });
+        Session::extend('gae', fn ($app) => new DatastoreSessionHandler());
 
         Storage::extend('gae', function ($app, $config) {
-            return new Flysystem(new GaeFilesystemAdapter($config['root']));
+            $adapter = new GaeFilesystemAdapter($config['root']);
+
+            return new FilesystemAdapter(
+                new Flysystem($adapter, $config),
+                $adapter,
+                $config,
+            );
         });
 
         // register the package's routes

@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class ListUserProvider extends NullUserProvider
 {
@@ -17,34 +18,34 @@ class ListUserProvider extends NullUserProvider
     /**
      * Create a new null user provider.
      *
-     * @param  string  $model
-     * @return void
+     * @param string $model
+     * @param array  $list
      */
     public function __construct($model, $list = [])
     {
         $this->model = $model;
-        $this->list = $list;
+        $this->list  = $list;
     }
 
     /**
      * Retrieve a user by their unique identifier.
      *
-     * @param  mixed  $identifier
-     * @return \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel|null
+     * @param string $identifier
+     *
+     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */
     public function retrieveById($identifier)
     {
-        if (in_array($identifier, $this->list)) {
+        if (\in_array($identifier, $this->list, true)) {
             $user = $this->createModel();
 
-            Log::info('Auth@ListUserProvider: Allowing access for user: ' . $identifier);
-            
+            Log::info('Auth@ListUserProvider: Allowing access for user: '.$identifier);
+
             return $user->fill([
                 $user->getAuthIdentifierName() => $identifier,
             ]);
-        } else {
-            Log::error('Auth@ListUserProvider: Denying access to user: ' . $identifier);
         }
+        Log::error('Auth@ListUserProvider: Denying access to user: '.$identifier);
 
         return null;
     }

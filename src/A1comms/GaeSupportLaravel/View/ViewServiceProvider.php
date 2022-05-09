@@ -1,23 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\View;
 
-use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
-use Illuminate\View\Engines\EngineResolver;
+use A1comms\GaeSupportLaravel\Console;
 use A1comms\GaeSupportLaravel\View\Compilers\FakeCompiler;
 use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
-use A1comms\GaeSupportLaravel\Console;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
 
 class ViewServiceProvider extends LaravelViewServiceProvider
 {
     /**
      * Register the service provider.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
-        if (is_gae() && (env('APP_ENV', 'production') == 'production')) {
+        if (is_gae() && ('production' === env('APP_ENV', 'production'))) {
             $this->registerFactory();
 
             $this->registerGaeViewFinder();
@@ -36,7 +36,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the console commands.
      */
-    public function boot()
+    public function boot(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -47,10 +47,8 @@ class ViewServiceProvider extends LaravelViewServiceProvider
 
     /**
      * Register the view finder implementation.
-     *
-     * @return void
      */
-    public function registerGaeViewFinder()
+    public function registerGaeViewFinder(): void
     {
         $this->app->bind('view.finder', function ($app) {
             // TODO: Replace with a static manifest array search.
@@ -60,10 +58,8 @@ class ViewServiceProvider extends LaravelViewServiceProvider
 
     /**
      * Register the Blade compiler implementation.
-     *
-     * @return void
      */
-    public function registerGaeBladeCompiler()
+    public function registerGaeBladeCompiler(): void
     {
         // The Compiler engine requires an instance of the CompilerInterface, which in
         // this case will be the Blade compiler, so we'll first create the compiler
@@ -77,13 +73,11 @@ class ViewServiceProvider extends LaravelViewServiceProvider
 
     /**
      * Register the engine resolver instance.
-     *
-     * @return void
      */
-    public function registerGaeEngineResolver()
+    public function registerGaeEngineResolver(): void
     {
         $this->app->singleton('view.engine.resolver', function () {
-            $resolver = new EngineResolver;
+            $resolver = new EngineResolver();
 
             // Next, we will register the various view engines with the resolver so that the
             // environment will resolve the engines needed for various views based on the
@@ -103,13 +97,10 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the Blade engine implementation.
      *
-     * @param  \Illuminate\View\Engines\EngineResolver  $resolver
-     * @return void
+     * @param \Illuminate\View\Engines\EngineResolver $resolver
      */
-    public function registerGaeBladeEngine($resolver)
+    public function registerGaeBladeEngine($resolver): void
     {
-        $resolver->register('blade', function () {
-            return new CompilerEngine($this->app['blade.compiler']);
-        });
+        $resolver->register('blade', fn () => new CompilerEngine($this->app['blade.compiler']));
     }
 }

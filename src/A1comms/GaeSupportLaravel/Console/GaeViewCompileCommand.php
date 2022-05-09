@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Console;
 
+use A1comms\GaeSupportLaravel\View\Compilers\BladeCompiler;
+use A1comms\GaeSupportLaravel\View\FileViewFinder;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use A1comms\GaeSupportLaravel\View\FileViewFinder;
-use A1comms\GaeSupportLaravel\View\ViewServiceProvider;
-use A1comms\GaeSupportLaravel\View\Compilers\BladeCompiler;
 
 /**
  * Deployment command for running on GAE.
@@ -43,9 +44,6 @@ class GaeViewCompileCommand extends Command
 
     /**
      * Create a new view compiler command instance.
-     *
-     * @param  \Illuminate\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(Filesystem $files)
     {
@@ -56,61 +54,62 @@ class GaeViewCompileCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): int
     {
-        $this->info("Blade Compiler: Startup...");
+        $this->info('Blade Compiler: Startup...');
 
         $compiledDirectory = config('view.compiled', null);
-        $viewPaths = config('view.paths', []);
+        $viewPaths         = config('view.paths', []);
 
         $hints = app('view')->getFinder()->getHints();
         foreach ($hints as $namespace => $paths) {
             $viewPaths = array_merge($paths, $viewPaths);
         }
 
-        $this->info("Blade Compiler: Cleaning view storage directory (" . $compiledDirectory . ")...");
+        $this->info('Blade Compiler: Cleaning view storage directory ('.$compiledDirectory.')...');
         $this->files->cleanDirectory($compiledDirectory);
-        $this->files->put($compiledDirectory . "/.gitkeep", " ");
-        $this->info("Blade Compiler: Cleaning view storage directory...done");
+        $this->files->put($compiledDirectory.'/.gitkeep', ' ');
+        $this->info('Blade Compiler: Cleaning view storage directory...done');
 
-        for ($i = 0; $i < count($viewPaths); $i++) {
-            $path = $viewPaths[$i];
+        for ($i = 0; $i < \count($viewPaths); ++$i) {
+            $path         = $viewPaths[$i];
             $relativePath = FileViewFinder::getRelativePath(base_path(), $path);
 
-            $this->info("Blade Compiler: Compiling views in " . $relativePath . " (" . ($i+1) . "/" . count($viewPaths) . ")...");
+            $this->info('Blade Compiler: Compiling views in '.$relativePath.' ('.($i + 1).'/'.\count($viewPaths).')...');
 
             $files = $this->files->allFiles($path);
 
-            for ($g = 0; $g < count($files); $g++) {
-                $file = $files[$g];
-                $filePath = $file->getPathname();
+            for ($g = 0; $g < \count($files); ++$g) {
+                $file             = $files[$g];
+                $filePath         = $file->getPathname();
                 $fileRelativePath = FileViewFinder::getRelativePath(base_path(), $filePath);
 
-                if (!preg_match("/(.*)\.blade\.php$/", $filePath)) {
-                    $this->info("Blade Compiler: \tSkipping view (" . ($g+1) . "/" . count($files) . ") " . $fileRelativePath);
+                if (!preg_match('/(.*)\\.blade\\.php$/', $filePath)) {
+                    $this->info("Blade Compiler: \tSkipping view (".($g + 1).'/'.\count($files).') '.$fileRelativePath);
+
                     continue;
                 }
 
-                $compiler = new BladeCompiler($this->files, $compiledDirectory);
-                $compiledPath = $compiler->compile($filePath);
+                $compiler                          = new BladeCompiler($this->files, $compiledDirectory);
+                $compiledPath                      = $compiler->compile($filePath);
                 $this->manifest[$fileRelativePath] = FileViewFinder::getRelativePath($compiledDirectory, $compiledPath);
 
-                $this->info("Blade Compiler: \tCompiled view (" . ($g+1) . "/" . count($files) . ") " . $fileRelativePath);
+                $this->info("Blade Compiler: \tCompiled view (".($g + 1).'/'.\count($files).') '.$fileRelativePath);
             }
 
-            $this->info("Blade Compiler: Compiling views in " . $relativePath . " (" . ($i+1) . "/" . count($viewPaths) . ")...done");
+            $this->info('Blade Compiler: Compiling views in '.$relativePath.' ('.($i + 1).'/'.\count($viewPaths).')...done');
         }
 
         $this->writeManifest($compiledDirectory);
+
+        return 0;
     }
 
-    public function writeManifest($compiledDirectory)
+    public function writeManifest($compiledDirectory): void
     {
         $this->files->put(
-            $compiledDirectory . "/manifest.php",
+            $compiledDirectory.'/manifest.php',
             '<?php return '.var_export($this->manifest, true).';'.PHP_EOL
         );
     }

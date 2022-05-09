@@ -1,24 +1,26 @@
 <?php
 
-use OpenCensus\Trace\Tracer;
-use OpenCensus\Trace\Exporter\StackdriverExporter;
-use Google\Cloud\Storage\StorageClient;
-use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+declare(strict_types=1);
 
-require __DIR__ . '/helpers.php';
+use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+use Google\Cloud\Storage\StorageClient;
+use OpenCensus\Trace\Exporter\StackdriverExporter;
+use OpenCensus\Trace\Tracer;
+
+require __DIR__.'/helpers.php';
 
 // Load in the Laravel / Lumen support helpers, for the "env()" function,
 // as we may be loading before them, resulting in undefined function errors
 // in the Trace initialisation.
-$laravelHelpers = __DIR__ . '/../../../laravel/framework/src/Illuminate/Support/helpers.php';
-$lumenHelpers = __DIR__ . '/../../../illuminate/support/helpers.php';
+$laravelHelpers = __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php';
+$lumenHelpers   = __DIR__.'/../../../illuminate/support/helpers.php';
 if (is_file($laravelHelpers)) {
     require $laravelHelpers;
 } elseif (is_file($lumenHelpers)) {
     require $lumenHelpers;
 }
 
-if (is_gae() && (php_sapi_name() != 'cli')) {
+if (is_gae() && (PHP_SAPI !== 'cli')) {
     // Set up exception logging properly...
     ErrorBootstrap::init();
 
@@ -26,7 +28,7 @@ if (is_gae() && (php_sapi_name() != 'cli')) {
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
     } elseif (is_cloud_run()) {
-        $forwards = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {

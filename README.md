@@ -1,6 +1,6 @@
 # GaeSupportLaravel
 
-Google App Engine (GAE) Standard Environment support package for **Laravel 6.0 LTS**.
+Google App Engine (GAE) Standard Environment support package for **Laravel 9.x**.
 
 [![Latest Stable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/stable)](https://packagist.org/packages/a1comms/gae-support-laravel)
 [![Monthly Downloads](https://poser.pugx.org/a1comms/gae-support-laravel/d/monthly)](https://packagist.org/packages/a1comms/gae-support-laravel)
@@ -10,9 +10,7 @@ Google App Engine (GAE) Standard Environment support package for **Laravel 6.0 L
 
 Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpasser https://github.com/shpasser/GaeSupportL5
 
-This library is designed for homogeneous operation between the Standard Environment and the Flexible Environment.
-
-*Note: we only intend to support Laravel LTS releases, with this version targeted specifically at **Laravel 6.0 LTS***
+*Note: we only intend to support Laravel LTS releases, with this version targeted specifically at **Laravel 9.x***
 
 ## Functionality
 * StackDriver Logging integration
@@ -44,7 +42,7 @@ Pull in the package via Composer:
 
 ```js
 "require": {
-    "a1comms/gae-support-laravel": "~6.0"
+    "a1comms/gae-support-laravel": "~9.0"
 }
 ```
 
@@ -192,7 +190,7 @@ To our class, that'll inject the required logging hook:
 use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
 
-## Upgrading (from Laravel/Lumen 5.5 LTS)
+## Upgrading (from Laravel/Lumen 6.x LTS)
 
 ### Laravel Specific (Not Lumen)
 
@@ -200,65 +198,11 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 
 ```json
 "require": {
-    "a1comms/gae-support-laravel": "~6.0"
+    "a1comms/gae-support-laravel": "~9.0"
 }
 ```
 
-**2.** Remove the following from `bootstrap/app.php`:
-
-```php
-/*
-|--------------------------------------------------------------------------
-| Setup Early Logging
-|--------------------------------------------------------------------------
-*/
-A1comms\GaeSupportLaravel\Log\Logger::setup($app);
-```
-
-**3.** Then update `bootstrap/app.php` from this:
-
-```php
-$app = new A1comms\GaeSupportLaravel\Foundation\Application(
-    realpath(__DIR__.'/../')
-);
-```
-
-To this:
-
-```php
-$app = new A1comms\GaeSupportLaravel\Foundation\Application(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
-```
-
-**4.** In `config/logging.php`, configure a custom logger and set it as the default:
-
-*It's also useful to set the emergency log path to a location App Engine will forward to Stackdriver Logging, see below.*
-
-```php
-<?php
-
-use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
-
-return [
-    
-    'default' => 'gae',
-
-    'channels' => [
-        'gae' => [
-            'driver' => 'custom',
-            'via' => CreateLoggingDriver::class,
-        ], 
-
-        'emergency' => [
-            'path' => '/var/log/emergency.log',
-        ],
-    ],
-
-];
-```
-
-**5.** Follow the Laravel upgrade steps for all versions 5.5 ... 6.0
+**2.** Follow the Laravel upgrade steps for all versions 6.x ... 9.x
 
 ### Lumen Specific (Not Laravel)
 
@@ -266,24 +210,8 @@ return [
 
 ```json
 "require": {
-    "a1comms/gae-support-laravel": "~6.0"
+    "a1comms/gae-support-laravel": "~9.0"
 }
 ```
 
-**2.** Update `bootstrap/app.php` to change this:
-
-```php
-$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
-    realpath(__DIR__.'/../')
-);
-```
-
-To this:
-
-```php
-$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
-```
-
-**3.** Follow the Lumen upgrade steps for all versions 5.5 ... 6.0
+**2.** Follow the Lumen upgrade steps for all versions 6.x ... 9.x

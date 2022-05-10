@@ -20,18 +20,8 @@ class TraceProvider implements IntegrationInterface
         opencensus_trace_method(GuzzleClient::class, 'transfer', [self::class, 'handleRequest']);
     }
 
-    public static function handleRequest($scope, $request, $options)
+    public static function handleRequest($scope, $request, array $options = [])
     {
-        $uri = '';
-
-        if (\count($args) < 1) {
-            $uri = 'invalid';
-        } else {
-            // Make sure we remove the query string,
-            // as this can contain sensitive data!
-            $uri = explode('?', $args[0])[0];
-        }
-
         return [
             'name'       => 'GuzzleHttp::request',
             'attributes' => [

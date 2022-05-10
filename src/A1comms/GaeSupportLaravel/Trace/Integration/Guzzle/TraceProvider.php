@@ -17,10 +17,10 @@ class TraceProvider implements IntegrationInterface
             return;
         }
 
-        opencensus_trace_method(GuzzleClient::class, '__call', [self::class, 'handleRequest']);
+        opencensus_trace_method(GuzzleClient::class, 'transfer', [self::class, 'handleRequest']);
     }
 
-    public static function handleRequest($scope, $method, $args)
+    public static function handleRequest($scope, $request, $options)
     {
         $uri = '';
 
@@ -35,8 +35,8 @@ class TraceProvider implements IntegrationInterface
         return [
             'name'       => 'GuzzleHttp::request',
             'attributes' => [
-                'method' => $method,
-                'uri'    => $uri,
+                'method' => $request->getMethod(),
+                'uri'    => $request->getUri(),
             ],
         ];
     }

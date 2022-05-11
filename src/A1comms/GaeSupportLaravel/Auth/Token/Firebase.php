@@ -53,6 +53,64 @@ class Firebase
         ]);
     }
 
+    public static function userLookup($expected_audience, $idToken, $localId, $tenantId = null)
+    {
+        $stack = HandlerStack::create();
+        $stack->push(
+            new AuthTokenMiddleware(
+                new GCECredentials()
+            )
+        );
+
+        $client = new Client([
+            'handler' => $stack,
+            'auth'    => 'google_auth',
+        ]);
+
+        $data = [
+            'idToken'       => $idToken,
+            'localId'       => $localId
+        ];
+        if (!empty($tenantId)) {
+            $data['tenantId'] = $tenantId;
+        }
+
+        try {
+            $response = (new ExponentialBackoff(6, [self::class, 'shouldRetry']))->execute([$client, 'request'], [
+                'POST',
+                'https://identitytoolkit.googleapis.com/v1/projects/'.$expected_audience.'/accounts:lookup',
+                [
+                    'json'            => $data,
+                    'http_errors'     => true,
+                    'connect_timeout' => self::REQUEST_CONNECTION_TIMEOUT_S,
+                    'timeout'         => self::REQUEST_TIMEOUT_S,
+                ],
+            ]);
+        } catch (GuzzleException $e) {
+            throw $e;
+        }
+
+        if (200 !== $response->getStatusCode()) {
+            $fallbackMessage = 'Failed to sign in';
+            \Log::info('response body', [$response->getBody()]);
+            try {
+                $message = json_decode((string) $response->getBody(), true)['error']['message'] ?? $fallbackMessage;
+            } catch (InvalidArgumentException $e) {
+                $message = $fallbackMessage;
+            }
+
+            throw new \Exception($message);
+        }
+
+        try {
+            $resp_data = json_decode((string) $response->getBody(), true);
+        } catch (\InvalidArgumentException $e) {
+            throw new \Exception('failed to sign in: invalid response');
+        }
+
+        return $resp_data;
+    }
+
     public static function fetchToken($expected_audience, $idToken, $expiry = (3600 * 24 * 7), $tenantId = null)
     {
         $stack = HandlerStack::create();

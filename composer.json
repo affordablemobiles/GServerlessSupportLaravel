@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.1",
         "a1comms/eloquent-datastore": "~1",
+        "a1comms/eloquent-sqlcommenter": "~9",
         "opencensus/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "^7.4.1",
         "google/cloud": ">=0.175.0 <1.0.0",

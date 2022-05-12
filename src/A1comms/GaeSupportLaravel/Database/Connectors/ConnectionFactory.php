@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Database\Connectors;
 
+use A1comms\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Database\Connectors\ConnectionFactory as LaravelConnectionFactory;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use PDOException;
 
-class ConnectionFactory extends LaravelConnectionFactory
+class ConnectionFactory extends BaseConnectionFactory
 {
     /**
      * Create a new Closure that resolves to a PDO instance.

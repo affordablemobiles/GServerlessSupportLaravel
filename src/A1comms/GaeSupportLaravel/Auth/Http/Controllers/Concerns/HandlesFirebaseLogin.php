@@ -27,6 +27,19 @@ trait HandlesFirebaseLogin
     }
 
     /**
+     * fetchUserData.
+     */
+    protected function fetchUserData(string $idToken, string $uid, string|null $tenantId = null): array
+    {
+        return Token::userLookup(
+            env('FIREBASE_PROJECT'),
+            $idToken,
+            $uid,
+            $tenantId,
+        );
+    }
+
+    /**
      * fetchSessionTokenFromCookie.
      */
     protected function fetchSessionTokenFromCookie(Request $request): string

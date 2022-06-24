@@ -31,6 +31,7 @@ class FakeCompiler extends Compiler implements CompilerInterface
         }
 
         $this->cachePath = $cachePath;
+        $this->basePath  = '';
     }
 
     /**

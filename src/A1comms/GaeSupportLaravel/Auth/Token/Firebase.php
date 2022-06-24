@@ -69,7 +69,7 @@ class Firebase
 
         $data = [
             'idToken'       => $idToken,
-            'localId'       => $localId
+            'localId'       => $localId,
         ];
         if (!empty($tenantId)) {
             $data['tenantId'] = $tenantId;
@@ -93,6 +93,7 @@ class Firebase
         if (200 !== $response->getStatusCode()) {
             $fallbackMessage = 'Failed to sign in';
             \Log::info('response body', [$response->getBody()]);
+
             try {
                 $message = json_decode((string) $response->getBody(), true)['error']['message'] ?? $fallbackMessage;
             } catch (InvalidArgumentException $e) {

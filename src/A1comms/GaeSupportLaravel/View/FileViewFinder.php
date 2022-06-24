@@ -118,7 +118,7 @@ class FileViewFinder extends LaravelFileViewFinder
                  * be different to the path in build where
                  * the templates and manifest were compiled.
                  */
-                $viewPath = self::getRelativePath(base_path(), $path.'/'.$file);
+                $viewPath = self::getRelativePath(base_path(), rtrim($path, '/').'/'.$file);
                 if (!empty($this->manifest[$viewPath])) {
                     return $viewPath;
                 }

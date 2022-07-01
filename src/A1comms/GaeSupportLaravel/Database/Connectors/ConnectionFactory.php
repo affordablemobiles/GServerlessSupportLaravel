@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Database\Connectors;
 
+use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use A1comms\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Arr;
@@ -37,13 +38,26 @@ class ConnectionFactory extends BaseConnectionFactory
     protected function createPdoResolverWithSockets(array $config)
     {
         return function () use ($config) {
-            foreach (Arr::shuffle($sockets = $this->parseSockets($config)) as $key => $socket) {
+            $cacheKey = 'GaeSupportLaravel-Database-ConnectionFactory-'.$config['name'];
+            $sockets  = Arr::shuffle($this->parseSockets($config));
+
+            $current = InstanceLocalCache::get($cacheKey);
+            if (!empty($current)) {
+                $sockets = array_filter($sockets, fn ($socket) => $socket !== $current);
+                array_unshift($sockets, $current);
+            }
+
+            foreach ($sockets as $key => $socket) {
                 $config['unix_socket'] = $socket;
 
                 \Log::info('Connecting to DB unix_socket: '.$socket);
 
                 try {
-                    return $this->createConnector($config)->connect($config);
+                    $connection = $this->createConnector($config)->connect($config);
+
+                    InstanceLocalCache::forever($cacheKey, $socket);
+
+                    return $connection;
                 } catch (PDOException $e) {
                     if (\count($sockets) - 1 === $key && $this->container->bound(ExceptionHandler::class)) {
                         $this->container->make(ExceptionHandler::class)->report($e);

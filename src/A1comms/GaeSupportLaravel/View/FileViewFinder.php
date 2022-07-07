@@ -16,6 +16,8 @@ class FileViewFinder extends LaravelFileViewFinder
 {
     private $manifest = [];
 
+    private $pathCache = [];
+
     public function __construct(Filesystem $files, array $paths, array $extensions = null, string $cachePath = null)
     {
         $this->files = $files;
@@ -118,7 +120,7 @@ class FileViewFinder extends LaravelFileViewFinder
                  * be different to the path in build where
                  * the templates and manifest were compiled.
                  */
-                $viewPath = self::getRelativePath(base_path(), rtrim($path, '/').'/'.$file);
+                $viewPath = $this->transformViewPath($path).'/'.$file;
                 if (!empty($this->manifest[$viewPath])) {
                     return $viewPath;
                 }
@@ -126,5 +128,18 @@ class FileViewFinder extends LaravelFileViewFinder
         }
 
         throw new InvalidArgumentException("View [{$name}] not found.");
+    }
+
+    protected function transformViewPath($path)
+    {
+        if (!empty($this->pathCache[$path])) {
+            return $this->pathCache[$path];
+        }
+
+        $viewPath = self::getRelativePath(base_path(), rtrim($path, '/'));
+
+        $this->pathCache[$path] = $viewPath;
+
+        return $viewPath;
     }
 }

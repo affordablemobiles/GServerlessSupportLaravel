@@ -12,12 +12,16 @@ require __DIR__.'/helpers.php';
 // Load in the Laravel / Lumen support helpers, for the "env()" function,
 // as we may be loading before them, resulting in undefined function errors
 // in the Trace initialisation.
-$laravelHelpers = __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php';
-$lumenHelpers   = __DIR__.'/../../../illuminate/support/helpers.php';
-if (is_file($laravelHelpers)) {
-    require $laravelHelpers;
-} elseif (is_file($lumenHelpers)) {
-    require $lumenHelpers;
+$helpers = [
+    __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php',
+    __DIR__.'/../../../illuminate/support/helpers.php',
+    __DIR__.'/../../../laravel/framework/src/Illuminate/Collections/helpers.php',
+    __DIR__.'/../../../illuminate/collections/helpers.php',
+];
+foreach ($helpers as $helper) {
+    if (is_file($helper)) {
+        require $helper;
+    }
 }
 
 if (is_gae() && (PHP_SAPI !== 'cli')) {

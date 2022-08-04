@@ -30,7 +30,7 @@ class IAP_Guard extends BaseGuard
             if (is_cloud_run()) {
                 $user = explode(':', $request->header('X-Goog-Authenticated-User-Email'));
                 if (count($user) == 2) {
-                    return $user[1];
+                    return static::returnUser($provider, $user[1]);
                 }
             }
 

@@ -47,9 +47,9 @@ class IAMSigner implements Signer
      * @param string $payload
      * @param string $key
      *
-     * @throws InvalidArgumentException When given key is invalid
-     *
      * @return Signature
+     *
+     * @throws InvalidArgumentException When given key is invalid
      */
     public function sign($payload, $key)
     {
@@ -63,9 +63,9 @@ class IAMSigner implements Signer
      * @param string $payload
      * @param string $key
      *
-     * @throws InvalidArgumentException When given key is invalid
-     *
      * @return bool
+     *
+     * @throws InvalidArgumentException When given key is invalid
      */
     public function verify($expected, $payload, $key)
     {

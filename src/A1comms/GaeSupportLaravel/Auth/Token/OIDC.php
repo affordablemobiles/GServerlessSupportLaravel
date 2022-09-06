@@ -75,9 +75,9 @@ class OIDC
      * @param string $oidc_jwt          the JWT token to be validated
      * @param string $expected_audience the expected audience of the provided JWT
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
-     *
      * @return array returns array containing "sub" and "email" if token is valid
+     *
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
      */
     public static function validateToken($oidc_jwt, $expected_audience)
     {

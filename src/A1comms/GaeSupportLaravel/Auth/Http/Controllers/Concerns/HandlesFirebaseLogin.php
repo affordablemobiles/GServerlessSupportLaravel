@@ -21,7 +21,7 @@ trait HandlesFirebaseLogin
         return Token::fetchToken(
             env('FIREBASE_PROJECT'),
             $idToken,
-            (3600 * 24 * 7),
+            3600 * 24 * 7,
             $tenantId,
         );
     }

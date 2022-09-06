@@ -36,9 +36,9 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
     }
 
     /**
-     * @throws DebugBarException
-     *
      * @return array
+     *
+     * @throws DebugBarException
      */
     public function collect()
     {

@@ -35,9 +35,9 @@ class JWT
      * @param string $sig_alg           expected signature algorithm of the JWT
      * @param array  $issuers           an array of acceptable issuers
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
-     *
      * @return array returns array containing "sub" and "email" if token is valid
+     *
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
      */
     public static function validate($jwt, $expected_audience, $jwk_url, $sig_alg, $issuers)
     {

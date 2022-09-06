@@ -106,9 +106,9 @@ class FileViewFinder extends LaravelFileViewFinder
      * @param string $name
      * @param array  $paths
      *
-     * @throws \InvalidArgumentException
-     *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     protected function findInPaths($name, $paths)
     {

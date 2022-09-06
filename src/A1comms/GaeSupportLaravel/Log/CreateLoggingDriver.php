@@ -12,9 +12,9 @@ use Monolog\Logger;
 class CreateLoggingDriver
 {
     /**
-     * @throws \Exception
-     *
      * @return Logger
+     *
+     * @throws \Exception
      */
     public function __invoke(array $config)
     {

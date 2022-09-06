@@ -35,7 +35,7 @@ class OAuth2_Guard extends BaseGuard
             return null;
         }
 
-        ErrorReporting::exceptionHandler((new Exception('Request is using legacy OAuth2 authentication token')), 200);
+        ErrorReporting::exceptionHandler(new Exception('Request is using legacy OAuth2 authentication token'), 200);
 
         return static::returnUser($provider, $return['email']);
     }

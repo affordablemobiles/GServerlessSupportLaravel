@@ -50,7 +50,7 @@ if (is_gae() && (PHP_SAPI !== 'cli')) {
             ),
             'propagator' => (
                 new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
-                    (new A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter())
+                    new A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter()
                 )
             ),
         ];

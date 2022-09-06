@@ -90,12 +90,12 @@ if (!function_exists('ipv4_in_range')) {
             return ($ip_dec & $netmask_dec) === ($range_dec & $netmask_dec);
         }
         // range might be 255.255.*.* or 1.2.3.0-1.2.3.255
-            if (str_contains($range, '*')) { // a.b.*.* format
+        if (str_contains($range, '*')) { // a.b.*.* format
                 // Just convert to A-B format by setting * to 0 for A and 255 for B
-                $lower = str_replace('*', '0', $range);
-                $upper = str_replace('*', '255', $range);
-                $range = "{$lower}-{$upper}";
-            }
+            $lower = str_replace('*', '0', $range);
+            $upper = str_replace('*', '255', $range);
+            $range = "{$lower}-{$upper}";
+        }
 
         if (str_contains($range, '-')) { // A-B format
             [$lower, $upper] = explode('-', $range, 2);

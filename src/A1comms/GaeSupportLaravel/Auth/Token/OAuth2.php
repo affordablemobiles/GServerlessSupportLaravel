@@ -49,9 +49,9 @@ class OAuth2
      * @param string the access_token to validate
      * @param mixed $token
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
-     *
      * @return array returns decoded token information from the tokeninfo endpoint
+     *
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
      */
     public static function validateToken($token)
     {

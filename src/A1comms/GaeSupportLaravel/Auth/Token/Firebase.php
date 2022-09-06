@@ -40,9 +40,9 @@ class Firebase
      * @param string $sessionCookie_jwt the JWT token to be validated
      * @param string $expected_audience the expected audience of the provided JWT (project id)
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
-     *
      * @return array returns array containing "sub" and "email" if token is valid
+     *
+     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
      */
     public static function validateToken($sessionCookie_jwt, $expected_audience)
     {

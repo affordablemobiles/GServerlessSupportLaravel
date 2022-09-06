@@ -83,6 +83,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
                     [
                         'data'       => $data,
                         'lastaccess' => $this->getTimeStamp(),
+                        'expireAt'   => $this->getExpiryTimeStamp(),
                     ],
                     $this->getQueryOptions(),
                 );
@@ -146,5 +147,12 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     protected function getTimeStamp(): DateTimeInterface
     {
         return Carbon::now();
+    }
+
+    protected function getExpiryTimeStamp(): DateTimeInterface
+    {
+        return Carbon::now()->addMinutes(
+            config('session.lifetime'),
+        );
     }
 }

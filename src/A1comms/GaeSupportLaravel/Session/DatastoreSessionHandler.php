@@ -18,6 +18,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
     /** @const string[] */
     private const excludeFromIndexes = [
         'data',
+        'expireAt',
     ];
 
     /** @var DatastoreClient */

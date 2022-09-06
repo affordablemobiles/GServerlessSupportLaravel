@@ -52,7 +52,10 @@ class GaeSupportServiceProvider extends ServiceProvider
         }
 
         // Register the DatastoreSessionHandler
-        Session::extend('gae', fn ($app) => new DatastoreSessionHandler());
+        Session::extend('gae', fn ($app) => new DatastoreSessionHandler(
+            config('session.table'),
+            config('session.store'),
+        ));
 
         Storage::extend('gae', function ($app, $config) {
             $adapter = new GaeFilesystemAdapter($config['root']);

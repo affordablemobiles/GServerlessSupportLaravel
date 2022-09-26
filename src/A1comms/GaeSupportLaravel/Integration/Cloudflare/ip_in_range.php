@@ -120,7 +120,7 @@ if (!function_exists('ip2long6')) {
         $ip   = explode(':', $ip);
         $r_ip = '';
         foreach ($ip as $v) {
-            $r_ip .= str_pad(base_convert($v, 16, 2), 16, 0, STR_PAD_LEFT);
+            $r_ip .= str_pad(base_convert($v, 16, 2), 16, '0', STR_PAD_LEFT);
         }
 
         return base_convert($r_ip, 2, 10);

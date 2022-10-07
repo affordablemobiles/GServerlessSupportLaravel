@@ -31,6 +31,11 @@ class DatastoreFactory
 
             return true;
         }
+        if (str_contains((string) $ex, '"status": "DEADLINE_EXCEEDED"')) {
+            Log::info('ExponentialBackoff: retrying datastore operation: DEADLINE_EXCEEDED');
+
+            return true;
+        }
 
         return false;
     }

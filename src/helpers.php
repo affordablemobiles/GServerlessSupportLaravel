@@ -134,7 +134,10 @@ if (!function_exists('gae_storage_path')) {
     {
         if (is_gae() || defined('IS_GAE')) {
             $ret = '/tmp/laravel/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
-            @mkdir($ret, 0o755, true);
+            if (is_gae_development()) {
+                $ret = '/tmp/laravel/'.$_SERVER['HTTP_HOST'].'/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
+            }
+            @mkdir($ret, 0755, true);
 
             return $ret;
         }

@@ -18,25 +18,11 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Auth::provider('null', function (Application $app, array $config) {
-            if (!empty($config['model'])) {
-                return new NullUserProvider($config['model']);
-            }
+        Auth::provider('null', fn (Application $app, array $config) => new NullUserProvider($config['model'] ?? IAPUser::class));
 
-            return new NullUserProvider(IAPUser::class);
-        });
+        Auth::provider('list', fn (Application $app, array $config) => new ListUserProvider($config['model'] ?? IAPUser::class, $config['list'] ?? []));
 
-        Auth::provider('list', function (Application $app, array $config) {
-            if (empty($config['list'])) {
-                $config['list'] = [];
-            }
-
-            if (!empty($config['model'])) {
-                return new ListUserProvider($config['model'], $config['list']);
-            }
-
-            return new ListUserProvider(IAPUser::class, $config['list']);
-        });
+        Auth::provider('group', fn (Application $app, array $config) => new GroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
 
         Auth::viaRequest('firebase', [Guard\Firebase_Guard::class, 'validate']);
 

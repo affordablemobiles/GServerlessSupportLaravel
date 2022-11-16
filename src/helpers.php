@@ -47,6 +47,10 @@ if (!function_exists('is_gae_production')) {
 if (!function_exists('is_gae_development')) {
     function is_gae_development()
     {
+        if (!is_gae()) {
+            return false;
+        }
+
         if (is_cloud_run()) {
             return (bool) (config('gaesupport.dev-prefix')
                 && str_starts_with($_SERVER['HTTP_HOST'], config('gaesupport.dev-prefix')));

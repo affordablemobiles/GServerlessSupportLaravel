@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
+use Google\Cloud\Tasks\V2\Task;
+
 class PushQueue
 {
     private $name;
@@ -33,7 +35,14 @@ class PushQueue
         $result = [];
 
         foreach ($tasks as $task) {
-            $tresult = Client::instance()->getClient()->createTask($this->full_name, $task->getTask());
+            if ($task instanceof PushTask) {
+                $task = $task->getTask();
+            } elseif ($task instanceof Task) {
+            } else {
+                throw new \InvalidArgumentException('Each $task must be either PushTask or Task. Actual type: '.\gettype($task));
+            }
+
+            $tresult = Client::instance()->getClient()->createTask($this->full_name, $task);
 
             $tdetails = PushTask::parseTaskName($tresult);
 

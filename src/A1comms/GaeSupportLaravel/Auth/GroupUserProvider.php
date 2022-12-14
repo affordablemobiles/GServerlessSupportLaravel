@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth;
 
+use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 use A1comms\GaeSupportLaravel\Integration\Google\Credentials\GCEDWDCredentials;
 use Google\Client;
 use Google\Service\Directory;
@@ -48,13 +49,13 @@ class GroupUserProvider extends NullUserProvider
         if ($this->isGroupMember($identifier)) {
             $user = $this->createModel();
 
-            Log::info('Auth@ListUserProvider: Allowing access for user: '.$identifier);
+            Log::info('Auth@GroupUserProvider: Allowing access for user: '.$identifier);
 
             return $user->fill([
                 $user->getAuthIdentifierName() => $identifier,
             ]);
         }
-        Log::error('Auth@ListUserProvider: Denying access to user: '.$identifier);
+        Log::error('Auth@GroupUserProvider: Denying access to user: '.$identifier);
 
         return null;
     }
@@ -66,12 +67,20 @@ class GroupUserProvider extends NullUserProvider
      */
     protected function isGroupMember(string $identifier)
     {
-        $client = new Client([
-            'credentials' => (new GCEDWDCredentials(
-                scope: Directory::ADMIN_DIRECTORY_GROUP_MEMBER_READONLY,
-            ))->setSubject(env('GSUITE_ADMIN_IMPERSONATE')),
-        ]);
+        try {
+            $client = new Client([
+                'credentials' => (new GCEDWDCredentials(
+                    scope: Directory::ADMIN_DIRECTORY_GROUP_MEMBER_READONLY,
+                ))->setSubject(env('GSUITE_ADMIN_IMPERSONATE')),
+            ]);
 
-        return (new Directory($client))->members->hasMember($this->group, $identifier)->getIsMember();
+            return (new Directory($client))->members->hasMember($this->group, $identifier)->getIsMember();
+        } catch (\Throwable $ex) {
+            if (!str_contains((string) $ex, 'Invalid Input')) {
+                ErrorBootstrap::exceptionHandler($ex);
+            }
+
+            return false;
+        }
     }
 }

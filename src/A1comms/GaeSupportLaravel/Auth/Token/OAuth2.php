@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\Auth\Token;
 
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
-use Exception;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Cloud\Core\ExponentialBackoff;
 use GuzzleHttp\Client;
@@ -73,7 +72,7 @@ class OAuth2
             ]);
 
             $response = json_decode($response->getBody(), true);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new InvalidTokenException('Access Token Validation Exception: Remote Token Check Failed');
         }
 

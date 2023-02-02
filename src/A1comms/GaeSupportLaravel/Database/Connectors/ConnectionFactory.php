@@ -8,8 +8,6 @@ use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use A1comms\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Arr;
-use InvalidArgumentException;
-use PDOException;
 
 class ConnectionFactory extends BaseConnectionFactory
 {
@@ -58,7 +56,7 @@ class ConnectionFactory extends BaseConnectionFactory
                     InstanceLocalCache::forever($cacheKey, $socket);
 
                     return $connection;
-                } catch (PDOException $e) {
+                } catch (\PDOException $e) {
                     if (\count($sockets) - 1 === $key && $this->container->bound(ExceptionHandler::class)) {
                         $this->container->make(ExceptionHandler::class)->report($e);
                     }
@@ -79,7 +77,7 @@ class ConnectionFactory extends BaseConnectionFactory
         $sockets = Arr::wrap($config['unix_socket']);
 
         if (empty($sockets)) {
-            throw new InvalidArgumentException('Database unix_socket array is empty.');
+            throw new \InvalidArgumentException('Database unix_socket array is empty.');
         }
 
         return $sockets;

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Http\Middleware;
 
-use Closure;
 use Illuminate\Support\Facades\Log;
 
 class TaskCronAuthentication
@@ -23,7 +22,7 @@ class TaskCronAuthentication
      *
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle($request, \Closure $next)
     {
         if (!is_gae()) {
             Log::info('App Engine Authentication Middleware: Not on App Engine, Bypassing...');

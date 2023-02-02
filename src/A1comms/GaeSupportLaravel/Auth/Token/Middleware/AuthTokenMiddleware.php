@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\Auth\Token\Middleware;
 
 use A1comms\GaeSupportLaravel\Auth\Token\OAuth2;
 use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
-use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -117,7 +116,7 @@ class AuthTokenMiddleware
                 return $this->fetchOAuth2Token($request_uri);
 
             default:
-                throw new Exception('Invalid Token Type from callback');
+                throw new \Exception('Invalid Token Type from callback');
         }
     }
 

@@ -60,8 +60,6 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * GaeQueue constructor.
      *
-     * @param $default
-     * @param $url
      * @param bool $shouldEncrypt
      * @param bool $shouldCompress
      */

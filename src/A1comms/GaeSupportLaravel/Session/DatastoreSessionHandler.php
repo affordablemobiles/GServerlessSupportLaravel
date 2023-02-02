@@ -6,14 +6,11 @@ namespace A1comms\GaeSupportLaravel\Session;
 
 use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
 use Carbon\Carbon;
-use DateTimeInterface;
 use Google\Cloud\Core\ExponentialBackoff;
 use Google\Cloud\Datastore\DatastoreClient;
 use Google\Cloud\Datastore\Key;
-use LogicException;
-use SessionHandlerInterface;
 
-class DatastoreSessionHandler implements SessionHandlerInterface
+class DatastoreSessionHandler implements \SessionHandlerInterface
 {
     /** @const string[] */
     private const excludeFromIndexes = [
@@ -126,7 +123,7 @@ class DatastoreSessionHandler implements SessionHandlerInterface
 
     public function googlegc(): void
     {
-        throw new LogicException('PHP based Session GC is deprecated, please use the Go app in Cloud Functions');
+        throw new \LogicException('PHP based Session GC is deprecated, please use the Go app in Cloud Functions');
     }
 
     protected function getKey($id): Key
@@ -145,12 +142,12 @@ class DatastoreSessionHandler implements SessionHandlerInterface
         ];
     }
 
-    protected function getTimeStamp(): DateTimeInterface
+    protected function getTimeStamp(): \DateTimeInterface
     {
         return Carbon::now();
     }
 
-    protected function getExpiryTimeStamp(): DateTimeInterface
+    protected function getExpiryTimeStamp(): \DateTimeInterface
     {
         return Carbon::now()->addMinutes(
             config('session.lifetime'),

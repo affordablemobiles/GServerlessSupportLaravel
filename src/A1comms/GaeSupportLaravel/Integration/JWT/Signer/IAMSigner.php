@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Integration\JWT\Signer;
 
-use Exception;
-use Google_Client;
-use Google_Service_IAMCredentials;
-use Google_Service_IAMCredentials_SignBlobRequest;
-use InvalidArgumentException;
 use Lcobucci\JWT\Signature;
 use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signer\Key;
@@ -49,7 +44,7 @@ class IAMSigner implements Signer
      *
      * @return Signature
      *
-     * @throws InvalidArgumentException When given key is invalid
+     * @throws \InvalidArgumentException When given key is invalid
      */
     public function sign($payload, $key)
     {
@@ -65,7 +60,7 @@ class IAMSigner implements Signer
      *
      * @return bool
      *
-     * @throws InvalidArgumentException When given key is invalid
+     * @throws \InvalidArgumentException When given key is invalid
      */
     public function verify($expected, $payload, $key)
     {
@@ -83,17 +78,17 @@ class IAMSigner implements Signer
      */
     public function createHash($payload, Key $key)
     {
-        $client = new Google_Client();
+        $client = new \Google_Client();
 
         $client->setApplicationName('GaeSupportLaravel-JWT/0.1');
         $client->useApplicationDefaultCredentials();
         $client->addScope('https://www.googleapis.com/auth/cloud-platform');
 
-        $service = new Google_Service_IAMCredentials($client);
+        $service = new \Google_Service_IAMCredentials($client);
 
         $keyID = sprintf('projects/-/serviceAccounts/%s', $key->getContent());
 
-        $requestBody = new Google_Service_IAMCredentials_SignBlobRequest();
+        $requestBody = new \Google_Service_IAMCredentials_SignBlobRequest();
 
         $requestBody->setPayload(base64_encode($payload));
 
@@ -114,6 +109,6 @@ class IAMSigner implements Signer
      */
     public function doVerify($expected, $payload, Key $key)
     {
-        throw new Exception('signature verification is currently unsupported');
+        throw new \Exception('signature verification is currently unsupported');
     }
 }

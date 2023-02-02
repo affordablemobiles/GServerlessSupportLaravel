@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Filesystem;
 
-use Closure;
 use Illuminate\Http\Request;
 use Mimey\MimeTypes;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -16,7 +15,7 @@ class StaticFilesMiddleware
      *
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, \Closure $next)
     {
         if (is_cloud_run()) {
             $path = public_path().'/'.$request->path();

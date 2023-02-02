@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\View\Compilers;
 
 use Illuminate\View\Compilers\Compiler;
 use Illuminate\View\Compilers\CompilerInterface;
-use InvalidArgumentException;
 
 class FakeCompiler extends Compiler implements CompilerInterface
 {
@@ -27,7 +26,7 @@ class FakeCompiler extends Compiler implements CompilerInterface
     public function __construct($cachePath)
     {
         if (!$cachePath) {
-            throw new InvalidArgumentException('Please provide a valid cache path.');
+            throw new \InvalidArgumentException('Please provide a valid cache path.');
         }
 
         $this->cachePath = $cachePath;

@@ -7,7 +7,6 @@ namespace A1comms\GaeSupportLaravel\Integration\ErrorReporting;
 use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
-use Throwable;
 
 /**
  * Static methods for bootstrapping Stackdriver Error Reporting.
@@ -138,7 +137,7 @@ class Report
         }
     }
 
-    public static function exceptionHandler(Throwable $ex, int $status_code = 500, array $context = []): void
+    public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = []): void
     {
         $message = sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {

@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Token\IAP;
-use Exception;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +22,7 @@ class IAP_Guard extends BaseGuard
     {
         $expected_audience = env('IAP_AUDIENCE');
         if (empty($expected_audience)) {
-            throw new Exception('IAP Authentication Guard: Audience (env IAP_AUDIENCE) not defined');
+            throw new \Exception('IAP Authentication Guard: Audience (env IAP_AUDIENCE) not defined');
         }
 
         $jwt = $request->header('X-Goog-IAP-JWT-Assertion');

@@ -7,7 +7,6 @@ namespace A1comms\GaeSupportLaravel\Auth\Token\Type;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use A1comms\GaeSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
-use Exception;
 use Google\Cloud\Core\ExponentialBackoff;
 use GuzzleHttp\Client;
 use SimpleJWT\InvalidTokenException as JWTInvalidTokenException;
@@ -54,7 +53,7 @@ class JWT
             if (!\in_array($jwt->getClaim('iss'), $issuers, true)) {
                 throw new InvalidTokenException('Invalid Issuer Claim (iss)');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new InvalidTokenException('Invalid Claim (iss): '.$e->getMessage(), 0, $e);
         }
 
@@ -62,7 +61,7 @@ class JWT
             if ($jwt->getClaim('aud') !== $expected_audience) {
                 throw new InvalidTokenException('Invalid Target Audience (aud)');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new InvalidTokenException('Invalid Claim (aud): '.$e->getMessage(), 0, $e);
         }
 
@@ -72,7 +71,7 @@ class JWT
             if (empty($email)) {
                 throw new InvalidTokenException('Email Claim Empty (email)');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new InvalidTokenException('Invalid Claim (email): '.$e->getMessage(), 0, $e);
         }
 
@@ -81,7 +80,7 @@ class JWT
             if (empty($sub)) {
                 throw new InvalidTokenException('Subject Claim Empty (sub)');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new InvalidTokenException('Invalid Claim (sub): '.$e->getMessage(), 0, $e);
         }
 

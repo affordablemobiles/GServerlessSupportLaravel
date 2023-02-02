@@ -9,7 +9,6 @@ use A1comms\GaeSupportLaravel\Integration\Google\Credentials\GCEDWDCredentials;
 use Google\Client;
 use Google\Service\Directory;
 use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 
 class GroupUserProvider extends NullUserProvider
 {
@@ -31,7 +30,7 @@ class GroupUserProvider extends NullUserProvider
         $this->model = $model;
 
         if (empty($group)) {
-            throw new InvalidArgumentException('group must be defined');
+            throw new \InvalidArgumentException('group must be defined');
         }
 
         $this->group = $group;

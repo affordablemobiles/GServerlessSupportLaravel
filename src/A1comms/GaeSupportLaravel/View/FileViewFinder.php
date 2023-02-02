@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\View;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
-use InvalidArgumentException;
 
 /**
  * Search for views in a static manifest instead of on disk,
@@ -127,7 +126,7 @@ class FileViewFinder extends LaravelFileViewFinder
             }
         }
 
-        throw new InvalidArgumentException("View [{$name}] not found.");
+        throw new \InvalidArgumentException("View [{$name}] not found.");
     }
 
     protected function transformViewPath($path)

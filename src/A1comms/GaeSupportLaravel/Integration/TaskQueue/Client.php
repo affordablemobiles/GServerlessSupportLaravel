@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
-use Exception;
 use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Tasks\V2\CloudTasksClient;
 use Illuminate\Support\Str;
@@ -78,7 +77,7 @@ class Client
                 return 'us-central1';
 
             default:
-                throw new Exception('Unknown App Engine Region Code: '.$zone);
+                throw new \Exception('Unknown App Engine Region Code: '.$zone);
         }
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Integration\Google\Credentials;
 
 use A1comms\GaeSupportLaravel\Integration\Google\OAuth2;
-use DomainException;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Auth\Iam;
 
@@ -93,12 +92,12 @@ class GCEDWDCredentials extends GCECredentials
      * @param string $alg signing algorithm requested
      * @param string $msg message to sign
      *
-     * @throws DomainException
+     * @throws \DomainException
      */
     public function signOAuth2(string $alg, string $msg): string
     {
         if ('RS256' !== $alg) {
-            throw new DomainException('Algorithm not supported');
+            throw new \DomainException('Algorithm not supported');
         }
 
         $previousToken = $this->getLastReceivedToken();

@@ -8,7 +8,6 @@ use A1comms\GaeSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Model\FirebaseUser;
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase;
-use Exception;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +24,7 @@ class Firebase_Guard implements StatelessValidator
     {
         $expected_audience = env('FIREBASE_PROJECT');
         if (empty($expected_audience)) {
-            throw new Exception('Firebase Authentication Guard: Audience (env FIREBASE_PROJECT) not defined');
+            throw new \Exception('Firebase Authentication Guard: Audience (env FIREBASE_PROJECT) not defined');
         }
 
         $jwt = $request->cookie(config('gaesupport.auth.firebase.cookie_name'));

@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Log;
 
-use DateTimeInterface;
 use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Utils;
 use OpenCensus\Trace\Tracer;
-use Throwable;
 
 class JsonFormatter extends NormalizerFormatter
 {
@@ -83,7 +81,7 @@ class JsonFormatter extends NormalizerFormatter
         $normalized['message']                      = $this->normalize($this->message);
         $normalized['severity']                     = $normalized['level_name'];
         $normalized['logging.googleapis.com/trace'] = 'projects/'.gae_project().'/traces/'.Tracer::spanContext()->traceId();
-        $normalized['time']                         = $normalized['datetime']->format(DateTimeInterface::RFC3339_EXTENDED);
+        $normalized['time']                         = $normalized['datetime']->format(\DateTimeInterface::RFC3339_EXTENDED);
 
         unset($normalized['level'], $normalized['level_name'], $normalized['datetime']);
 
@@ -169,7 +167,7 @@ class JsonFormatter extends NormalizerFormatter
             return $normalized;
         }
 
-        if ($data instanceof Throwable) {
+        if ($data instanceof \Throwable) {
             return $this->normalizeException($data, 0);
         }
 

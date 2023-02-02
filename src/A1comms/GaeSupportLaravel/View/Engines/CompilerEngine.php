@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\View\Engines;
 
 use Illuminate\View\Engines\CompilerEngine as LaravelCompilerEngine;
-use Throwable;
 
 class CompilerEngine extends LaravelCompilerEngine
 {
@@ -37,7 +36,7 @@ class CompilerEngine extends LaravelCompilerEngine
      *
      * @return string
      */
-    protected function getMessage(Throwable $e)
+    protected function getMessage(\Throwable $e)
     {
         return $e->getMessage().' (View: '.last($this->lastCompiled).')';
     }

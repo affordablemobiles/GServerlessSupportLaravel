@@ -6,7 +6,6 @@ namespace A1comms\GaeSupportLaravel\Auth\Guard;
 
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Token\OIDC;
-use Exception;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +22,7 @@ class OIDC_Guard extends BaseGuard
     {
         $expected_audience = env('OIDC_AUDIENCE');
         if (empty($expected_audience)) {
-            throw new Exception('OIDC Authentication Guard: Audience (env OIDC_AUDIENCE) not defined');
+            throw new \Exception('OIDC Authentication Guard: Audience (env OIDC_AUDIENCE) not defined');
         }
 
         $jwt = $request->bearerToken();

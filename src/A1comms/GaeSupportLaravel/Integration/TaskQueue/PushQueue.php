@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Integration\TaskQueue;
 
+use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
+use Google\Cloud\Core\ExponentialBackoff;
 use Google\Cloud\Tasks\V2\Task;
 
 class PushQueue
@@ -42,7 +44,13 @@ class PushQueue
                 throw new \InvalidArgumentException('Each $task must be either PushTask or Task. Actual type: '.\gettype($task));
             }
 
-            $tresult = Client::instance()->getClient()->createTask($this->full_name, $task);
+            $tresult = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([
+                Client::instance()->getClient(),
+                'createTask',
+            ], [
+                $this->full_name,
+                $task,
+            ]);
 
             $tdetails = PushTask::parseTaskName($tresult);
 

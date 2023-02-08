@@ -25,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
 
         Auth::provider('group', fn (Application $app, array $config) => new GroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
 
+        Auth::provider('identity-group', fn (Application $app, array $config) => new IdentityGroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
+
         $this->viaRequest('firebase', [Guard\Firebase_Guard::class, 'validate']);
 
         $this->viaRequest('gae-internal', [Guard\AppEngine_Guard::class, 'validate']);

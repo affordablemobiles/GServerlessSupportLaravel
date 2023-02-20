@@ -60,8 +60,10 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * GaeQueue constructor.
      *
-     * @param bool $shouldEncrypt
-     * @param bool $shouldCompress
+     * @param bool  $shouldEncrypt
+     * @param bool  $shouldCompress
+     * @param mixed $default
+     * @param mixed $url
      */
     public function __construct(
         Request $request,

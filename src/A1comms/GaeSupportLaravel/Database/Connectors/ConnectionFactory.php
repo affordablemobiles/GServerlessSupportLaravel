@@ -12,6 +12,27 @@ use Illuminate\Support\Arr;
 class ConnectionFactory extends BaseConnectionFactory
 {
     /**
+     * Parse and prepare the database configuration.
+     *
+     * @param string $name
+     *
+     * @return array
+     */
+    protected function parseConfig(array $config, $name)
+    {
+        $config = parent::parseConfig($config, $name);
+
+        if (\array_key_exists('username', $config)) {
+            $config['username'] = value($config['username']);
+        }
+        if (\array_key_exists('password', $config)) {
+            $config['password'] = value($config['password']);
+        }
+
+        return $config;
+    }
+
+    /**
      * Create a new Closure that resolves to a PDO instance.
      *
      * @return \Closure

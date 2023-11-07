@@ -5,10 +5,22 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\View\Compilers;
 
 use A1comms\GaeSupportLaravel\View\FileViewFinder;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\View\Compilers\BladeCompiler as LaravelBladeCompiler;
 
-class BladeCompiler extends LaravelBladeCompiler
+class BladeCompiler
 {
+    public function __construct(protected LaravelBladeCompiler $compiler, protected Filesystem $files, protected string $cachePath)
+    {
+        $rpfiles = new \ReflectionProperty($this->compiler, 'files');
+        $rpfiles->setAccessible(true);
+        $rpfiles->setValue($this->compiler, $files);
+
+        $rpcache = new \ReflectionProperty($this->compiler, 'cachePath');
+        $rpcache->setAccessible(true);
+        $rpcache->setValue($this->compiler, $cachePath);
+    }
+
     /**
      * Compile the view at the given path.
      *
@@ -17,13 +29,13 @@ class BladeCompiler extends LaravelBladeCompiler
     public function compile($path = null)
     {
         if ($path) {
-            $this->setPath($path);
+            $this->compiler->setPath($path);
         }
 
         if (null !== $this->cachePath) {
-            $contents = $this->compileString($this->files->get($this->getPath()));
+            $contents = $this->compiler->compileString($this->files->get($this->compiler->getPath()));
 
-            $compiledPath = $this->getCompiledPath($this->getRelativePath());
+            $compiledPath = $this->compiler->getCompiledPath($this->getRelativePath());
 
             $this->files->put($compiledPath, $contents);
 
@@ -38,6 +50,6 @@ class BladeCompiler extends LaravelBladeCompiler
      */
     public function getRelativePath()
     {
-        return FileViewFinder::getRelativePath(base_path(), $this->path);
+        return FileViewFinder::getRelativePath(base_path(), $this->compiler->getPath());
     }
 }

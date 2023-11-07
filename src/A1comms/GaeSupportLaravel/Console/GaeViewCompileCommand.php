@@ -72,6 +72,8 @@ class GaeViewCompileCommand extends Command
         $this->files->put($compiledDirectory.'/.gitkeep', ' ');
         $this->info('Blade Compiler: Cleaning view storage directory...done');
 
+        $compiler = new BladeCompiler(app('blade.compiler'), $this->files, $compiledDirectory);
+
         for ($i = 0; $i < \count($viewPaths); ++$i) {
             $path         = $viewPaths[$i];
             $relativePath = FileViewFinder::getRelativePath(base_path(), $path);
@@ -91,7 +93,6 @@ class GaeViewCompileCommand extends Command
                     continue;
                 }
 
-                $compiler                          = new BladeCompiler($this->files, $compiledDirectory);
                 $compiledPath                      = $compiler->compile($filePath);
                 $this->manifest[$fileRelativePath] = FileViewFinder::getRelativePath($compiledDirectory, $compiledPath);
 

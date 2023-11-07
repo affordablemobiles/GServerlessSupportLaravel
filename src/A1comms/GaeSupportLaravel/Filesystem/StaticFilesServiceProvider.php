@@ -17,13 +17,11 @@ class StaticFilesServiceProvider extends ServiceProvider
         }
     }
 
-    public function register(): void
-    {
-    }
+    public function register(): void {}
 
     private function map(): void
     {
-        Route::fallback(function () {
+        Route::fallback(static function () {
             $path = public_path().'/'.request()->path();
 
             if (!is_file($path)) {

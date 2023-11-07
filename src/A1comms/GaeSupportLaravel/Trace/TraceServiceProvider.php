@@ -22,11 +22,9 @@ class TraceServiceProvider extends ServiceProvider
         //       Need to wait for rootSpan visibility to be changed to public.
         //       https://github.com/census-instrumentation/opencensus-php/issues/199
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => $_SERVER['REQUEST_TIME_FLOAT']], function (): void {
-            });
+            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => $_SERVER['REQUEST_TIME_FLOAT']], static function (): void {});
         } elseif (\defined('LARAVEL_START')) {
-            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], function (): void {
-            });
+            Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], static function (): void {});
         }
 
         foreach (config('gaesupport.trace_providers', []) as $p) {

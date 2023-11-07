@@ -123,11 +123,11 @@ class GCEDWDCredentials extends GCECredentials
      * @return array<mixed> {
      *                      A set of auth related metadata, based on the token type
      *
-     *     @var string $access_token for access tokens
-     *     @var int    $expires_in   for access tokens
-     *     @var string $token_type   for access tokens
-     *     @var string $id_token     for ID tokens
-     * }
+     * @var string $access_token for access tokens
+     * @var int    $expires_in   for access tokens
+     * @var string $token_type   for access tokens
+     * @var string $id_token     for ID tokens
+     *             }
      *
      * @throws \Exception
      */

@@ -28,6 +28,6 @@ class QueueServiceProvider extends LaravelQueueServiceProvider
     {
         $app = $this->app;
 
-        $manager->addConnector('gae', fn () => new GaeConnector($app['encrypter'], $app['request']));
+        $manager->addConnector('gae', static fn () => new GaeConnector($app['encrypter'], $app['request']));
     }
 }

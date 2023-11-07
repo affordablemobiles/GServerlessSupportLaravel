@@ -21,8 +21,6 @@ class Report
     /**
      * Register hooks for error reporting.
      *
-     * @param PsrLogger $psrLogger
-     *
      * @codeCoverageIgnore
      */
     public static function init(PsrLogger $psrLogger = null): void

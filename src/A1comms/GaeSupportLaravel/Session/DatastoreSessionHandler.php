@@ -50,7 +50,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
         return true;
     }
 
-    public function read(string $id): string|false
+    public function read(string $id): false|string
     {
         try {
             $key    = $this->getKey($id);
@@ -116,7 +116,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
         return true;
     }
 
-    public function gc($maxlifetime): int|false
+    public function gc($maxlifetime): false|int
     {
         return false;
     }

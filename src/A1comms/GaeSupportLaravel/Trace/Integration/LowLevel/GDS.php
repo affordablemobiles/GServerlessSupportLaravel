@@ -29,7 +29,7 @@ class GDS implements IntegrationInterface
 
     public static function load_REST(): void
     {
-        opencensus_trace_method(GatewayREST::class, 'executePostRequest', function ($str_method, $args) {
+        opencensus_trace_method(GatewayREST::class, 'executePostRequest', static function ($str_method, $args) {
             return [
                 'name'       => 'GDS::execute/'.$str_method,
                 'attributes' => [],
@@ -37,7 +37,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(GatewayREST::class, 'fetchByKeyPart', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(GatewayREST::class, 'fetchByKeyPart', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::fetchByKeyPart',
                 'attributes' => [],
@@ -45,7 +45,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(GatewayREST::class, 'upsert', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(GatewayREST::class, 'upsert', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::upsert',
                 'attributes' => [],
@@ -53,7 +53,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(GatewayREST::class, 'gql', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(GatewayREST::class, 'gql', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::gql',
                 'attributes' => [],
@@ -64,7 +64,7 @@ class GDS implements IntegrationInterface
 
     public static function load_gRPC(): void
     {
-        opencensus_trace_method(Gateway::class, 'execute', function ($str_method, $args) {
+        opencensus_trace_method(Gateway::class, 'execute', static function ($str_method, $args) {
             return [
                 'name'       => 'GDS::execute/'.$str_method,
                 'attributes' => [],
@@ -72,7 +72,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(Gateway::class, 'fetchByKeyPart', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(Gateway::class, 'fetchByKeyPart', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::fetchByKeyPart',
                 'attributes' => [],
@@ -80,7 +80,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(Gateway::class, 'upsert', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(Gateway::class, 'upsert', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::upsert',
                 'attributes' => [],
@@ -88,7 +88,7 @@ class GDS implements IntegrationInterface
             ];
         });
 
-        opencensus_trace_method(Gateway::class, 'gql', function ($arr_key_parts, $str_setter) {
+        opencensus_trace_method(Gateway::class, 'gql', static function ($arr_key_parts, $str_setter) {
             return [
                 'name'       => 'GDS::gql',
                 'attributes' => [],

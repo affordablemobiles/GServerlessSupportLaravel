@@ -89,6 +89,7 @@ class AuthTokenMiddleware
                         $request = $request->withHeader('authorization', 'Bearer '.$this->fetchDynamicToken(
                             $request->getUri()
                         ));
+
                         // no break
                     default:
                         break;

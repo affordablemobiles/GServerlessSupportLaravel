@@ -19,13 +19,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Auth::provider('null', fn (Application $app, array $config) => new NullUserProvider($config['model'] ?? IAPUser::class));
+        Auth::provider('null', static fn (Application $app, array $config) => new NullUserProvider($config['model'] ?? IAPUser::class));
 
-        Auth::provider('list', fn (Application $app, array $config) => new ListUserProvider($config['model'] ?? IAPUser::class, $config['list'] ?? []));
+        Auth::provider('list', static fn (Application $app, array $config) => new ListUserProvider($config['model'] ?? IAPUser::class, $config['list'] ?? []));
 
-        Auth::provider('group', fn (Application $app, array $config) => new GroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
+        Auth::provider('group', static fn (Application $app, array $config) => new GroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
 
-        Auth::provider('identity-group', fn (Application $app, array $config) => new IdentityGroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
+        Auth::provider('identity-group', static fn (Application $app, array $config) => new IdentityGroupUserProvider($config['model'] ?? IAPUser::class, $config['group'] ?? ''));
 
         $this->viaRequest('firebase', [Guard\Firebase_Guard::class, 'validate']);
 
@@ -48,7 +48,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function viaRequest($driver, callable $callback)
     {
-        return Auth::extend($driver, function ($app, $name, $config) use ($callback) {
+        return Auth::extend($driver, static function ($app, $name, $config) use ($callback) {
             $guard = new RequestGuard($callback, $app['request'], Auth::createUserProvider($config['provider'] ?? null));
 
             $app->refresh('request', $guard, 'setRequest');

@@ -62,7 +62,7 @@ class ConnectionFactory extends BaseConnectionFactory
 
             $current = is_gae_development() ? null : InstanceLocalCache::get($cacheKey);
             if (!empty($current)) {
-                $sockets = array_filter($sockets, fn ($socket) => $socket !== $current);
+                $sockets = array_filter($sockets, static fn ($socket) => $socket !== $current);
                 array_unshift($sockets, $current);
             }
 

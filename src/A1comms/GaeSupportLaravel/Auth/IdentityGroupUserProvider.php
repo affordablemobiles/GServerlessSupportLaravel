@@ -23,7 +23,6 @@ class IdentityGroupUserProvider extends NullUserProvider
      * Create a new group user provider.
      *
      * @param string $model
-     * @param array  $list
      */
     public function __construct($model, string $group)
     {

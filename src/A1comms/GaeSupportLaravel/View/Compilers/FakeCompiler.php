@@ -61,9 +61,7 @@ class FakeCompiler extends Compiler implements CompilerInterface
      *
      * @param string $name
      */
-    public function directive($name, callable $handler): void
-    {
-    }
+    public function directive($name, callable $handler): void {}
 
     /**
      * Get the list of custom directives.

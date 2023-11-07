@@ -48,7 +48,7 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
             $measures = array_map(fn ($span) => $this->mapSpan($span), opencensus_trace_list());
         }
 
-        usort($measures, function ($a, $b) {
+        usort($measures, static function ($a, $b) {
             if ($a['start'] === $b['start']) {
                 return 0;
             }

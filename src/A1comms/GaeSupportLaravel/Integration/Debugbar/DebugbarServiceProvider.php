@@ -32,9 +32,7 @@ class DebugbarServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-    }
+    public function boot(): void {}
 
     /**
      * Get the services provided by the provider.

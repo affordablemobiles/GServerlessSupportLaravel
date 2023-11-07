@@ -13,9 +13,7 @@ class DatabaseServiceProvider extends ServiceProvider
     /**
      * Bootstrap the application events.
      */
-    public function boot(): void
-    {
-    }
+    public function boot(): void {}
 
     /**
      * Register the service provider.
@@ -25,9 +23,9 @@ class DatabaseServiceProvider extends ServiceProvider
         // The connection factory is used to create the actual connection instances on
         // the database. We will inject the factory into the manager so that it may
         // make the connections while they are actually needed and not of before.
-        $this->app->singleton('db.factory', fn ($app) => new ConnectionFactory($app));
+        $this->app->singleton('db.factory', static fn ($app) => new ConnectionFactory($app));
 
         // This authentication handler enables IAM authentication on GCP.
-        $this->app->singleton(IAMAuthentication::class, fn () => new IAMAuthentication());
+        $this->app->singleton(IAMAuthentication::class, static fn () => new IAMAuthentication());
     }
 }

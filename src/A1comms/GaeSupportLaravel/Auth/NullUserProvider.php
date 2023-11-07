@@ -73,9 +73,7 @@ class NullUserProvider implements UserProvider
      * @param \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel $user
      * @param string                                                  $token
      */
-    public function updateRememberToken(Authenticatable $user, $token): void
-    {
-    }
+    public function updateRememberToken(Authenticatable $user, $token): void {}
 
     /**
      * Retrieve a user by the given credentials.

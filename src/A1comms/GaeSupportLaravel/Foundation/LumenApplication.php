@@ -31,7 +31,7 @@ class LumenApplication extends BaseLumenApplication
         $this->withFacades();
 
         if (class_exists('League\Flysystem\Filesystem')) {
-            Storage::extend('gae', fn ($app, $config) => new Flysystem(new GaeFilesystemAdapter($config['root'])));
+            Storage::extend('gae', static fn ($app, $config) => new Flysystem(new GaeFilesystemAdapter($config['root'])));
         }
 
         if (is_gae()) {

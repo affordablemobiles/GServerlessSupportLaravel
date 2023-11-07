@@ -217,7 +217,7 @@ if (!function_exists('gae_basic_log')) {
 if (!function_exists('diefast')) {
     function diefast($data = null): void
     {
-        register_shutdown_function(function (): void {
+        register_shutdown_function(static function (): void {
             if (function_exists('fastcgi_finish_request')) {
                 fastcgi_finish_request();
             }

@@ -34,9 +34,8 @@ class GaeJob extends Job implements JobContract
     /**
      * Create a new job instance.
      *
-     * @param \A1comms\GaeSupportLaravel\Queue\GaeQueue $gaeQueue
-     * @param object                                    $job
-     * @param bool                                      $pushed
+     * @param object $job
+     * @param bool   $pushed
      */
     public function __construct(
         Container $container,

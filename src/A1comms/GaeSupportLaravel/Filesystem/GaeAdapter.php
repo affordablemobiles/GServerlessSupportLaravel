@@ -30,17 +30,11 @@ use League\Flysystem\Config;
  */
 class GaeAdapter extends Local
 {
-    /**
-     * {@inheritdoc}
-     */
     public function __construct($root)
     {
         parent::__construct($root, 0, self::DISALLOW_LINKS);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function writeStream($path, $resource, Config $config)
     {
         $location = $this->applyPathPrefix($path);
@@ -65,9 +59,6 @@ class GaeAdapter extends Local
         return compact('path', 'visibility');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function applyPathPrefix($path)
     {
         $prefixedPath = parent::applyPathPrefix($path);
@@ -75,9 +66,6 @@ class GaeAdapter extends Local
         return rtrim($prefixedPath, \DIRECTORY_SEPARATOR);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function ensureDirectory($root)
     {
         if (false === is_dir($root)) {

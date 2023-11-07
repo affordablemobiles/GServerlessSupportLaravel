@@ -41,7 +41,7 @@ class FileViewFinder extends LaravelFileViewFinder
             $endPath   = str_replace('\\', '/', $endPath);
             $startPath = str_replace('\\', '/', $startPath);
         }
-        $stripDriveLetter = function ($path) {
+        $stripDriveLetter = static function ($path) {
             if (\strlen($path) > 2 && ':' === $path[1] && '/' === $path[2] && ctype_alpha($path[0])) {
                 return substr($path, 2);
             }
@@ -53,7 +53,7 @@ class FileViewFinder extends LaravelFileViewFinder
         // Split the paths into arrays
         $startPathArr       = explode('/', trim($startPath, '/'));
         $endPathArr         = explode('/', trim($endPath, '/'));
-        $normalizePathArray = function ($pathSegments, $absolute) {
+        $normalizePathArray = static function ($pathSegments, $absolute) {
             $result = [];
             foreach ($pathSegments as $segment) {
                 if ('..' === $segment && ($absolute || \count($result))) {
@@ -95,8 +95,7 @@ class FileViewFinder extends LaravelFileViewFinder
                                    && ':' === $file[1]
                                    && strspn($file, '/\\', 2, 1)
             )
-            || null !== parse_url($file, PHP_URL_SCHEME)
-        ;
+            || null !== parse_url($file, PHP_URL_SCHEME);
     }
 
     /**

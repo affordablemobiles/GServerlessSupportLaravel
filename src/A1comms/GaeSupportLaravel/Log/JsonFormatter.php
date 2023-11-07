@@ -62,8 +62,6 @@ class JsonFormatter extends NormalizerFormatter
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @suppress PhanTypeComparisonToArray
      */
     public function format(array $record): string
@@ -90,9 +88,6 @@ class JsonFormatter extends NormalizerFormatter
         return $this->toJson($normalized, true).($this->appendNewline ? "\n" : '');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function formatBatch(array $records): string
     {
         switch ($this->batchMode) {
@@ -128,7 +123,7 @@ class JsonFormatter extends NormalizerFormatter
 
         $oldNewline          = $this->appendNewline;
         $this->appendNewline = false;
-        array_walk($records, function (&$value, $key) use ($instance): void {
+        array_walk($records, static function (&$value, $key) use ($instance): void {
             $value = $instance->format($value);
         });
         $this->appendNewline = $oldNewline;

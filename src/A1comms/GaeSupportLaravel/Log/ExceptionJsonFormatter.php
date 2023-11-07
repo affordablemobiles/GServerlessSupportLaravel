@@ -16,8 +16,6 @@ namespace A1comms\GaeSupportLaravel\Log;
 class ExceptionJsonFormatter extends JsonFormatter
 {
     /**
-     * {@inheritdoc}
-     *
      * @suppress PhanTypeComparisonToArray
      */
     public function format(array $record): string

@@ -35,7 +35,7 @@ class IAMAuthentication
     {
         return $this->cache->remember(
             __CLASS__.'__'.__METHOD__,
-            fn ($result) => (new \DateTime())->setTimestamp($result['expires_at']),
+            fn ($result) => (new \DateTime())->setTimestamp($result['expires_at'] ?? 0),
             fn ()        => $this->credentials->fetchAuthToken()
         )['access_token'];
     }

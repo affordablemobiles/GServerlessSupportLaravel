@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Integration\JWT\Signer;
 
-use Lcobucci\JWT\Signature;
 use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signer\Key;
 
@@ -23,7 +22,7 @@ class IAMSigner implements Signer
      *
      * @return string
      */
-    public function getAlgorithmId()
+    public function algorithmId(): string
     {
         return 'RS256';
     }
@@ -33,22 +32,24 @@ class IAMSigner implements Signer
      */
     public function modifyHeader(array &$headers): void
     {
-        $headers['alg'] = $this->getAlgorithmId();
+        $headers['alg'] = $this->algorithmId();
     }
 
     /**
      * Returns a signature for given data.
      *
      * @param string $payload
-     * @param string $key
+     * @param Key $key
      *
-     * @return Signature
+     * @return string
      *
-     * @throws \InvalidArgumentException When given key is invalid
+     * @throws CannotSignPayload  When payload signing fails.
+     * @throws InvalidKeyProvided When issue key is invalid/incompatible.
+     * @throws ConversionFailed   When signature could not be converted.
      */
-    public function sign($payload, $key)
+    public function sign(string $payload, Key $key): string
     {
-        return new Signature($this->createHash($payload, $key));
+        return $this->createHash($payload, $key);
     }
 
     /**
@@ -56,13 +57,14 @@ class IAMSigner implements Signer
      *
      * @param string $expected
      * @param string $payload
-     * @param string $key
+     * @param Key $key
      *
      * @return bool
      *
-     * @throws \InvalidArgumentException When given key is invalid
+     * @throws InvalidKeyProvided When issue key is invalid/incompatible.
+     * @throws ConversionFailed   When signature could not be converted.
      */
-    public function verify($expected, $payload, $key)
+    public function verify(string $expected, string $payload, Key $key): bool
     {
         return $this->doVerify($expected, $payload, $key);
     }
@@ -86,7 +88,7 @@ class IAMSigner implements Signer
 
         $service = new \Google_Service_IAMCredentials($client);
 
-        $keyID = sprintf('projects/-/serviceAccounts/%s', $key->getContent());
+        $keyID = sprintf('projects/-/serviceAccounts/%s', $key->contents());
 
         $requestBody = new \Google_Service_IAMCredentials_SignBlobRequest();
 

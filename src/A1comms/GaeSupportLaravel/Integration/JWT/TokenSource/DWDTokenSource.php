@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Integration\JWT\TokenSource;
 
 use A1comms\GaeSupportLaravel\Integration\JWT\Signer\IAMSigner;
+use DateTimeImmutable;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Google\Auth\OAuth2;
-use Lcobucci\JWT\Builder;
-use Lcobucci\JWT\Signer\Key;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
 
 class DWDTokenSource extends OAuth2
 {
@@ -39,25 +40,25 @@ class DWDTokenSource extends OAuth2
 
     public function toJwt(array $config = [])
     {
-        $gce_creds    = new GCECredentials();
+        $gce_creds = new GCECredentials();
         $client_email = $gce_creds->getClientName();
 
-        $time = time();
+        $config = Configuration::forSymmetricSigner(
+            new IAMSigner(),
+            InMemory::plainText($client_email)
+        );
 
-        $signer = new IAMSigner();
+        $now = new DateTimeImmutable();
 
-        $keyID = new Key($client_email);
+        $token = $config->builder()
+            ->issuedBy($client_email)
+            ->permittedFor($this->getTokenCredentialUri())
+            ->relatedTo($this->subject)
+            ->issuedAt($now)
+            ->expiresAt($now->modify('+1 hour'))
+            ->withClaim('scope', implode(' ', $this->scopes))
+            ->getToken($config->signer(), $config->signingKey());
 
-        $token = (new Builder())
-            ->issuedBy($client_email)                           // Configures the issuer (iss claim)
-            ->permittedFor($this->getTokenCredentialUri())      // aud claim
-            ->relatedTo($this->subject)                         // sub claim
-            ->issuedAt($time)                                   // Configures the time that the token was issue (iat claim)
-            ->expiresAt($time + 3600)                           // Configures the expiration time of the token (exp claim)
-            ->withClaim('scope', implode(' ', $this->scopes))   // scopes claim
-            ->getToken($signer, $keyID)
-        ;
-
-        return (string) $token;
+        return $token->toString();
     }
 }

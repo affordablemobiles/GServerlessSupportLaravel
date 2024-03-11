@@ -10,16 +10,16 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 
 /**
- * Deployment command for running on GAE.
+ * Deployment command for running on Google Serverless.
  */
-class GaeViewCompileCommand extends Command
+class GServerlessViewCompileCommand extends Command
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'gae:viewcompile';
+    protected $name = 'g-serverless:viewcompile';
 
     /**
      * The console command description.

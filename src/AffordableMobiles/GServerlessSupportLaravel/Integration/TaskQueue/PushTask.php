@@ -27,8 +27,8 @@ class PushTask
             $this->pushTask->setUrl(URL::to($url_path));
 
             $token = new OidcToken();
-            $token->setServiceAccountEmail(env('TASK_QUEUE_SERVICE_ACCOUNT', gae_project().'@appspot.gserviceaccount.com'));
-            $token->setAudience(env('OIDC_AUDIENCE'));
+            $token->setServiceAccountEmail(config('gserverlesssupport.cloud-tasks.service-account'));
+            $token->setAudience(config('gserverlesssupport.cloud-tasks.audience'));
 
             $this->pushTask->setOidcToken($token);
         } else {
@@ -48,28 +48,9 @@ class PushTask
                 }
 
                 $this->pushTask->setAppEngineRouting($routing);
-            } elseif (is_gae_development()) {
-                /*
-                 * Support our development environment,
-                 * which runs working copies on live
-                 * App Engine containers via rsync to /tmp.
-                 *
-                 * Our chosen naming convention is versions
-                 * starting with "dev-", so if we spot that
-                 * in the version name, send tasks back
-                 * to that specific version.
-                 */
-                Log::info('Detected development environment, routing to '.gae_service().':'.gae_version());
-
+            } elseif ('default' !== g_service()) {
                 $routing = (new AppEngineRouting())
-                    ->setService(gae_service())
-                    ->setVersion(gae_version())
-                ;
-
-                $this->pushTask->setAppEngineRouting($routing);
-            } elseif ('default' !== gae_service()) {
-                $routing = (new AppEngineRouting())
-                    ->setService(gae_service())
+                    ->setService(g_service())
                 ;
 
                 $this->pushTask->setAppEngineRouting($routing);

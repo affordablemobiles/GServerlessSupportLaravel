@@ -27,7 +27,7 @@ class Firebase_Guard implements StatelessValidator
             throw new \Exception('Firebase Authentication Guard: Audience (env FIREBASE_PROJECT) not defined');
         }
 
-        $jwt = $request->cookie(config('gaesupport.auth.firebase.cookie_name'));
+        $jwt = $request->cookie(config('gserverlesssupport.auth.firebase.cookie_name'));
         if (empty($jwt)) {
             return null;
         }

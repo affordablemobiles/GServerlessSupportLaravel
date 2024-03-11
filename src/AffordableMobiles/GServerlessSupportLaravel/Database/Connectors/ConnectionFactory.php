@@ -57,10 +57,10 @@ class ConnectionFactory extends BaseConnectionFactory
     protected function createPdoResolverWithSockets(array $config)
     {
         return function () use ($config) {
-            $cacheKey = 'GaeSupportLaravel-Database-ConnectionFactory-'.$config['name'];
+            $cacheKey = 'GServerlessSupportLaravel-Database-ConnectionFactory-'.$config['name'];
             $sockets  = Arr::shuffle($this->parseSockets($config));
 
-            $current = is_gae_development() ? null : InstanceLocalCache::get($cacheKey);
+            $current = is_g_serverless_development() ? null : InstanceLocalCache::get($cacheKey);
             if (!empty($current)) {
                 $sockets = array_filter($sockets, static fn ($socket) => $socket !== $current);
                 array_unshift($sockets, $current);

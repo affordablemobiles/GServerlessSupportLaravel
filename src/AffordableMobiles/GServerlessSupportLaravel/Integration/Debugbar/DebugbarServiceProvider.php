@@ -41,6 +41,6 @@ class DebugbarServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['gae-support-debugbar'];
+        return ['g-serverless-support-debugbar'];
     }
 }

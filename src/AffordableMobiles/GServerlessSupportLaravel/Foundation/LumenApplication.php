@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Foundation;
 
-use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
+use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GaeFilesystemAdapter;
 use Google\Cloud\Storage\StorageClient as GCSStorageClient;
 use Google\Cloud\Storage\StreamWrapper as GCSStreamWrapper;
 use Illuminate\Support\Facades\Storage;
@@ -31,17 +31,17 @@ class LumenApplication extends BaseLumenApplication
         $this->withFacades();
 
         if (class_exists('League\Flysystem\Filesystem')) {
-            Storage::extend('gae', static fn ($app, $config) => new Flysystem(new GaeFilesystemAdapter($config['root'])));
+            Storage::extend('gserverless', static fn ($app, $config) => new Flysystem(new GServerlessFilesystemAdapter($config['root'])));
         }
 
-        if (is_gae()) {
+        if (is_g_serverless()) {
             $storage = new GCSStorageClient();
             GCSStreamWrapper::register($storage);
         }
 
         $this->mergeConfigFrom(
-            __DIR__.'/../../../config/gaesupport.php',
-            'gaesupport'
+            __DIR__.'/../../../config/gserverlesssupport.php',
+            'gserverlesssupport'
         );
 
         return $return;

@@ -41,11 +41,11 @@ class Client extends GuzzleClient
             // We are able to modify the handler stack, continue...
 
             // Unless disabled, add TraceMiddleware for sub-request trace merging in StackDriver.
-            if (false !== @$config['gaesupport']['trace']) {
+            if (false !== @$config['gserverlesssupport']['trace']) {
                 $config['handler']->push(new TraceMiddleware());
             }
         } else {
-            Log::warning('A1comms\\GaeSupportLaravel\\Integration\\Guzzle\\Client: Unable to modify handler stack, no push method defined');
+            Log::warning('AffordableMobiles\\GServerlessSupportLaravel\\Integration\\Guzzle\\Client: Unable to modify handler stack, no push method defined');
         }
 
         return parent::__construct($config);

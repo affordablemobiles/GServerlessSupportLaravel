@@ -39,11 +39,7 @@ class CreateLoggingDriver
             $handler = new StreamHandler('/tmp/logpipe', Logger::INFO);
             $handler->setFormatter($formatter);
             $logger = new Logger($logName, [$handler]);
-        } elseif (is_gae_flex()) {
-            $psrLogger = LoggingClient::psrBatchLogger($logName);
-            $handler   = new PsrHandler($psrLogger);
-            $logger    = new Logger($logName, [$handler]);
-        } elseif (is_gae()) {
+        } elseif (is_gae_std()) {
             if ('true' === env('GAE_SYNC_LOGS', 'false')) {
                 $psrLogger = (new LoggingClient())->psrLogger($logName);
                 $handler   = new PsrHandler($psrLogger);

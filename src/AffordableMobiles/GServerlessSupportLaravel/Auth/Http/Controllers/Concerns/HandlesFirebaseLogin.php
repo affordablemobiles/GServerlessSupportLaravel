@@ -44,7 +44,7 @@ trait HandlesFirebaseLogin
      */
     protected function fetchSessionTokenFromCookie(Request $request): string
     {
-        $cookieName = config('gaesupport.auth.firebase.cookie_name');
+        $cookieName = config('gserverlesssupport.auth.firebase.cookie_name');
 
         if ($request->hasCookie($cookieName)) {
             return $request->cookie($cookieName);
@@ -68,7 +68,7 @@ trait HandlesFirebaseLogin
      */
     protected function refreshLoginCookie(Request $request, int $expiryMinutes = 2628000, null|string $path = null, null|string $domain = null): void
     {
-        $cookieName = config('gaesupport.auth.firebase.cookie_name');
+        $cookieName = config('gserverlesssupport.auth.firebase.cookie_name');
 
         if ($request->hasCookie($cookieName)) {
             CookieHelper::queue(
@@ -89,7 +89,7 @@ trait HandlesFirebaseLogin
     {
         CookieHelper::queue(
             CookieHelper::forget(
-                config('gaesupport.auth.firebase.cookie_name'),
+                config('gserverlesssupport.auth.firebase.cookie_name'),
                 $path,
                 $domain,
             )
@@ -102,22 +102,22 @@ trait HandlesFirebaseLogin
     protected function logoutRedirect(): RedirectResponse
     {
         return redirect(
-            config('gaesupport.auth.firebase.logout_redirect')
+            config('gserverlesssupport.auth.firebase.logout_redirect')
         );
     }
 
     private function fetchLoginCookie(string $token, int $expiryMinutes = 2628000, null|string $path = null, null|string $domain = null): Cookie
     {
         return CookieHelper::make(
-            config('gaesupport.auth.firebase.cookie_name'),     // name
+            config('gserverlesssupport.auth.firebase.cookie_name'),     // name
             $token,                                             // value
             $expiryMinutes,                                     // expiry
             $path,                                              // path
             $domain,                                            // domain
             true,                                               // secure
-            config('gaesupport.auth.firebase.cookie_httpOnly'), // httpOnly
+            config('gserverlesssupport.auth.firebase.cookie_httpOnly'), // httpOnly
             false,                                              // raw
-            config('gaesupport.auth.firebase.cookie_sameSite'), // sameSite
+            config('gserverlesssupport.auth.firebase.cookie_sameSite'), // sameSite
         );
     }
 }

@@ -8,14 +8,14 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config;
 
 /**
- * Class GaeAdapter.
+ * Class GServerlessAdapter.
  *
  * The class overrides the existing methods in order to:
  *
  * - remove exclusive locks(not supported by GAE) while writing files,
  *
  * - 'ensureDirectory()' replace a call to 'reapath()' functions with
- * a call to 'gae_realpath()' function, which is compatible with GCS buckets,
+ * a call to 'g_serverless_realpath()' function, which is compatible with GCS buckets,
  *
  * - 'writeStream()' replace 'fopen()' mode from 'w+', which is not supported
  * on GCS buckets and replaces it with 'w', as for the specific function
@@ -28,7 +28,7 @@ use League\Flysystem\Config;
  * slash which is not supported by GCS and an empty directory listing is returned.
  * In order to make the check pass the path has to be 'gs://bucket/storage/app/'.
  */
-class GaeAdapter extends Local
+class GServerlessAdapter extends Local
 {
     public function __construct($root)
     {
@@ -72,6 +72,6 @@ class GaeAdapter extends Local
             mkdir($root, 0o755, true);
         }
 
-        return gae_realpath($root);
+        return g_serverless_realpath($root);
     }
 }

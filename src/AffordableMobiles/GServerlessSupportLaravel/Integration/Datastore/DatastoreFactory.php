@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AffordableMobiles\GServerlessSupportLaravel\Integration\Datastore;
+namespace A1comms\GaeSupportLaravel\Integration\Datastore;
 
 use GDS;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +11,7 @@ class DatastoreFactory
 {
     public static function make($namespace = null)
     {
-        return new GDS\Gateway\GRPCv1(gae_project(), $namespace);
+        return new GDS\Gateway\GRPCv1(g_project(), $namespace);
     }
 
     public static function shouldRetry($ex, $retryAttempt = 1)

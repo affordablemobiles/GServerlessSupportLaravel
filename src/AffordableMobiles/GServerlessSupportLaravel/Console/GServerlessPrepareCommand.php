@@ -9,30 +9,30 @@ use AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider;
 use Illuminate\Console\Command;
 
 /**
- * Deployment command for running on GAE.
+ * Deployment command for running on Google Serverless.
  */
-class GaePrepareCommand extends Command
+class GServerlessPrepareCommand extends Command
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'gae:prepare';
+    protected $name = 'g-serverless:prepare';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Deployment command for production App Engine';
+    protected $description = 'Deployment command for Google Cloud Serverless';
 
     /**
      * Prefix for all console logs.
      *
      * @var string
      */
-    protected $logPrefix = 'App Engine Deployment: ';
+    protected $logPrefix = 'Google Serverless Deployment: ';
 
     /**
      * Create a new config cache command instance.
@@ -64,7 +64,7 @@ class GaePrepareCommand extends Command
     {
         if (\in_array(ViewServiceProvider::class, config('app.providers'), true)) {
             $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...');
-            $this->call('gae:viewcompile');
+            $this->call('g-serverless:viewcompile');
             $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...done');
         }
     }

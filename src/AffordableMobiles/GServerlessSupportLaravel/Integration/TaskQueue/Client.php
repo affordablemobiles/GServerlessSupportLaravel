@@ -19,7 +19,7 @@ class Client
     public function __construct()
     {
         $this->client   = new CloudTasksClient();
-        $this->project  = gae_project();
+        $this->project  = g_project();
         $this->location = $this->fetchLocation();
     }
 
@@ -49,35 +49,10 @@ class Client
 
     private function fetchLocation()
     {
-        $metadata = new Metadata();
-        $zone     = explode(
-            '/',
-            $metadata->get('instance/zone')
-        );
-        $zone = array_pop($zone);
-
-        // if the pattern is similar to europe-west1-a (i.e., GAE Flexible Environment)
-        if (Str::is('*-*-*', $zone)) {
-            return Str::beforeLast($zone, '-');
+        if (!empty(config('gserverlesssupport.cloud-tasks.region'))) {
+            return config('gserverlesssupport.cloud-tasks.region');
         }
 
-        if (!empty(config('gaesupport.cloud-tasks.region'))) {
-            return config('gaesupport.cloud-tasks.region');
-        }
-
-        switch ($zone) {
-            case 'eu2':
-            case 'eu4':
-            case 'eu5':
-            case 'eu6':
-                return 'europe-west1';
-
-            case 'us6':
-            case 'us14':
-                return 'us-central1';
-
-            default:
-                throw new \Exception('Unknown App Engine Region Code: '.$zone);
-        }
+        throw new \Exception('Cloud Tasks Region Must Be Specified');
     }
 }

@@ -59,7 +59,7 @@ class InstanceLocal extends CacheManager
     private function getDriver()
     {
         if (!$this->driver) {
-            $this->driver = $this->createFileDriver(['path' => '/tmp/cache/GaeSupportLaravel']);
+            $this->driver = $this->createFileDriver(['path' => '/tmp/cache/GServerlessSupportLaravel']);
         }
 
         return $this->driver;

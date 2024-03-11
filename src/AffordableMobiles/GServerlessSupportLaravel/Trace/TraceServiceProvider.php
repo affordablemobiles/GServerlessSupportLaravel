@@ -27,7 +27,7 @@ class TraceServiceProvider extends ServiceProvider
             Tracer::inSpan(['name' => 'laravel/bootstrap', 'startTime' => LARAVEL_START], static function (): void {});
         }
 
-        foreach (config('gaesupport.trace_providers', []) as $p) {
+        foreach (config('gserverlesssupport.trace_providers', []) as $p) {
             $p::load();
         }
     }

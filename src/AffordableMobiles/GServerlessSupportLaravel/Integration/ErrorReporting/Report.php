@@ -50,7 +50,7 @@ class Report
      *
      * @return string a string prefix for reporting the error
      */
-    public static function getErrorPrefix($level)
+    protected static function getErrorPrefix(int $level)
     {
         switch ($level) {
             case E_PARSE:
@@ -104,7 +104,7 @@ class Report
      *
      * @return string an error level string
      */
-    public static function getErrorLevelString($level)
+    protected static function getErrorLevelString(int $level)
     {
         switch ($level) {
             case E_PARSE:
@@ -139,32 +139,31 @@ class Report
     {
         $message = sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {
-            $service = gae_service();
-            $version = gae_version();
             self::$psrLogger->error($message, [
                 'context' => array_merge($context, [
                     'reportLocation' => [
                         'filePath'     => $ex->getFile(),
                         'lineNumber'   => $ex->getLine(),
-                        'functionName' => self::getFunctionNameForReport($ex->getTrace()),
+                        'functionName' => self::getFunctionNameForReport(
+                            $ex->getTrace()
+                        ),
                     ],
                     'httpRequest' => [
-                        'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                        'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                        'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                        'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                        'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                        'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                        'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                        'referrer'           => $_SERVER['HTTP_REFERER'] ?? '',
                         'responseStatusCode' => $status_code,
-                        'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                        'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? '',
                     ],
                     'user' => self::getUserNameForReport(),
                 ]),
                 'serviceContext' => [
-                    'service' => $service,
-                    'version' => $version,
+                    'service' => g_service(),
+                    'version' => g_version(),
                 ],
             ]);
         }
-        // fwrite(STDERR, $message . PHP_EOL);
     }
 
     /**
@@ -188,8 +187,6 @@ class Report
         if (!self::$psrLogger) {
             return false;
         }
-        $service = gae_service();
-        $version = gae_version();
         $context = [
             'context' => [
                 'reportLocation' => [
@@ -198,18 +195,18 @@ class Report
                     'functionName' => self::getFunctionNameForReport(),
                 ],
                 'httpRequest' => [
-                    'method'             => empty($_SERVER['REQUEST_METHOD']) ?: $_SERVER['REQUEST_METHOD'],
-                    'url'                => (empty($_SERVER['HTTP_HOST']) ? '' : $_SERVER['HTTP_HOST']).(empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI']),
-                    'userAgent'          => empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'],
-                    'referrer'           => empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'],
+                    'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                    'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                    'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                    'referrer'           => $_SERVER['HTTP_REFERER'] ?? null,
                     'responseStatusCode' => null,
-                    'remoteIp'           => empty($_SERVER['REMOTE_ADDR']) ? '' : $_SERVER['REMOTE_ADDR'],
+                    'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
                 ],
                 'user' => self::getUserNameForReport(),
             ],
             'serviceContext' => [
-                'service' => $service,
-                'version' => $version,
+                'service' => g_service(),
+                'version' => g_version(),
             ],
         ];
         self::$psrLogger->log(
@@ -233,8 +230,6 @@ class Report
                 case E_PARSE:
                 case E_COMPILE_ERROR:
                 case E_CORE_ERROR:
-                    $service = gae_service();
-                    $version = gae_version();
                     $message = sprintf(
                         '%s: %s in %s on line %d',
                         self::getErrorPrefix($err['type']),
@@ -249,10 +244,19 @@ class Report
                                 'lineNumber'   => $err['line'],
                                 'functionName' => self::getFunctionNameForReport(),
                             ],
+                            'httpRequest' => [
+                                'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                                'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                                'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                                'referrer'           => $_SERVER['HTTP_REFERER'] ?? null,
+                                'responseStatusCode' => null,
+                                'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
+                            ],
+                            'user' => self::getUserNameForReport(),
                         ],
                         'serviceContext' => [
-                            'service' => $service,
-                            'version' => $version,
+                            'service' => g_service(),
+                            'version' => g_version(),
                         ],
                     ];
                     if (self::$psrLogger) {

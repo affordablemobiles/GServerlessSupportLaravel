@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel;
 
-use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GaeAdapter as GaeFilesystemAdapter;
+use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GServerlessFilesystemAdapter;
 use AffordableMobiles\GServerlessSupportLaravel\Session\DatastoreSessionHandler;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Session;
@@ -13,9 +13,9 @@ use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem as Flysystem;
 
 /**
- * Class GaeSupportServiceProvider.
+ * Class GServerlessSupportServiceProvider.
  */
-class GaeSupportServiceProvider extends ServiceProvider
+class GServerlessSupportServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.
@@ -30,8 +30,8 @@ class GaeSupportServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/gaesupport.php',
-            'gaesupport'
+            __DIR__.'/../../config/gserverlesssupport.php',
+            'gserverlesssupport'
         );
     }
 
@@ -42,23 +42,23 @@ class GaeSupportServiceProvider extends ServiceProvider
     {
         // Publish our config file when the user runs "artisan vendor:publish".
         $this->publishes([
-            __DIR__.'/../../config/gaesupport.php' => config_path('gaesupport.php'),
+            __DIR__.'/../../config/gserverlesssupport.php' => config_path('gserverlesssupport.php'),
         ]);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\GaePrepareCommand::class,
+                Console\GServerlessPrepareCommand::class,
             ]);
         }
 
         // Register the DatastoreSessionHandler
-        Session::extend('gae', static fn ($app) => new DatastoreSessionHandler(
+        Session::extend('datastore', static fn ($app) => new DatastoreSessionHandler(
             config('session.table'),
             config('session.store'),
         ));
 
-        Storage::extend('gae', static function ($app, $config) {
-            $adapter = new GaeFilesystemAdapter($config['root']);
+        Storage::extend('gserverless', static function ($app, $config) {
+            $adapter = new GServerlessFilesystemAdapter($config['root']);
 
             return new FilesystemAdapter(
                 new Flysystem($adapter, $config),
@@ -66,9 +66,6 @@ class GaeSupportServiceProvider extends ServiceProvider
                 $config,
             );
         });
-
-        // register the package's routes
-        require __DIR__.'/Http/routes.php';
     }
 
     /**
@@ -78,6 +75,6 @@ class GaeSupportServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['gae-support'];
+        return ['g-serverless-support'];
     }
 }

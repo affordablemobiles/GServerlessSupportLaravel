@@ -82,7 +82,7 @@ class IAMSigner implements Signer
     {
         $client = new \Google_Client();
 
-        $client->setApplicationName('GaeSupportLaravel-JWT/0.1');
+        $client->setApplicationName('GServerlessSupportLaravel-JWT/0.1');
         $client->useApplicationDefaultCredentials();
         $client->addScope('https://www.googleapis.com/auth/cloud-platform');
 

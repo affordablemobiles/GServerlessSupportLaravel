@@ -9,14 +9,6 @@ if (!function_exists('is_cloud_run')) {
     }
 }
 
-if (!function_exists('is_gae')) {
-    function is_gae()
-    {
-        // Cloud Run emulates App Engine
-        return is_cloud_run() || isset($_SERVER['GAE_INSTANCE']);
-    }
-}
-
 if (!function_exists('is_gae_std')) {
     function is_gae_std()
     {
@@ -30,88 +22,34 @@ if (!function_exists('is_gae_std')) {
     }
 }
 
-if (!function_exists('is_gae_std_legacy')) {
-    function is_gae_std_legacy()
+if (!function_exists('is_g_serverless')) {
+    function is_g_serverless()
     {
-        return false;
+        return is_cloud_run() || is_gae_std();
     }
 }
 
-if (!function_exists('is_gae_production')) {
-    function is_gae_production()
+if (!function_exists('g_project')) {
+    function g_project()
     {
-        return is_gae();
-    }
-}
-
-if (!function_exists('is_gae_development')) {
-    function is_gae_development()
-    {
-        if (!is_gae()) {
-            return false;
-        }
-
-        if (is_cloud_run()) {
-            return (bool) (config('gaesupport.dev-prefix')
-                && str_starts_with($_SERVER['HTTP_HOST'], config('gaesupport.dev-prefix')));
-        }
-
-        return (bool) (config('gaesupport.dev-prefix')
-            && str_starts_with(gae_version(), config('gaesupport.dev-prefix')));
-    }
-}
-
-if (!function_exists('is_gae_flex')) {
-    function is_gae_flex()
-    {
-        if (isset($_SERVER['GOOGLE_CLOUD_PROJECT'])) {
-            if (!isset($_SERVER['GAE_ENV'])) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-}
-
-if (!function_exists('gae_instance')) {
-    function gae_instance()
-    {
-        if (is_cloud_run()) {
-            // there is no instance idenfitier on Cloud Run
-            // return the revision so we aren't returning nothing.
-            return $_SERVER['K_REVISION'];
-        }
-        if (is_gae()) {
-            return $_SERVER['GAE_INSTANCE'];
-        }
-
-        return false;
-    }
-}
-
-if (!function_exists('gae_project')) {
-    function gae_project()
-    {
-        if (is_gae()) {
+        if (is_g_serverless()) {
             if (isset($_SERVER['GOOGLE_CLOUD_PROJECT'])) {
                 return $_SERVER['GOOGLE_CLOUD_PROJECT'];
             }
 
-            return (new \Google\Cloud\Core\Compute\Metadata())->getProjectId();
+            return once(fn () => ((new \Google\Cloud\Core\Compute\Metadata())->getProjectId()));
         }
 
         return false;
     }
 }
 
-if (!function_exists('gae_service')) {
-    function gae_service()
+if (!function_exists('g_service')) {
+    function g_service()
     {
         if (is_cloud_run()) {
             return $_SERVER['K_SERVICE'];
-        }
-        if (is_gae()) {
+        } else if (is_gae_std()) {
             return $_SERVER['GAE_SERVICE'];
         }
 
@@ -119,13 +57,12 @@ if (!function_exists('gae_service')) {
     }
 }
 
-if (!function_exists('gae_version')) {
-    function gae_version()
+if (!function_exists('g_version')) {
+    function g_version()
     {
         if (is_cloud_run()) {
             return $_SERVER['K_REVISION'];
-        }
-        if (is_gae()) {
+        } else if (is_gae_std()) {
             return $_SERVER['GAE_VERSION'];
         }
 
@@ -133,14 +70,44 @@ if (!function_exists('gae_version')) {
     }
 }
 
-if (!function_exists('gae_storage_path')) {
-    function gae_storage_path($path = '')
+if (!function_exists('g_instance')) {
+    function g_instance()
     {
-        if (is_gae() || defined('IS_GAE')) {
+        if (is_gae_std()) {
+            return $_SERVER['GAE_INSTANCE'];
+        } else if (is_cloud_run()) {
+            return once(fn () => ((new \Google\Cloud\Core\Compute\Metadata())->get('instance/id')));
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('is_g_serverless_development')) {
+    function is_g_serverless_development()
+    {
+        if (is_cloud_run()) {
+            return (bool) (config('gserverlesssupport.dev-prefix')
+                && str_starts_with($_SERVER['HTTP_HOST'], config('gserverlesssupport.dev-prefix')));
+        } else if (is_gae_std()) {
+            return (bool) (config('gserverlesssupport.dev-prefix')
+                && str_starts_with(g_version(), config('gserverlesssupport.dev-prefix')));
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('g_serverless_storage_path')) {
+    function g_serverless_storage_path($path = '')
+    {
+        if (is_g_serverless()) {
             $ret = '/tmp/laravel/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
-            if (is_gae_development()) {
+            
+            if (is_g_serverless_development()) {
                 $ret = '/tmp/laravel/'.$_SERVER['HTTP_HOST'].'/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
             }
+
             @mkdir($ret, 0o755, true);
 
             return $ret;
@@ -150,8 +117,8 @@ if (!function_exists('gae_storage_path')) {
     }
 }
 
-if (!function_exists('gae_realpath')) {
-    function gae_realpath($path)
+if (!function_exists('g_serverless_realpath')) {
+    function g_serverless_realpath($path)
     {
         $result = realpath($path);
         if (false === $result) {
@@ -163,6 +130,43 @@ if (!function_exists('gae_realpath')) {
         return $result;
     }
 }
+
+if (!function_exists('g_serverless_basic_log')) {
+    function g_serverless_basic_log($logName, $severity, $message, $context = []): void
+    {
+        $record = [
+            'severity'                     => $severity,
+            'message'                      => $message,
+            'context'                      => $context,
+            'customLogName'                => $logName,
+            'logging.googleapis.com/trace' => 'projects/'.g_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'time'                         => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
+        ];
+
+        if (is_cloud_run()) {
+            @file_put_contents('/tmp/logpipe', json_encode($record)."\n", FILE_APPEND);
+        } else {
+            @file_put_contents('/var/log/'.$logName.'.log', json_encode($record)."\n", FILE_APPEND);
+        }
+    }
+}
+
+if (!function_exists('diefast')) {
+    function diefast($data = null): void
+    {
+        register_shutdown_function(static function (): void {
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            }
+        });
+
+        exit($data);
+    }
+}
+
+/**
+ * Missing functions for Lumen
+ */
 
 if (!function_exists('app_path')) {
     function app_path($path = '')
@@ -194,35 +198,76 @@ if (!function_exists('is_lumen')) {
     }
 }
 
-if (!function_exists('gae_basic_log')) {
-    function gae_basic_log($logName, $severity, $message, $context = []): void
-    {
-        $record = [
-            'severity'                     => $severity,
-            'message'                      => $message,
-            'context'                      => $context,
-            'customLogName'                => $logName,
-            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
-            'time'                         => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
-        ];
 
-        if (is_cloud_run()) {
-            @file_put_contents('/tmp/logpipe', json_encode($record)."\n", FILE_APPEND);
-        } else {
-            @file_put_contents('/var/log/'.$logName.'.log', json_encode($record)."\n", FILE_APPEND);
-        }
+/**
+ * Deprecated functions
+ */
+
+if (!function_exists('gae_project')) {
+    function gae_project()
+    {
+        return g_project();
     }
 }
 
-if (!function_exists('diefast')) {
-    function diefast($data = null): void
+if (!function_exists('gae_service')) {
+    function gae_service()
     {
-        register_shutdown_function(static function (): void {
-            if (function_exists('fastcgi_finish_request')) {
-                fastcgi_finish_request();
-            }
-        });
+        return g_service();
+    }
+}
 
-        exit($data);
+if (!function_exists('gae_version')) {
+    function gae_version()
+    {
+       return g_version();
+    }
+}
+
+ if (!function_exists('gae_instance')) {
+    function gae_instance()
+    {
+        return g_instance();
+    }
+}
+
+if (!function_exists('is_gae')) {
+    function is_gae()
+    {
+        return is_g_serverless();
+    }
+}
+
+if (!function_exists('is_gae_std_legacy')) {
+    function is_gae_std_legacy()
+    {
+        return false;
+    }
+}
+
+if (!function_exists('is_gae_production')) {
+    function is_gae_production()
+    {
+        return is_gae();
+    }
+}
+
+if (!function_exists('is_gae_development')) {
+    function is_gae_development()
+    {
+        return is_g_serverless_development();
+    }
+}
+
+if (!function_exists('is_gae_flex')) {
+    function is_gae_flex()
+    {
+        if (isset($_SERVER['GOOGLE_CLOUD_PROJECT'])) {
+            if (!isset($_SERVER['GAE_ENV'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

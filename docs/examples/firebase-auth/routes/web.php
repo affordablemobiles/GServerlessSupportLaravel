@@ -19,8 +19,8 @@ Route::get('/login', function () {
     return view('login');
 })->name('login');
 
-Route::post('/login', [\A1comms\GaeSupportLaravel\Auth\Http\Controllers\Firebase::class, 'login']);
-Route::get('/logout', [\A1comms\GaeSupportLaravel\Auth\Http\Controllers\Firebase::class, 'logout']);
+Route::post('/login', [\AffordableMobiles\GServerlessSupportLaravel\Auth\Http\Controllers\Firebase::class, 'login']);
+Route::get('/logout', [\AffordableMobiles\GServerlessSupportLaravel\Auth\Http\Controllers\Firebase::class, 'logout']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {

@@ -48,7 +48,7 @@ To enable, you'll first need to include our `ViewServiceProvider` in `config/app
 ```php
     'providers' => [
         //Illuminate\View\ViewServiceProvider::class,
-        A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
     ];
 ```
 

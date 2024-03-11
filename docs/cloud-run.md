@@ -62,7 +62,7 @@ Until a better solution is presented, we emulate how this would work in a Go app
         ...
 
         // Static files for Google Cloud Run
-        A1comms\GaeSupportLaravel\Filesystem\StaticFilesServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Filesystem\StaticFilesServiceProvider::class,
     ],
 ```
 
@@ -78,7 +78,7 @@ class Kernel extends HttpKernel
     protected $middleware = [
         ...
 
-        \A1comms\GaeSupportLaravel\Filesystem\StaticFilesMiddleware::class,
+        \AffordableMobiles\GServerlessSupportLaravel\Filesystem\StaticFilesMiddleware::class,
     ];
 ```
 

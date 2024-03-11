@@ -9,7 +9,7 @@ To enable, you'll first need to include our `QueueServiceProvider` in `config/ap
 ```php
     'providers' => [
         //Illuminate\Queue\QueueServiceProvider::class,
-        A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Queue\QueueServiceProvider::class,
     ];
 ```
 

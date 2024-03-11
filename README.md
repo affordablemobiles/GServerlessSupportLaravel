@@ -1,25 +1,23 @@
-# GaeSupportLaravel
+# GServerlessSupportLaravel
 
-Google App Engine (GAE) Standard Environment support package for **Laravel 9.x**.
+Google Serverless (Cloud Run & App Engine Standard Environment) support package for **Laravel 11.x**.
 
-[![Latest Stable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/stable)](https://packagist.org/packages/a1comms/gae-support-laravel)
-[![Monthly Downloads](https://poser.pugx.org/a1comms/gae-support-laravel/d/monthly)](https://packagist.org/packages/a1comms/gae-support-laravel)
-[![Total Downloads](https://poser.pugx.org/a1comms/gae-support-laravel/downloads)](https://packagist.org/packages/a1comms/gae-support-laravel)
-[![Latest Unstable Version](https://poser.pugx.org/a1comms/gae-support-laravel/v/unstable)](https://packagist.org/packages/a1comms/gae-support-laravel)
-[![License](https://poser.pugx.org/a1comms/gae-support-laravel/license)](https://packagist.org/packages/a1comms/gae-support-laravel)
+[![Latest Stable Version](https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/v/stable)](https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel)
+[![Monthly Downloads](https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/d/monthly)](https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel)
+[![Total Downloads](https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/downloads)](https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel)
+[![License](https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/license)](https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel)
 
 Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpasser https://github.com/shpasser/GaeSupportL5
 
-*Note: we only intend to support Laravel LTS releases, with this version targeted specifically at **Laravel 9.x***
-
 ## Functionality
-* StackDriver Logging integration
-* StackDriver Trace integration (see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/trace.md))
-* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/blade-pre-compile.md))
-* Guzzle integration (optional, see [docs/trace.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/trace.md#guzzle))
-* Laravel Auth Integration for IAP (optional, see [docs/iap-auth-verify.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/iap-auth-verify.md))
-* Queue Driver for Cloud Tasks (optional, see [docs/queue.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/queue.md))
-* Examples for deployment from Git via Cloud Build, plus encrypted secrets with KMS (optional, see [docs/cloudbuild.md](https://github.com/a1comms/GaeSupportLaravel/blob/php7.4-laravel6.0/docs/cloudbuild.md))
+* Google Cloud Operations Suite integration
+    * Cloud Logging destination with structured logs.
+    * Cloud Trace (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/trace.md))
+        * Guzzle propagation support (optional, see [docs/trace.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/trace.md#guzzle))
+* Identity Aware Proxy (IAP) integration (optional, see [docs/iap-auth-verify.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/iap-auth-verify.md))
+* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/blade-pre-compile.md))
+* Queue Driver for Cloud Tasks (optional, see [docs/queue.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/queue.md))
+* Examples for deployment to App Engine from Git via Cloud Build, plus encrypted secrets with Secret Manager (optional, see [docs/cloudbuild.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/cloudbuild.md))
 
 ## Installation
 
@@ -27,7 +25,7 @@ Pull in the package via Composer:
 
 ```js
 "require": {
-    "a1comms/gae-support-laravel": "~9.0"
+    "affordablemobiles/g-serverless-support-laravel": "~11"
 }
 ```
 
@@ -38,7 +36,7 @@ Pull in the package via Composer:
 ```json
     "scripts": {
         "post-autoload-dump": [
-            "php artisan gae:prepare"
+            "php artisan g-serverless:prepare"
         ]
     },
 ```
@@ -47,7 +45,7 @@ Pull in the package via Composer:
 
 ```php
     'providers' => [
-        A1comms\GaeSupportLaravel\GaeSupportServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\GaeSupportServiceProvider::class,
     ];
 ```
 
@@ -55,10 +53,10 @@ Pull in the package via Composer:
 
 ```php
     'providers' => [
-        A1comms\GaeSupportLaravel\Auth\AuthServiceProvider::class,
-        A1comms\GaeSupportLaravel\View\ViewServiceProvider::class,
-        A1comms\GaeSupportLaravel\Queue\QueueServiceProvider::class,
-        A1comms\GaeSupportLaravel\Trace\TraceServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Queue\QueueServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Trace\TraceServiceProvider::class,
     ];
 ```
 
@@ -85,7 +83,7 @@ And remove the relevant Laravel service providers that these replace:
 |
 */
 
-$app = new A1comms\GaeSupportLaravel\Foundation\Application(
+$app = new AffordableMobiles\GServerlessSupportLaravel\Foundation\Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 ```
@@ -101,7 +99,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 To our class, that'll inject the required logging hook:
 
 ```php
-use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
+use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 ```
 
 **6.** In `config/logging.php`, configure a custom logger and set it as the default:
@@ -111,7 +109,7 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
 ```php
 <?php
 
-use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
+use AffordableMobiles\GServerlessSupportLaravel\Log\CreateLoggingDriver;
 
 return [
     
@@ -156,7 +154,7 @@ LOG_CHANNEL=gae
 |
 */
 
-$app = new A1comms\GaeSupportLaravel\Foundation\LumenApplication(
+$app = new AffordableMobiles\GServerlessSupportLaravel\Foundation\LumenApplication(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 ```
@@ -172,7 +170,7 @@ use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 To our class, that'll inject the required logging hook:
 
 ```php
-use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
+use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
 
 ## Upgrading (from Laravel/Lumen 6.x LTS)
@@ -183,7 +181,7 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 
 ```json
 "require": {
-    "a1comms/gae-support-laravel": "~9.0"
+    "affordablemobiles/g-serverless-support-laravel": "~9.0"
 }
 ```
 
@@ -195,7 +193,7 @@ use A1comms\GaeSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHan
 
 ```json
 "require": {
-    "a1comms/gae-support-laravel": "~9.0"
+    "affordablemobiles/g-serverless-support-laravel": "~9.0"
 }
 ```
 

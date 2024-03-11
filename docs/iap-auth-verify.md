@@ -10,7 +10,7 @@ For this, we validate each request statelessly, using the request headers (from 
 
 ```php
     'providers' => [
-        A1comms\GaeSupportLaravel\Auth\AuthServiceProvider::class,
+        AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
     ];
 ```
 
@@ -87,7 +87,7 @@ Route::get('/user/email', function () {
 
 ### Custom User Model
 
-By default, the user object returned is an instance of `A1comms\GaeSupportLaravel\Auth\Model\IAPUser`.
+By default, the user object returned is an instance of `AffordableMobiles\GServerlessSupportLaravel\Auth\Model\IAPUser`.
 
 To use your own custom user model, you can setup a "null" provider.
 
@@ -123,7 +123,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel;
 
 class User extends Authenticatable implements NullUserModel
 {

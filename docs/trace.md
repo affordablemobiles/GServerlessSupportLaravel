@@ -42,7 +42,7 @@ We do this by asking composer to include `src/preload.php` once it has set up th
 
 `src/preload.php` will first include `src/helpers.php` to register our helper functions (which is done because composer can't guarantee load order if we specify an array of files to load in `composer.json` and we need our helper functions before the preload functions run).
 
-By default, the list of low level providers is provided by calling `A1comms\GaeSupportLaravel\Trace\LowLevelLoader`, but this can be overridden by creating your own `LowLevelLoader` that implements `A1comms\GaeSupportLaravel\Trace\LowLevelLoaderInterface` at `App\Trace\LowLevelLoader`, which we check for before loading the default.
+By default, the list of low level providers is provided by calling `AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader`, but this can be overridden by creating your own `LowLevelLoader` that implements `AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoaderInterface` at `App\Trace\LowLevelLoader`, which we check for before loading the default.
 
 Example `app/Trace/LowLevelLoader.php` that just loads `Memcached` tracing:
 
@@ -51,7 +51,7 @@ Example `app/Trace/LowLevelLoader.php` that just loads `Memcached` tracing:
 
 namespace App\Trace;
 
-use A1comms\GaeSupportLaravel\Trace\LowLevelLoaderInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoaderInterface;
 
 class LowLevelLoader implements LowLevelLoaderInterface
 {
@@ -132,4 +132,4 @@ This means you should automatically see external calls made with Guzzle as trace
 ### Guzzle Sub-Request Trace Merging
 StackDriver Trace has the ability to show trace points from sub-requests within the same organization (to other App Engine microservices, either in the same project, or outside of it, as long as they are part of the organization container) into the same trace entry in the GUI, allowing you to view the aggregate impact of a whole request in a micro-service environment.
 
-To take advantage of this, replace your `GuzzleHttp\Client` with `A1comms\GaeSupportLaravel\Integration\Guzzle\Client`.
+To take advantage of this, replace your `GuzzleHttp\Client` with `AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\Client`.

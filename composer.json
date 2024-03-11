@@ -1,21 +1,21 @@
 {
-    "name": "a1comms/gae-support-laravel",
-    "description": "Google App Engine Standard Environment runtime support for Laravel apps",
+    "name": "affordablemobiles/g-serverless-support-laravel",
+    "description": "Google Serverless runtime support for Laravel apps",
     "license": "MIT",
     "authors": [
         {
             "name": "Samuel Melrose",
-            "email": "sam.melrose@a1comms.com"
+            "email": "sam.melrose@affordablemobiles.co.uk"
         }
     ],
     "require": {
-        "php": "^8.1",
+        "php": "^8.3",
         "a1comms/eloquent-datastore": "~1",
         "a1comms/eloquent-sqlcommenter": "~9",
         "a1comms/opencensus": "~0",
         "a1comms/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "^7.4.1",
-        "google/cloud": ">=0.175.0 <1.0.0",
+        "google/cloud": ">=0.237.0 <1.0.0",
         "kelvinmo/simplejwt": "^0.6.2",
         "illuminate/support": "~9",
         "illuminate/contracts": "~9",
@@ -31,7 +31,6 @@
         "xantios/mimey": "^2.2"
     },
     "require-dev": {
-        "phpmd/phpmd" : "@stable",
         "friendsofphp/php-cs-fixer": "^3.6"
     },
     "suggest": {
@@ -39,23 +38,17 @@
     },
     "autoload": {
         "psr-4": {
-            "A1comms\\GaeSupportLaravel\\": "src/A1comms/GaeSupportLaravel/"
+            "AffordableMobiles\\GServerlessSupportLaravel\\": "src/AffordableMobiles/GServerlessSupportLaravel/"
         },
         "files": [
             "src/preload.php"
         ]
     },
-    "repositories": [
-        {
-          "type": "git",
-          "url": "https://github.com/a1comms/opencensus-php-exporter-stackdriver.git"
-        }
-    ],
     "extra": {
         "laravel": {
             "providers": [
-                "A1comms\\GaeSupportLaravel\\GaeSupportServiceProvider",
-                "A1comms\\GaeSupportLaravel\\Trace\\TraceServiceProvider"
+                "AffordableMobiles\\GServerlessSupportLaravel\\GaeSupportServiceProvider",
+                "AffordableMobiles\\GServerlessSupportLaravel\\Trace\\TraceServiceProvider"
             ]
         }
     }

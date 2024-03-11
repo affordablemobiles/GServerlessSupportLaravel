@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use A1comms\GaeSupportLaravel\Log\CreateLoggingDriver;
+use AffordableMobiles\GServerlessSupportLaravel\Log\CreateLoggingDriver;
 use Monolog\Handler\NullHandler;
 
 return [

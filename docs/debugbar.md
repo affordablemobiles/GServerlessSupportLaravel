@@ -17,7 +17,7 @@ index ee04459..d945faa 100755
          /*
           * Package Service Providers...
           */
-+        A1comms\GaeSupportLaravel\Integration\Debugbar\DebugbarServiceProvider::class,
++        AffordableMobiles\GServerlessSupportLaravel\Integration\Debugbar\DebugbarServiceProvider::class,
  
          /*
           * Application Service Providers...

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Foundation;
 
-use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GaeFilesystemAdapter;
+use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GServerlessFilesystemAdapter;
 use Google\Cloud\Storage\StorageClient as GCSStorageClient;
 use Google\Cloud\Storage\StreamWrapper as GCSStreamWrapper;
 use Illuminate\Support\Facades\Storage;

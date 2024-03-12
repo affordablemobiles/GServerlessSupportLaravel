@@ -18,7 +18,7 @@ class Client extends GuzzleClient
      * e.g.
      *      $client = new Client([
      *          ...standard guzzle config...,
-     *          'gaesupport' => [
+     *          'gserverlesssupport' => [
      *              'trace' => false,
      *              'auth'  => [
      *                  ...auth config placeholder...,
@@ -28,7 +28,7 @@ class Client extends GuzzleClient
      */
     public function __construct(array $config = [])
     {
-        if ((!is_gae()) || (\PHP_SAPI === 'cli')) {
+        if ((!is_g_serverless()) || (\PHP_SAPI === 'cli')) {
             return parent::__construct($config);
         }
 

@@ -17,15 +17,15 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function register(): void
     {
-        if (is_gae() && ('production' === env('APP_ENV', 'production'))) {
+        if (is_g_serverless() && ('production' === env('APP_ENV', 'production'))) {
             $this->registerFactory();
 
-            $this->registerGaeViewFinder();
+            $this->registerGServerlessViewFinder();
 
-            $this->registerGaeBladeCompiler();
+            $this->registerGServerlessBladeCompiler();
 
-            $this->registerGaeEngineResolver();
-        } elseif (is_gae()) {
+            $this->registerGServerlessEngineResolver();
+        } elseif (is_g_serverless()) {
             app()->config['view.compiled'] = realpath(g_serverless_storage_path('framework/views'));
             parent::register();
         } else {
@@ -40,7 +40,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\GaeViewCompileCommand::class,
+                Console\GServerlessViewCompileCommand::class,
             ]);
         }
     }
@@ -48,7 +48,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the view finder implementation.
      */
-    public function registerGaeViewFinder(): void
+    public function registerGServerlessViewFinder(): void
     {
         $this->app->bind('view.finder', function ($app) {
             // TODO: Replace with a static manifest array search.
@@ -59,7 +59,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the Blade compiler implementation.
      */
-    public function registerGaeBladeCompiler(): void
+    public function registerGServerlessBladeCompiler(): void
     {
         // The Compiler engine requires an instance of the CompilerInterface, which in
         // this case will be the Blade compiler, so we'll first create the compiler
@@ -74,7 +74,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the engine resolver instance.
      */
-    public function registerGaeEngineResolver(): void
+    public function registerGServerlessEngineResolver(): void
     {
         $this->app->singleton('view.engine.resolver', function () {
             $resolver = new EngineResolver();
@@ -87,7 +87,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             }
 
             foreach (['blade'] as $engine) {
-                $this->{'registerGae'.ucfirst($engine).'Engine'}($resolver);
+                $this->{'registerGServerless'.ucfirst($engine).'Engine'}($resolver);
             }
 
             return $resolver;
@@ -99,7 +99,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      *
      * @param \Illuminate\View\Engines\EngineResolver $resolver
      */
-    public function registerGaeBladeEngine($resolver): void
+    public function registerGServerlessBladeEngine($resolver): void
     {
         $resolver->register('blade', fn () => new CompilerEngine($this->app['blade.compiler']));
     }

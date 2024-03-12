@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace A1comms\GaeSupportLaravel\Integration\Datastore;
+namespace AffordableMobiles\GServerlessSupportLaravel\Integration\Datastore;
 
 use GDS;
 use Illuminate\Support\Facades\Log;

@@ -55,7 +55,6 @@ Pull in the package via Composer:
     'providers' => [
         AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
         AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
-        AffordableMobiles\GServerlessSupportLaravel\Queue\QueueServiceProvider::class,
         AffordableMobiles\GServerlessSupportLaravel\Trace\TraceServiceProvider::class,
     ];
 ```
@@ -65,7 +64,6 @@ And remove the relevant Laravel service providers that these replace:
 ```php
     'providers' => [
         //Illuminate\View\ViewServiceProvider::class,
-        //Illuminate\Queue\QueueServiceProvider::class,
     ];
 ```
 
@@ -173,7 +171,7 @@ To our class, that'll inject the required logging hook:
 use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
 ```
 
-## Upgrading (from Laravel/Lumen 6.x LTS)
+## Upgrading (from Laravel/Lumen 9.x LTS)
 
 ### Laravel Specific (Not Lumen)
 
@@ -181,7 +179,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\LumenHandl
 
 ```json
 "require": {
-    "affordablemobiles/g-serverless-support-laravel": "~9.0"
+    "affordablemobiles/g-serverless-support-laravel": "~11"
 }
 ```
 
@@ -193,7 +191,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\LumenHandl
 
 ```json
 "require": {
-    "affordablemobiles/g-serverless-support-laravel": "~9.0"
+    "affordablemobiles/g-serverless-support-laravel": "~11"
 }
 ```
 

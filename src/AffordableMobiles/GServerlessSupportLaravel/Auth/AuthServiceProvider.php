@@ -29,11 +29,11 @@ class AuthServiceProvider extends ServiceProvider
 
         $this->viaRequest('firebase', [Guard\Firebase_Guard::class, 'validate']);
 
-        $this->viaRequest('gae-internal', [Guard\AppEngine_Guard::class, 'validate']);
         $this->viaRequest('g-iap', [Guard\IAP_Guard::class, 'validate']);
         $this->viaRequest('g-oidc', [Guard\OIDC_Guard::class, 'validate']);
         $this->viaRequest('g-oauth2', [Guard\OAuth2_Guard::class, 'validate']);
 
+        $this->viaRequest('gae-internal', [Guard\AppEngine_Guard::class, 'validate']);
         $this->viaRequest('gae-combined-iap', [Guard\Combined\IAP_Guard::class, 'validate']);
         $this->viaRequest('gae-combined-iap-oidc', [Guard\Combined\IAP_OIDC_Guard::class, 'validate']);
         $this->viaRequest('gae-combined-iap-oidc-oauth2', [Guard\Combined\IAP_OIDC_OAuth2_Guard::class, 'validate']);

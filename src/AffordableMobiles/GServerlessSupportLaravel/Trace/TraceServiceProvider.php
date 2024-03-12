@@ -11,7 +11,7 @@ class TraceServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        if ((!is_gae()) || (\PHP_SAPI === 'cli')) {
+        if ((!is_g_serverless()) || (\PHP_SAPI === 'cli')) {
             return;
         }
 

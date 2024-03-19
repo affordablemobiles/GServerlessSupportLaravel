@@ -22,9 +22,6 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
     private $datastore;
 
     /** @var string */
-    private $namespaceId;
-
-    /** @var string */
     private $kind;
 
     /** @var string */
@@ -33,11 +30,13 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
     /** @var string */
     private $orig_id;
 
-    public function __construct($kind = 'sessions', $namespaceId = null)
+    public function __construct($kind = 'sessions', $namespaceId = null, $databaseId = '')
     {
-        $this->datastore   = new DatastoreClient();
+        $this->datastore   = new DatastoreClient([
+            'namespaceId' => $namespaceId,
+            'databaseId' => $databaseId,
+        ]);
         $this->kind        = $kind;
-        $this->namespaceId = $namespaceId;
     }
 
     public function open(string $savePath, string $sessionName): bool
@@ -131,7 +130,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
         return $this->datastore->key(
             $this->kind,
             $id,
-            ['namespaceId' => $this->namespaceId],
+            [],
         );
     }
 

@@ -53,8 +53,9 @@ class GServerlessSupportServiceProvider extends ServiceProvider
 
         // Register the DatastoreSessionHandler
         Session::extend('datastore', static fn ($app) => new DatastoreSessionHandler(
-            config('session.table'),
-            config('session.store'),
+            config('session.table', 'sessions'),
+            config('session.namespace', null),
+            config('session.database', '')
         ));
 
         Storage::extend('gserverless', static function ($app, $config) {

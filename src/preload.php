@@ -24,17 +24,22 @@ foreach ($helpers as $helper) {
     }
 }
 
-if (is_gae() && (PHP_SAPI !== 'cli')) {
+if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     // Set up exception logging properly...
     ErrorBootstrap::init();
 
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).
     if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
-    } elseif (is_cloud_run()) {
+    } elseif (!empty($_SERVER['HTTP_CF_CONNECTING_IP']) {
+        $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_REAL_IP']) {
+        $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_REAL_IP'];
+    } else {
         $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
+
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {
         // Turn HTTPS on for Laravel
         $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
@@ -43,34 +48,35 @@ if (is_gae() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
-    if (!defined('GAE_TRACE_STOP')) {
-        $options = [
-            'sampler' => (
-                new AffordableMobiles\GServerlessSupportLaravel\Trace\Sampler\HttpHeaderSampler()
-            ),
-            'propagator' => (
-                new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
-                    new AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTraceFormatter()
+    if (g_serverless_should_trace()) {
+        OpenTelemetry\API\Globals::registerInitializer(function (Configurator $configurator) {
+            $propagator = OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator::getInstance();
+
+            $spanProcessor = new OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor(
+                (new AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory())->create(),
+            );
+
+            $tracerProvider = (new OpenTelemetry\SDK\Trace\TracerProviderBuilder())
+                ->addSpanProcessor($spanProcessor)
+                ->setSampler(
+                    new OpenTelemetry\SDK\Trace\Sampler\ParentBased(
+                        new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler(),
+                    ),
                 )
-            ),
-        ];
+                ->build();
+        
+            ShutdownHandler::register([$tracerProvider, 'shutdown']);
+        
+            return $configurator
+                ->withTracerProvider($tracerProvider)
+                ->withPropagator($propagator);
+        });
 
-        if (is_gae_flex()) {
-            Tracer::start(new StackdriverExporter(['async' => true]), $options);
-        } else {
-            // TODO: Async on Standard Environment too!
-            Tracer::start(new StackdriverExporter(), $options);
+        $loaderInterface = 'App\\Trace\\LowLevelLoader';
+        if (!class_exists($loaderInterface)) {
+            // TODO: Different default arrays for Laravel vs Lumen?
+            $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader::class;
         }
-    }
-
-    $loaderInterface = 'App\\Trace\\LowLevelLoader';
-    if (!class_exists($loaderInterface)) {
-        // TODO: Different default arrays for Laravel vs Lumen?
-        $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader::class;
-    }
-    $traceProviders = $loaderInterface::getList();
-
-    foreach ($traceProviders as $p) {
-        $p::load();
+        $loaderInterface::load();
     }
 }

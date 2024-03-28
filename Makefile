@@ -6,7 +6,7 @@ HERE := $(shell dirname $(THIS))
 all: lint
 
 fix:
-	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php
+	php -n -dmemory_limit=12G -dzend_extension=opcache.so -dopcache.enable_cli=On -dopcache.jit_buffer_size=128M $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php
 
 lint:
-	php $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php --dry-run
+	php -n -dmemory_limit=12G -dzend_extension=opcache.so -dopcache.enable_cli=On -dopcache.jit_buffer_size=128M $(HERE)/vendor/bin/php-cs-fixer fix --config=$(HERE)/.php-cs-fixer.php --dry-run

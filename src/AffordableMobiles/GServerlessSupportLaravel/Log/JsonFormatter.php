@@ -15,7 +15,6 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Log;
 
 use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Utils;
-use OpenCensus\Trace\Tracer;
 
 class JsonFormatter extends NormalizerFormatter
 {
@@ -78,7 +77,7 @@ class JsonFormatter extends NormalizerFormatter
 
         $normalized['message']                      = $this->normalize($this->message);
         $normalized['severity']                     = $normalized['level_name'];
-        $normalized['logging.googleapis.com/trace'] = 'projects/'.g_project().'/traces/'.Tracer::spanContext()->traceId();
+        $normalized['logging.googleapis.com/trace'] = g_serverless_trace_id();
         $normalized['time']                         = $normalized['datetime']->format(\DateTimeInterface::RFC3339_EXTENDED);
 
         unset($normalized['level'], $normalized['level_name'], $normalized['datetime']);

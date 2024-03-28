@@ -15,5 +15,5 @@ interface LowLevelLoaderInterface
      *
      * For an example, see the default at LowLevelLoader.
      */
-    public static function getList();
+    public static function load();
 }

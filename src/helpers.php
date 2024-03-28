@@ -131,6 +131,44 @@ if (!function_exists('g_serverless_realpath')) {
     }
 }
 
+if (!function_exists('g_serverless_trace_context')) {
+    function g_serverless_trace_context(): OpenTelemetry\API\Trace\SpanContext
+    {
+        return once(fn() => OpenTelemetry\Extension\Propagator\CloudTrace\CloudTraceFormatter::deserialize(
+            $_SERVER['HTTP_X_CLOUD_TRACE_CONTEXT'] ?? '',
+        ));
+    }
+}
+
+if (!function_exists('g_serverless_short_trace_id')) {
+    function g_serverless_short_trace_id(): string
+    {
+        return once(fn() => g_serverless_trace_context()->getTraceId());
+    }
+}
+
+if (!function_exists('g_serverless_trace_id')) {
+    function g_serverless_trace_id(): string
+    {
+        return once(fn() => 'projects/'.g_project().'/traces/'.g_serverless_short_trace_id());
+    }
+}
+
+if (!function_exists('g_serverless_should_trace')) {
+    function g_serverless_should_trace(): bool
+    {
+        if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
+            return false;
+        }
+
+        if (is_g_serverless_development()) {
+            return true;
+        }
+
+        return g_serverless_trace_context()->isSampled();
+    }
+}
+
 if (!function_exists('g_serverless_basic_log')) {
     function g_serverless_basic_log($logName, $severity, $message, $context = []): void
     {
@@ -139,15 +177,11 @@ if (!function_exists('g_serverless_basic_log')) {
             'message'                      => $message,
             'context'                      => $context,
             'customLogName'                => $logName,
-            'logging.googleapis.com/trace' => 'projects/'.g_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'logging.googleapis.com/trace' => g_serverless_trace_id(),
             'time'                         => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 
-        if (is_cloud_run()) {
-            @file_put_contents('/tmp/logpipe', json_encode($record)."\n", FILE_APPEND);
-        } else {
-            @file_put_contents('/var/log/'.$logName.'.log', json_encode($record)."\n", FILE_APPEND);
-        }
+        @file_put_contents('php://stderr', json_encode($record)."\n", FILE_APPEND);
     }
 }
 

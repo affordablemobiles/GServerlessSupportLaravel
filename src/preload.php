@@ -29,16 +29,22 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     ErrorBootstrap::init();
 
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).
-    if (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
+    $sourceIPHeader = 'HTTP_' . strtoupper(
+        str_replace(
+            '-',
+            '_',
+            env('SOURCE_IP_HEADER', 'X-AppEngine-User-IP'),
+        ),
+    );
+    if (!empty($_SERVER[$sourceIPHeader])) {
+        $_SERVER['REMOTE_ADDR'] = $_SERVER[$sourceIPHeader];
+    } elseif (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
-    } elseif (!empty($_SERVER['HTTP_CF_CONNECTING_IP']) {
-        $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_REAL_IP']) {
-        $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_REAL_IP'];
     } else {
         $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
+    g_serverless_basic_log('audit', 'INFO', 'Correcting Source IP Address (REMOTE_ADDR) to ' . $_SERVER['REMOTE_ADDR'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
 
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {
         // Turn HTTPS on for Laravel

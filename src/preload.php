@@ -54,35 +54,38 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
-    if (g_serverless_should_trace()) {
-        OpenTelemetry\API\Globals::registerInitializer(function (Configurator $configurator) {
-            $propagator = OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator::getInstance();
+    OpenTelemetry\API\Globals::registerInitializer(function (Configurator $configurator) {
+        $propagator = OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator::getInstance();
 
-            $spanProcessor = new OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor(
-                (new AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory())->create(),
-            );
+        $spanProcessor = new OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor(
+            (new AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory())->create(),
+        );
 
-            $tracerProvider = (new OpenTelemetry\SDK\Trace\TracerProviderBuilder())
-                ->addSpanProcessor($spanProcessor)
-                ->setSampler(
-                    new OpenTelemetry\SDK\Trace\Sampler\ParentBased(
-                        new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler(),
-                    ),
-                )
-                ->build();
-        
-            ShutdownHandler::register([$tracerProvider, 'shutdown']);
-        
-            return $configurator
-                ->withTracerProvider($tracerProvider)
-                ->withPropagator($propagator);
-        });
-
-        $loaderInterface = 'App\\Trace\\LowLevelLoader';
-        if (!class_exists($loaderInterface)) {
-            // TODO: Different default arrays for Laravel vs Lumen?
-            $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader::class;
+        $sampler = new OpenTelemetry\SDK\Trace\Sampler\ParentBased(
+            new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler(),
+        );
+        if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
+            $sampler = new OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler();
+        } else if (is_g_serverless_development()) {
+            $sampler = new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler();
         }
-        $loaderInterface::load();
+
+        $tracerProvider = (new OpenTelemetry\SDK\Trace\TracerProviderBuilder())
+            ->addSpanProcessor($spanProcessor)
+            ->setSampler($sampler)
+            ->build();
+    
+        ShutdownHandler::register([$tracerProvider, 'shutdown']);
+    
+        return $configurator
+            ->withTracerProvider($tracerProvider)
+            ->withPropagator($propagator);
+    });
+
+    /* $loaderInterface = 'App\\Trace\\LowLevelLoader';
+    if (!class_exists($loaderInterface)) {
+        // TODO: Different default arrays for Laravel vs Lumen?
+        $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader::class;
     }
+    $loaderInterface::load(); */
 }

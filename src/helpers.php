@@ -143,29 +143,14 @@ if (!function_exists('g_serverless_trace_context')) {
 if (!function_exists('g_serverless_short_trace_id')) {
     function g_serverless_short_trace_id(): string
     {
-        return once(fn() => g_serverless_trace_context()->getTraceId());
+        return g_serverless_trace_context()->getTraceId();
     }
 }
 
 if (!function_exists('g_serverless_trace_id')) {
     function g_serverless_trace_id(): string
     {
-        return once(fn() => 'projects/'.g_project().'/traces/'.g_serverless_short_trace_id());
-    }
-}
-
-if (!function_exists('g_serverless_should_trace')) {
-    function g_serverless_should_trace(): bool
-    {
-        if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
-            return false;
-        }
-
-        if (is_g_serverless_development()) {
-            return true;
-        }
-
-        return g_serverless_trace_context()->isSampled();
+        return 'projects/'.g_project().'/traces/'.g_serverless_short_trace_id();
     }
 }
 

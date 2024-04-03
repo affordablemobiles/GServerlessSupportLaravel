@@ -49,8 +49,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "AffordableMobiles\\GServerlessSupportLaravel\\GaeSupportServiceProvider",
-                "AffordableMobiles\\GServerlessSupportLaravel\\Trace\\TraceServiceProvider"
+                "AffordableMobiles\\GServerlessSupportLaravel\\GServerlessSupportServiceProvider"
             ]
         }
     },

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\TaskQueue;
 
-use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Tasks\V2\CloudTasksClient;
-use Illuminate\Support\Str;
 
 class Client
 {

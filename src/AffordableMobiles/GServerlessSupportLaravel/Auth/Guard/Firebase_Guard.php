@@ -8,6 +8,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\Guard\StatelessVa
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Model\FirebaseUser;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Firebase;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,9 +19,9 @@ class Firebase_Guard implements StatelessValidator
      * Authenticate a user based on request information,
      * return a valid user object if successful, or null.
      *
-     * @return null|\Illuminate\Contracts\Auth\Authenticatable
+     * @return null|Authenticatable
      */
-    public static function validate(Request $request, UserProvider $provider = null)
+    public static function validate(Request $request, ?UserProvider $provider = null)
     {
         $expected_audience = env('FIREBASE_PROJECT');
         if (empty($expected_audience)) {
@@ -43,7 +44,7 @@ class Firebase_Guard implements StatelessValidator
         return static::returnUser($provider, $return);
     }
 
-    protected static function returnUser(UserProvider $provider = null, array $data)
+    protected static function returnUser(?UserProvider $provider, array $data)
     {
         if (empty($provider)) {
             $user = new FirebaseUser();

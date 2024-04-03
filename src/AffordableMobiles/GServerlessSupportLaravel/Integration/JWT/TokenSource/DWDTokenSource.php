@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\TokenSource;
 
 use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\IAMSigner;
-use DateTimeImmutable;
 use Google\Auth\Credentials\GCECredentials;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Google\Auth\OAuth2;
@@ -40,7 +39,7 @@ class DWDTokenSource extends OAuth2
 
     public function toJwt(array $config = [])
     {
-        $gce_creds = new GCECredentials();
+        $gce_creds    = new GCECredentials();
         $client_email = $gce_creds->getClientName();
 
         $config = Configuration::forSymmetricSigner(
@@ -48,7 +47,7 @@ class DWDTokenSource extends OAuth2
             InMemory::plainText($client_email)
         );
 
-        $now = new DateTimeImmutable();
+        $now = new \DateTimeImmutable();
 
         $token = $config->builder()
             ->issuedBy($client_email)
@@ -57,7 +56,8 @@ class DWDTokenSource extends OAuth2
             ->issuedAt($now)
             ->expiresAt($now->modify('+1 hour'))
             ->withClaim('scope', implode(' ', $this->scopes))
-            ->getToken($config->signer(), $config->signingKey());
+            ->getToken($config->signer(), $config->signingKey())
+        ;
 
         return $token->toString();
     }

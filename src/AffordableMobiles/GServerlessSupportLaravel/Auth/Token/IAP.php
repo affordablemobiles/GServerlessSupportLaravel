@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Type\JWT;
 
 class IAP
@@ -33,7 +34,7 @@ class IAP
      *
      * @return array returns array containing "sub" and "email" if token is valid
      *
-     * @throws \AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
+     * @throws InvalidTokenException if the token is invalid
      */
     public static function validateToken($iap_jwt, $expected_audience)
     {

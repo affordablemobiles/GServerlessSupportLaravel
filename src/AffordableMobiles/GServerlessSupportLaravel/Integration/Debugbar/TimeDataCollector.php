@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\Debugbar;
 
+use AffordableMobiles\OpenTelemetry\CloudTrace\Exporter as CloudTraceExporter;
 use DebugBar\DataCollector\Renderable;
 use DebugBar\DataCollector\TimeDataCollector as BaseTimeDataCollector;
 use DebugBar\DebugBarException;
+use OpenTelemetry\SDK\Common\Time\ClockInterface;
+use OpenTelemetry\SDK\Trace\SpanDataInterface;
 
 /**
  * Collects info about the request duration as well as providing
@@ -14,16 +17,20 @@ use DebugBar\DebugBarException;
  */
 class TimeDataCollector extends BaseTimeDataCollector implements Renderable
 {
-    public function mapSpan($span)
+    public function mapSpan(SpanDataInterface $span): array
     {
-        $start = $span->startTime();
-        $end   = $span->endTime();
+        $start = $this->epochNanoToMicrotime(
+            $span->getStartEpochNanos(),
+        );
+        $end   = $this->epochNanoToMicrotime(
+            $span->getEndEpochNanos(),
+        );
         if ($end <= 0) {
             $end = microtime(true);
         }
 
         return [
-            'label'          => $span->name(),
+            'label'          => $span->getName(),
             'start'          => $start,
             'relative_start' => $start - $this->requestStartTime,
             'end'            => $end,
@@ -42,11 +49,7 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
      */
     public function collect()
     {
-        $measures = [];
-
-        if (\function_exists('opencensus_trace_list')) {
-            $measures = array_map(fn ($span) => $this->mapSpan($span), opencensus_trace_list());
-        }
+        $measures = array_map(fn ($span) => $this->mapSpan($span), CloudTraceExporter::getSpans());
 
         usort($measures, static function ($a, $b) {
             if ($a['start'] === $b['start']) {
@@ -92,5 +95,12 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
                 'default' => '{}',
             ],
         ];
+    }
+
+    private function epochNanoToMicrotime(int $nanos): float
+    {
+        $micro = (int) ($nanos / ClockInterface::NANOS_PER_MICROSECOND);
+
+        return (float) $micro / ClockInterface::MICROS_PER_SECOND;
     }
 }

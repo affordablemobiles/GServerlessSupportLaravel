@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 
@@ -43,7 +44,7 @@ class NullUserProvider implements UserProvider
      *
      * @param string $identifier
      *
-     * @return null|\AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveById($identifier)
     {
@@ -60,7 +61,7 @@ class NullUserProvider implements UserProvider
      * @param string $identifier
      * @param string $token
      *
-     * @return null|\AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveByToken($identifier, $token)
     {
@@ -70,15 +71,15 @@ class NullUserProvider implements UserProvider
     /**
      * Update the "remember me" token for the given user in storage.
      *
-     * @param \AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel $user
-     * @param string                                                  $token
+     * @param NullUserModel $user
+     * @param string        $token
      */
     public function updateRememberToken(Authenticatable $user, $token): void {}
 
     /**
      * Retrieve a user by the given credentials.
      *
-     * @return null|\AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveByCredentials(array $credentials)
     {
@@ -88,7 +89,7 @@ class NullUserProvider implements UserProvider
     /**
      * Validate a user against the given credentials.
      *
-     * @param \AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\NullUserModel $user
+     * @param NullUserModel $user
      *
      * @return bool
      */

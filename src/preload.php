@@ -3,9 +3,15 @@
 declare(strict_types=1);
 
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+use AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory;
 use Google\Cloud\Storage\StorageClient;
-use OpenCensus\Trace\Exporter\StackdriverExporter;
-use OpenCensus\Trace\Tracer;
+use OpenTelemetry\API\Globals;
+use OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator;
+use OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler;
+use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
+use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
+use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
+use OpenTelemetry\SDK\Trace\TracerProviderBuilder;
 
 require __DIR__.'/helpers.php';
 
@@ -29,7 +35,7 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     ErrorBootstrap::init();
 
     // Properly set REMOTE_ADDR from a trustworthy source (hopefully).
-    $sourceIPHeader = 'HTTP_' . strtoupper(
+    $sourceIPHeader = 'HTTP_'.strtoupper(
         str_replace(
             '-',
             '_',
@@ -44,7 +50,7 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
         $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
     }
-    g_serverless_basic_log('audit', 'INFO', 'Correcting Source IP Address (REMOTE_ADDR) to ' . $_SERVER['REMOTE_ADDR'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
+    g_serverless_basic_log('audit', 'INFO', 'Correcting Source IP Address (REMOTE_ADDR) to '.$_SERVER['REMOTE_ADDR'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
 
     if (!empty($_SERVER['HTTP_X_APPENGINE_HTTPS'])) {
         // Turn HTTPS on for Laravel
@@ -54,32 +60,34 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
-    OpenTelemetry\API\Globals::registerInitializer(function (Configurator $configurator) {
-        $propagator = OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator::getInstance();
+    Globals::registerInitializer(static function (Configurator $configurator) {
+        $propagator = CloudTracePropagator::getInstance();
 
-        $spanProcessor = new OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor(
-            (new AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory())->create(),
+        $spanProcessor = new SimpleSpanProcessor(
+            (new SpanExporterFactory())->create(),
         );
 
-        $sampler = new OpenTelemetry\SDK\Trace\Sampler\ParentBased(
-            new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler(),
+        $sampler = new ParentBased(
+            new AlwaysOnSampler(),
         );
         if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
-            $sampler = new OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler();
-        } else if (is_g_serverless_development()) {
-            $sampler = new OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler();
+            $sampler = new AlwaysOffSampler();
+        } elseif (is_g_serverless_development()) {
+            $sampler = new AlwaysOnSampler();
         }
 
-        $tracerProvider = (new OpenTelemetry\SDK\Trace\TracerProviderBuilder())
+        $tracerProvider = (new TracerProviderBuilder())
             ->addSpanProcessor($spanProcessor)
             ->setSampler($sampler)
-            ->build();
-    
+            ->build()
+        ;
+
         ShutdownHandler::register([$tracerProvider, 'shutdown']);
-    
+
         return $configurator
             ->withTracerProvider($tracerProvider)
-            ->withPropagator($propagator);
+            ->withPropagator($propagator)
+        ;
     });
 
     /* $loaderInterface = 'App\\Trace\\LowLevelLoader';

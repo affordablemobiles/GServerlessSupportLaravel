@@ -22,9 +22,9 @@ return [
     'dev-prefix' => 'dev-',
 
     'cloud-tasks' => [
-        'region' => env('CLOUD_TASKS_REGION'),
+        'region'          => env('CLOUD_TASKS_REGION'),
         'service-account' => env('TASK_QUEUE_SERVICE_ACCOUNT', gae_project().'@appspot.gserviceaccount.com'),
-        'audience' => env('OIDC_AUDIENCE'),
+        'audience'        => env('OIDC_AUDIENCE'),
     ],
 
     // Authentication Settings

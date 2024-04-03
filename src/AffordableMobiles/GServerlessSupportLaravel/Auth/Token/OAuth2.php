@@ -50,7 +50,7 @@ class OAuth2
      *
      * @return array returns decoded token information from the tokeninfo endpoint
      *
-     * @throws \AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
+     * @throws InvalidTokenException if the token is invalid
      */
     public static function validateToken($token)
     {

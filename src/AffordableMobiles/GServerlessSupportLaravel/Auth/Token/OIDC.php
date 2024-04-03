@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Type\JWT;
 use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
@@ -77,7 +78,7 @@ class OIDC
      *
      * @return array returns array containing "sub" and "email" if token is valid
      *
-     * @throws \AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
+     * @throws InvalidTokenException if the token is invalid
      */
     public static function validateToken($oidc_jwt, $expected_audience)
     {

@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use Google\Cloud\Core\Compute\Metadata;
+use OpenTelemetry\API\Trace\SpanContext;
+use OpenTelemetry\Extension\Propagator\CloudTrace\CloudTraceFormatter;
 
 if (!function_exists('is_cloud_run')) {
     function is_cloud_run()
@@ -37,7 +40,7 @@ if (!function_exists('g_project')) {
                 return $_SERVER['GOOGLE_CLOUD_PROJECT'];
             }
 
-            return once(fn () => ((new \Google\Cloud\Core\Compute\Metadata())->getProjectId()));
+            return once(static fn () => (new Metadata())->getProjectId());
         }
 
         return false;
@@ -49,7 +52,8 @@ if (!function_exists('g_service')) {
     {
         if (is_cloud_run()) {
             return $_SERVER['K_SERVICE'];
-        } else if (is_gae_std()) {
+        }
+        if (is_gae_std()) {
             return $_SERVER['GAE_SERVICE'];
         }
 
@@ -62,7 +66,8 @@ if (!function_exists('g_version')) {
     {
         if (is_cloud_run()) {
             return $_SERVER['K_REVISION'];
-        } else if (is_gae_std()) {
+        }
+        if (is_gae_std()) {
             return $_SERVER['GAE_VERSION'];
         }
 
@@ -75,8 +80,9 @@ if (!function_exists('g_instance')) {
     {
         if (is_gae_std()) {
             return $_SERVER['GAE_INSTANCE'];
-        } else if (is_cloud_run()) {
-            return once(fn () => ((new \Google\Cloud\Core\Compute\Metadata())->get('instance/id')));
+        }
+        if (is_cloud_run()) {
+            return once(static fn () => (new Metadata())->get('instance/id'));
         }
 
         return false;
@@ -89,7 +95,8 @@ if (!function_exists('is_g_serverless_development')) {
         if (is_cloud_run()) {
             return (bool) (config('gserverlesssupport.dev-prefix')
                 && str_starts_with($_SERVER['HTTP_HOST'], config('gserverlesssupport.dev-prefix')));
-        } else if (is_gae_std()) {
+        }
+        if (is_gae_std()) {
             return (bool) (config('gserverlesssupport.dev-prefix')
                 && str_starts_with(g_version(), config('gserverlesssupport.dev-prefix')));
         }
@@ -103,7 +110,7 @@ if (!function_exists('g_serverless_storage_path')) {
     {
         if (is_g_serverless()) {
             $ret = '/tmp/laravel/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
-            
+
             if (is_g_serverless_development()) {
                 $ret = '/tmp/laravel/'.$_SERVER['HTTP_HOST'].'/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
             }
@@ -132,9 +139,9 @@ if (!function_exists('g_serverless_realpath')) {
 }
 
 if (!function_exists('g_serverless_trace_context')) {
-    function g_serverless_trace_context(): OpenTelemetry\API\Trace\SpanContext
+    function g_serverless_trace_context(): SpanContext
     {
-        return once(fn() => OpenTelemetry\Extension\Propagator\CloudTrace\CloudTraceFormatter::deserialize(
+        return once(static fn () => CloudTraceFormatter::deserialize(
             $_SERVER['HTTP_X_CLOUD_TRACE_CONTEXT'] ?? '',
         ));
     }
@@ -183,9 +190,7 @@ if (!function_exists('diefast')) {
     }
 }
 
-/**
- * Missing functions for Lumen
- */
+// Missing functions for Lumen
 
 if (!function_exists('app_path')) {
     function app_path($path = '')
@@ -217,10 +222,7 @@ if (!function_exists('is_lumen')) {
     }
 }
 
-
-/**
- * Deprecated functions
- */
+// Deprecated functions
 
 if (!function_exists('gae_project')) {
     function gae_project()
@@ -239,11 +241,11 @@ if (!function_exists('gae_service')) {
 if (!function_exists('gae_version')) {
     function gae_version()
     {
-       return g_version();
+        return g_version();
     }
 }
 
- if (!function_exists('gae_instance')) {
+if (!function_exists('gae_instance')) {
     function gae_instance()
     {
         return g_instance();

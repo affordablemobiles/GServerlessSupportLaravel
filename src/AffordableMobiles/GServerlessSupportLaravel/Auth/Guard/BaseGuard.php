@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Guard;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Model\IAPUser;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 
@@ -15,14 +16,14 @@ class BaseGuard implements StatelessValidator
      * Authenticate a user based on request information,
      * return a valid user object if successful, or null.
      *
-     * @return null|\Illuminate\Contracts\Auth\Authenticatable
+     * @return null|Authenticatable
      */
-    public static function validate(Request $request, UserProvider $provider = null)
+    public static function validate(Request $request, ?UserProvider $provider = null)
     {
         return null;
     }
 
-    protected static function returnUser(UserProvider $provider = null, string $email)
+    protected static function returnUser(?UserProvider $provider, string $email)
     {
         if (empty($provider)) {
             $user = new IAPUser();

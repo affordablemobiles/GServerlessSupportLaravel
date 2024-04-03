@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Guard;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OIDC;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,9 +17,9 @@ class OIDC_Guard extends BaseGuard
      * Authenticate a user based on request information,
      * return a valid user object if successful, or null.
      *
-     * @return null|\Illuminate\Contracts\Auth\Authenticatable
+     * @return null|Authenticatable
      */
-    public static function validate(Request $request, UserProvider $provider = null)
+    public static function validate(Request $request, ?UserProvider $provider = null)
     {
         $expected_audience = env('OIDC_AUDIENCE');
         if (empty($expected_audience)) {

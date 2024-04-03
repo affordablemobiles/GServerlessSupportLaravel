@@ -34,7 +34,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
     {
         $this->datastore   = new DatastoreClient([
             'namespaceId' => $namespaceId,
-            'databaseId' => $databaseId,
+            'databaseId'  => $databaseId,
         ]);
         $this->kind        = $kind;
     }

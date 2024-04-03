@@ -23,7 +23,7 @@ class Report
      *
      * @codeCoverageIgnore
      */
-    public static function init(PsrLogger $psrLogger = null): void
+    public static function init(?PsrLogger $psrLogger = null): void
     {
         $options = ['batchEnabled' => false];
 
@@ -43,10 +43,145 @@ class Report
         set_error_handler([self::class, 'errorHandler']);
     }
 
+    public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = []): void
+    {
+        $message = sprintf('PHP Notice: %s', (string) $ex);
+        if (self::$psrLogger) {
+            self::$psrLogger->error($message, [
+                'context' => array_merge($context, [
+                    'reportLocation' => [
+                        'filePath'     => $ex->getFile(),
+                        'lineNumber'   => $ex->getLine(),
+                        'functionName' => self::getFunctionNameForReport(
+                            $ex->getTrace()
+                        ),
+                    ],
+                    'httpRequest' => [
+                        'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                        'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                        'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                        'referrer'           => $_SERVER['HTTP_REFERER']    ?? '',
+                        'responseStatusCode' => $status_code,
+                        'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? '',
+                    ],
+                    'user' => self::getUserNameForReport(),
+                ]),
+                'serviceContext' => [
+                    'service' => g_service(),
+                    'version' => g_version(),
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * @param int    $level   the error level
+     * @param string $message the error message
+     * @param string $file    the filename that the error was raised in
+     * @param int    $line    the line number that the error was raised at
+     */
+    public static function errorHandler(int $level, string $message, string $file, int $line): bool
+    {
+        if (!($level & error_reporting())) {
+            return true;
+        }
+        $message = sprintf(
+            '%s: %s in %s on line %d',
+            self::getErrorPrefix($level),
+            $message,
+            $file,
+            $line
+        );
+        if (!self::$psrLogger) {
+            return false;
+        }
+        $context = [
+            'context' => [
+                'reportLocation' => [
+                    'filePath'     => $file,
+                    'lineNumber'   => $line,
+                    'functionName' => self::getFunctionNameForReport(),
+                ],
+                'httpRequest' => [
+                    'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                    'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                    'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                    'referrer'           => $_SERVER['HTTP_REFERER']    ?? null,
+                    'responseStatusCode' => null,
+                    'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
+                ],
+                'user' => self::getUserNameForReport(),
+            ],
+            'serviceContext' => [
+                'service' => g_service(),
+                'version' => g_version(),
+            ],
+        ];
+        self::$psrLogger->log(
+            self::getErrorLevelString($level),
+            $message,
+            $context
+        );
+
+        return true;
+    }
+
+    /**
+     * Called at exit, to check there's a fatal error and report the error if
+     * any.
+     */
+    public static function shutdownHandler(): void
+    {
+        if ($err = error_get_last()) {
+            switch ($err['type']) {
+                case E_ERROR:
+                case E_PARSE:
+                case E_COMPILE_ERROR:
+                case E_CORE_ERROR:
+                    $message = sprintf(
+                        '%s: %s in %s on line %d',
+                        self::getErrorPrefix($err['type']),
+                        $err['message'],
+                        $err['file'],
+                        $err['line']
+                    );
+                    $context = [
+                        'context' => [
+                            'reportLocation' => [
+                                'filePath'     => $err['file'],
+                                'lineNumber'   => $err['line'],
+                                'functionName' => self::getFunctionNameForReport(),
+                            ],
+                            'httpRequest' => [
+                                'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
+                                'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+                                'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                                'referrer'           => $_SERVER['HTTP_REFERER']    ?? null,
+                                'responseStatusCode' => null,
+                                'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
+                            ],
+                            'user' => self::getUserNameForReport(),
+                        ],
+                        'serviceContext' => [
+                            'service' => g_service(),
+                            'version' => g_version(),
+                        ],
+                    ];
+                    if (self::$psrLogger) {
+                        self::$psrLogger->log(
+                            self::getErrorLevelString($err['type']),
+                            $message,
+                            $context
+                        );
+                    }
+
+                    break;
+            }
+        }
+    }
+
     /**
      * Return a string prefix for the given error level.
-     *
-     * @param int $level
      *
      * @return string a string prefix for reporting the error
      */
@@ -100,8 +235,6 @@ class Report
     /**
      * Return an error level string for the given PHP error level.
      *
-     * @param int $level
-     *
      * @return string an error level string
      */
     protected static function getErrorLevelString(int $level)
@@ -135,143 +268,6 @@ class Report
         }
     }
 
-    public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = []): void
-    {
-        $message = sprintf('PHP Notice: %s', (string) $ex);
-        if (self::$psrLogger) {
-            self::$psrLogger->error($message, [
-                'context' => array_merge($context, [
-                    'reportLocation' => [
-                        'filePath'     => $ex->getFile(),
-                        'lineNumber'   => $ex->getLine(),
-                        'functionName' => self::getFunctionNameForReport(
-                            $ex->getTrace()
-                        ),
-                    ],
-                    'httpRequest' => [
-                        'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
-                        'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
-                        'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? '',
-                        'referrer'           => $_SERVER['HTTP_REFERER'] ?? '',
-                        'responseStatusCode' => $status_code,
-                        'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? '',
-                    ],
-                    'user' => self::getUserNameForReport(),
-                ]),
-                'serviceContext' => [
-                    'service' => g_service(),
-                    'version' => g_version(),
-                ],
-            ]);
-        }
-    }
-
-    /**
-     * @param int    $level   the error level
-     * @param string $message the error message
-     * @param string $file    the filename that the error was raised in
-     * @param int    $line    the line number that the error was raised at
-     */
-    public static function errorHandler(int $level, string $message, string $file, int $line): bool
-    {
-        if (!($level & error_reporting())) {
-            return true;
-        }
-        $message = sprintf(
-            '%s: %s in %s on line %d',
-            self::getErrorPrefix($level),
-            $message,
-            $file,
-            $line
-        );
-        if (!self::$psrLogger) {
-            return false;
-        }
-        $context = [
-            'context' => [
-                'reportLocation' => [
-                    'filePath'     => $file,
-                    'lineNumber'   => $line,
-                    'functionName' => self::getFunctionNameForReport(),
-                ],
-                'httpRequest' => [
-                    'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
-                    'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
-                    'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
-                    'referrer'           => $_SERVER['HTTP_REFERER'] ?? null,
-                    'responseStatusCode' => null,
-                    'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
-                ],
-                'user' => self::getUserNameForReport(),
-            ],
-            'serviceContext' => [
-                'service' => g_service(),
-                'version' => g_version(),
-            ],
-        ];
-        self::$psrLogger->log(
-            self::getErrorLevelString($level),
-            $message,
-            $context
-        );
-
-        return true;
-    }
-
-    /**
-     * Called at exit, to check there's a fatal error and report the error if
-     * any.
-     */
-    public static function shutdownHandler(): void
-    {
-        if ($err = error_get_last()) {
-            switch ($err['type']) {
-                case E_ERROR:
-                case E_PARSE:
-                case E_COMPILE_ERROR:
-                case E_CORE_ERROR:
-                    $message = sprintf(
-                        '%s: %s in %s on line %d',
-                        self::getErrorPrefix($err['type']),
-                        $err['message'],
-                        $err['file'],
-                        $err['line']
-                    );
-                    $context = [
-                        'context' => [
-                            'reportLocation' => [
-                                'filePath'     => $err['file'],
-                                'lineNumber'   => $err['line'],
-                                'functionName' => self::getFunctionNameForReport(),
-                            ],
-                            'httpRequest' => [
-                                'method'             => $_SERVER['REQUEST_METHOD'] ?? null,
-                                'url'                => ($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
-                                'userAgent'          => $_SERVER['HTTP_USER_AGENT'] ?? null,
-                                'referrer'           => $_SERVER['HTTP_REFERER'] ?? null,
-                                'responseStatusCode' => null,
-                                'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? null,
-                            ],
-                            'user' => self::getUserNameForReport(),
-                        ],
-                        'serviceContext' => [
-                            'service' => g_service(),
-                            'version' => g_version(),
-                        ],
-                    ];
-                    if (self::$psrLogger) {
-                        self::$psrLogger->log(
-                            self::getErrorLevelString($err['type']),
-                            $message,
-                            $context
-                        );
-                    }
-
-                    break;
-            }
-        }
-    }
-
     /**
      * Format the function name from a stack trace. This could be a global
      * function (function_name), a class function (Class->function), or a static
@@ -279,7 +275,7 @@ class Report
      *
      * @param array $trace The stack trace returned from Exception::getTrace()
      */
-    private static function getFunctionNameForReport(array $trace = null)
+    private static function getFunctionNameForReport(?array $trace = null)
     {
         if (null === $trace) {
             return '<unknown function>';

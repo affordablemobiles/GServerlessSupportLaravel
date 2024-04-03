@@ -10,14 +10,14 @@
     ],
     "require": {
         "php": "^8.3",
-        "a1comms/eloquent-datastore": "~11",
-        "a1comms/eloquent-sqlcommenter": "~11",
+        "affordablemobiles/eloquent-datastore": "~11",
+        "affordablemobiles/eloquent-sqlcommenter": "~11",
         "open-telemetry/sdk": "~1",
         "affordablemobiles/open-telemetry-operations-php": "~1",
         "open-telemetry/opentelemetry-auto-laravel": "~0",
         "open-telemetry/opentelemetry-auto-guzzle": "~0",
         "guzzlehttp/guzzle": "^7.8.1",
-        "google/cloud": ">=0.238.0 <1.0.0",
+        "google/cloud": ">=0.239.0 <1.0.0",
         "kelvinmo/simplejwt": "^0.8.2",
         "illuminate/support": "~11",
         "illuminate/contracts": "~11",
@@ -32,10 +32,11 @@
         "illuminate/collections": "~11"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.52"
+        "friendsofphp/php-cs-fixer": "^3.6"
     },
     "suggest": {
-        "a1comms/php-gds": "Provides legacy Datastore support"
+        "a1comms/php-gds": "Provides legacy Datastore support",
+        "barryvdh/laravel-debugbar": "Laravel Debugbar"
     },
     "autoload": {
         "psr-4": {
@@ -51,6 +52,11 @@
                 "AffordableMobiles\\GServerlessSupportLaravel\\GaeSupportServiceProvider",
                 "AffordableMobiles\\GServerlessSupportLaravel\\Trace\\TraceServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }

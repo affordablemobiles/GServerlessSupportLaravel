@@ -11,7 +11,6 @@ use Google\Cloud\Tasks\V2\HttpRequest;
 use Google\Cloud\Tasks\V2\OidcToken;
 use Google\Cloud\Tasks\V2\Task;
 use Google\Protobuf;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 class PushTask

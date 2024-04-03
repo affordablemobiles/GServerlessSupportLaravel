@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\Guzzle\TraceProvider;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\GDS;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\Grpc;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\LaravelAuth;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\LaravelExtended;
+use OpenCensus\Trace\Integrations\Laravel;
+use OpenCensus\Trace\Integrations\Memcached;
+use OpenCensus\Trace\Integrations\Mysql;
+use OpenCensus\Trace\Integrations\PDO;
+
 /**
  * Class to return the low level trace modules to load.
  */
@@ -17,20 +27,20 @@ class LowLevelLoader implements LowLevelLoaderInterface
         return [
             // OpenCensus provides a basic Laravel trace adapter,
             // which covered Eloquent and view compilation.
-            \OpenCensus\Trace\Integrations\Laravel::class,
+            Laravel::class,
             // Also load our own extended Laravel trace set.
-            \AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\LaravelExtended::class,
+            LaravelExtended::class,
             // Authentication Guards...
-            \AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\LaravelAuth::class,
+            LaravelAuth::class,
             // Trace our other basic functions...
-            \OpenCensus\Trace\Integrations\Mysql::class,
-            \OpenCensus\Trace\Integrations\PDO::class,
-            \OpenCensus\Trace\Integrations\Memcached::class,
-            \AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\Grpc::class,
+            Mysql::class,
+            PDO::class,
+            Memcached::class,
+            Grpc::class,
             // Plus GDS (Datastore)...
-            \AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\LowLevel\GDS::class,
+            GDS::class,
             // Guzzle calls...
-            \AffordableMobiles\GServerlessSupportLaravel\Trace\Integration\Guzzle\TraceProvider::class,
+            TraceProvider::class,
         ];
     }
 }

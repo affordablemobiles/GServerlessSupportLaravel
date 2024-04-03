@@ -12,7 +12,7 @@ $config = new PhpCsFixer\Config();
 $config
     ->setRiskyAllowed(true)
     ->setRules([
-        '@PHP81Migration' => true,
+        '@PHP83Migration' => true,
         '@PHP80Migration:risky' => true,
         'heredoc_indentation' => false,
         '@PhpCsFixer' => true,

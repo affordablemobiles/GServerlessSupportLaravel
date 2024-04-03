@@ -42,7 +42,7 @@ class GCEDWDCredentials extends GCECredentials
     private $scope = false;
 
     /**
-     * @param iam             $iam                    [optional] An IAM instance
+     * @param Iam             $iam                    [optional] An IAM instance
      * @param string|string[] $scope                  [optional] the scope of the access request,
      *                                                expressed either as an array or as a space-delimited string
      * @param string          $targetAudience         [optional] The audience for the ID token
@@ -52,7 +52,7 @@ class GCEDWDCredentials extends GCECredentials
      *                                                account identity name to use instead of "default"
      */
     public function __construct(
-        Iam $iam = null,
+        ?Iam $iam = null,
         $scope = null,
         $targetAudience = null,
         $quotaProject = null,
@@ -131,7 +131,7 @@ class GCEDWDCredentials extends GCECredentials
      *
      * @throws \Exception
      */
-    public function fetchAuthToken(callable $httpHandler = null)
+    public function fetchAuthToken(?callable $httpHandler = null)
     {
         if (empty($this->subject)) {
             return parent::fetchAuthToken($httpHandler);

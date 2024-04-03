@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Log;
 
-use Google\Cloud\Logging\LoggingClient;
-use Monolog\Handler\PsrHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
@@ -37,8 +35,7 @@ class CreateLoggingDriver
 
         $handler = new StreamHandler('php://stderr', Logger::INFO);
         $handler->setFormatter($formatter);
-        $logger = new Logger($logName, [$handler]);
 
-        return $logger;
+        return new Logger($logName, [$handler]);
     }
 }

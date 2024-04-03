@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Database\Connectors;
 
-use A1comms\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
+use AffordableMobiles\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
 use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Arr;

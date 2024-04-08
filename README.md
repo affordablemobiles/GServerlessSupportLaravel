@@ -41,30 +41,27 @@ Pull in the package via Composer:
     },
 ```
 
-**2.** For Laravel, include the service provider within `config/app.php`:
+**2.** For Laravel, configure the service providers within `config/app.php` by adding:
 
 ```php
-    'providers' => [
-        AffordableMobiles\GServerlessSupportLaravel\GaeSupportServiceProvider::class,
-    ];
-```
+    /*
+    |--------------------------------------------------------------------------
+    | Autoloaded Service Providers
+    |--------------------------------------------------------------------------
+    |
+    | The service providers listed here will be automatically loaded on any
+    | requests to your application. You may add your own services to the
+    | arrays below to provide additional features to this application.
+    |
+    */
 
-**3.** Also, for added functionality, include the optional service providers:
-
-```php
-    'providers' => [
+    'providers' => \Illuminate\Support\ServiceProvider::defaultProviders()->merge([
+        // Package Service Providers...
+        AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
         AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
-        AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
-        AffordableMobiles\GServerlessSupportLaravel\Trace\TraceServiceProvider::class,
-    ];
-```
-
-And remove the relevant Laravel service providers that these replace:
-
-```php
-    'providers' => [
-        //Illuminate\View\ViewServiceProvider::class,
-    ];
+    ])->replace([
+        \Illuminate\View\ViewServiceProvider::class => AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
+    ])->toArray(),
 ```
 
 **4.** Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
@@ -86,18 +83,16 @@ $app = new AffordableMobiles\GServerlessSupportLaravel\Foundation\Application(
 );
 ```
 
-**5.** Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
+**5.** Update `bootstrap/app.php` to enable proper exception logging to Error Reporting & Logging:
 
 Change the following `use` statement:
 
 ```php
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-```
-
-To our class, that'll inject the required logging hook:
-
-```php
-use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\Handler as ExceptionHandler;
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->report(function (Throwable $e) {
+            \AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report::exceptionHandler($e);
+        })->stop();
+    })
 ```
 
 **6.** In `config/logging.php`, configure a custom logger and set it as the default:

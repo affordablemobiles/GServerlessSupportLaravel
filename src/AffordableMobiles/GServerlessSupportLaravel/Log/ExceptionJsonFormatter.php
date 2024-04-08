@@ -15,15 +15,5 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Log;
 
 class ExceptionJsonFormatter extends JsonFormatter
 {
-    /**
-     * @suppress PhanTypeComparisonToArray
-     */
-    public function format(array $record): string
-    {
-        $context = $record['context'];
-        unset($record['context']);
-        $record = array_merge_recursive($record, $context);
-
-        return parent::format($record);
-    }
+    
 }

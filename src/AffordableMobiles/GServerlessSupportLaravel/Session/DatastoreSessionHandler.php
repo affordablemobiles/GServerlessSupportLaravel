@@ -149,7 +149,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
     protected function getExpiryTimeStamp(): \DateTimeInterface
     {
         return Carbon::now()->addMinutes(
-            config('session.lifetime'),
+            (int) config('session.lifetime'),
         );
     }
 }

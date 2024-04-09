@@ -42,6 +42,7 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
             env('SOURCE_IP_HEADER', 'X-AppEngine-User-IP'),
         ),
     );
+    
     if (!empty($_SERVER[$sourceIPHeader])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER[$sourceIPHeader];
     } elseif (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {

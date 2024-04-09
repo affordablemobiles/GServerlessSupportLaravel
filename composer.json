@@ -15,8 +15,6 @@
         "open-telemetry/sdk": "~1",
         "open-telemetry/extension-propagator-cloudtrace": "~0",
         "affordablemobiles/open-telemetry-operations-php": "~1",
-        "open-telemetry/opentelemetry-auto-laravel": "~0",
-        "open-telemetry/opentelemetry-auto-guzzle": "~0",
         "guzzlehttp/guzzle": "^7.8.1",
         "google/cloud": ">=0.239.0 <1.0.0",
         "kelvinmo/simplejwt": "^0.8.2",

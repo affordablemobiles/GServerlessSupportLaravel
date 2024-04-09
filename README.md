@@ -24,12 +24,10 @@ Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpas
 Pull in the package via Composer:
 
 ```js
-"require": {
-    "affordablemobiles/g-serverless-support-laravel": "~11"
-}
+    "require": {
+        "affordablemobiles/g-serverless-support-laravel": "~11"
+    }
 ```
-
-### Laravel Specific (Not Lumen)
 
 **1.** Add the following to `composer.json`:
 
@@ -95,99 +93,23 @@ Change the following `use` statement:
     })
 ```
 
-**6.** In `config/logging.php`, configure a custom logger and set it as the default:
-
-*It's also useful to set the emergency log path to a location App Engine will forward to Stackdriver Logging, see below.*
-
-```php
-<?php
-
-use AffordableMobiles\GServerlessSupportLaravel\Log\CreateLoggingDriver;
-
-return [
-    
-    'default' => 'gae',
-
-    'channels' => [
-        'gae' => [
-            'driver' => 'custom',
-            'via' => CreateLoggingDriver::class,
-        ],
-
-        'emergency' => [
-            'path' => '/var/log/emergency.log',
-        ],
-    ],
-
-];
-```
-
 **7.** In `.env`, set the following:
 
 ```
-QUEUE_CONNECTION=gae
+LOG_CHANNEL=stderr
+LOG_STDERR_FORMATTER=AffordableMobiles\GServerlessSupportLaravel\Log\JsonFormatter
 CACHE_DRIVER=array
-SESSION_DRIVER=gae
-LOG_CHANNEL=gae
+SESSION_DRIVER=datastore
 ```
 
-### Lumen Specific (Not Laravel)
-
-**1.** Update `bootstrap/app.php` to load the overridden application class
-
-```php
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| Here we will load the environment and create the application instance
-| that serves as the central piece of this framework. We'll use this
-| application as an "IoC" container and router for this framework.
-|
-*/
-
-$app = new AffordableMobiles\GServerlessSupportLaravel\Foundation\LumenApplication(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
-```
-
-**2.** Update `app/Exceptions/Handler.php` to enable proper Exception logging to StackDriver Error Reporting & Logging:
-
-Change the following `use` statement:
-
-```php
-use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
-```
-
-To our class, that'll inject the required logging hook:
-
-```php
-use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\LumenHandler as ExceptionHandler;
-```
-
-## Upgrading (from Laravel/Lumen 9.x LTS)
-
-### Laravel Specific (Not Lumen)
+## Upgrading (from Laravel 9.x LTS)
 
 **1.** Update the package version in `composer.json`:
 
 ```json
-"require": {
-    "affordablemobiles/g-serverless-support-laravel": "~11"
-}
+    "require": {
+        "affordablemobiles/g-serverless-support-laravel": "~11"
+    }
 ```
 
 **2.** Follow the Laravel upgrade steps for all versions 6.x ... 9.x
-
-### Lumen Specific (Not Laravel)
-
-**1.** Update the package version in `composer.json`:
-
-```json
-"require": {
-    "affordablemobiles/g-serverless-support-laravel": "~11"
-}
-```
-
-**2.** Follow the Lumen upgrade steps for all versions 6.x ... 9.x

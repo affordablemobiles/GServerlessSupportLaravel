@@ -92,16 +92,7 @@ if (!function_exists('g_instance')) {
 if (!function_exists('is_g_serverless_development')) {
     function is_g_serverless_development()
     {
-        if (is_cloud_run()) {
-            return (bool) (config('gserverlesssupport.dev-prefix')
-                && str_starts_with($_SERVER['HTTP_HOST'], config('gserverlesssupport.dev-prefix')));
-        }
-        if (is_gae_std()) {
-            return (bool) (config('gserverlesssupport.dev-prefix')
-                && str_starts_with(g_version(), config('gserverlesssupport.dev-prefix')));
-        }
-
-        return false;
+        return isset($_SERVER['G_SERVERLESS_DEVELOPMENT']);
     }
 }
 

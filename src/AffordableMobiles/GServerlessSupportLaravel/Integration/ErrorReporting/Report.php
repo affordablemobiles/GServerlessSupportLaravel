@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting;
 
-use AffordableMobiles\GServerlessSupportLaravel\Log\CreateLoggingDriver;
+use AffordableMobiles\GServerlessSupportLaravel\Log\MetadataProvider;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
 
@@ -25,18 +25,13 @@ class Report
      */
     public static function init(?PsrLogger $psrLogger = null): void
     {
-        $options = ['batchEnabled' => false];
+        $options = [
+            'metadataProvider' => MetadataProvider::instance(),
+            'batchEnabled' => false
+        ];
 
-        if (is_cloud_run()) {
-            self::$psrLogger = (new CreateLoggingDriver())([
-                'logName'   => self::DEFAULT_LOGNAME,
-                'formatter' => 'exception',
-            ]);
-        } else {
-            self::$psrLogger = $psrLogger ?: (new LoggingClient())
-                ->psrLogger(self::DEFAULT_LOGNAME, $options)
-            ;
-        }
+        self::$psrLogger = $psrLogger ?: (new LoggingClient())
+            ->psrLogger(self::DEFAULT_LOGNAME, $options);
 
         register_shutdown_function([self::class, 'shutdownHandler']);
         set_exception_handler([self::class, 'exceptionHandler']);

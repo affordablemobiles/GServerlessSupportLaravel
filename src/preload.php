@@ -5,7 +5,7 @@ declare(strict_types=1);
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 use AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory;
 use Google\Cloud\Storage\StorageClient;
-use OpenTelemetry\API\Globals;
+use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
@@ -42,14 +42,14 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
             env('SOURCE_IP_HEADER', 'X-AppEngine-User-IP'),
         ),
     );
-    
+
     if (!empty($_SERVER[$sourceIPHeader])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER[$sourceIPHeader];
     } elseif (!empty($_SERVER['HTTP_X_APPENGINE_USER_IP'])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_APPENGINE_USER_IP'];
     } else {
         $forwards               = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        $_SERVER['REMOTE_ADDR'] = trim(array_pop($forwards));
+        $_SERVER['REMOTE_ADDR'] = trim(array_shift($forwards));
     }
     g_serverless_basic_log('audit', 'INFO', 'Correcting Source IP Address (REMOTE_ADDR) to '.$_SERVER['REMOTE_ADDR'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
 
@@ -61,7 +61,7 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
-    Globals::registerInitializer(static function (Configurator $configurator) {
+    try {
         $propagator = CloudTracePropagator::getInstance();
 
         $spanProcessor = new SimpleSpanProcessor(
@@ -83,13 +83,14 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
             ->build()
         ;
 
-        ShutdownHandler::register([$tracerProvider, 'shutdown']);
-
-        return $configurator
-            ->withTracerProvider($tracerProvider)
-            ->withPropagator($propagator)
-        ;
-    });
+        Sdk::builder()
+            ->setTracerProvider($tracerProvider)
+            ->setPropagator($propagator)
+            ->setAutoShutdown(true)
+            ->buildAndRegisterGlobal();
+    } catch (\Throwable $ex) {
+        \AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report::exceptionHandler($ex, 200);
+    }
 
     /* $loaderInterface = 'App\\Trace\\LowLevelLoader';
     if (!class_exists($loaderInterface)) {

@@ -106,7 +106,7 @@ if (!function_exists('g_serverless_storage_path')) {
                 $ret = '/tmp/laravel/'.$_SERVER['HTTP_HOST'].'/storage'.($path ? DIRECTORY_SEPARATOR.$path : $path);
             }
 
-            @mkdir($ret, 0o755, true);
+            @mkdir($ret, 0755, true);
 
             return $ret;
         }
@@ -178,38 +178,6 @@ if (!function_exists('diefast')) {
         });
 
         exit($data);
-    }
-}
-
-// Missing functions for Lumen
-
-if (!function_exists('app_path')) {
-    function app_path($path = '')
-    {
-        $extra = empty($path) ? '' : ('/'.$path);
-
-        return base_path('app').$extra;
-    }
-}
-
-if (!function_exists('public_path')) {
-    /**
-     * Get the path to the public folder.
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    function public_path($path = null)
-    {
-        return rtrim(app()->basePath('public/'.$path), '/');
-    }
-}
-
-if (!function_exists('is_lumen')) {
-    function is_lumen()
-    {
-        return class_exists('\Laravel\Lumen\Application');
     }
 }
 

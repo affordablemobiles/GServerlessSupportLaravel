@@ -60,7 +60,7 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
-    require __DIR__.'AffordableMobiles/Trace/Propagator/_register.php';
+    require __DIR__.'/AffordableMobiles/GServerlessSupportLaravel/Trace/Propagator/_register.php';
 
     try {
         $propagator = CloudTracePropagator::getInstance();

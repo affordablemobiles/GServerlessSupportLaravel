@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Log;
 
-use DateTimeInterface;
-use Monolog\LogRecord;
 use Monolog\Formatter\JsonFormatter as ParentJsonFormatter;
+use Monolog\LogRecord;
 
 class JsonFormatter extends ParentJsonFormatter
 {
@@ -24,8 +23,8 @@ class JsonFormatter extends ParentJsonFormatter
         $normalized = parent::normalizeRecord($record);
 
         // Re-key level for GCP logging
-        $normalized['severity'] = $normalized['level_name'];
-        $normalized['time'] = $record->datetime->format(DateTimeInterface::RFC3339_EXTENDED);
+        $normalized['severity']                     = $normalized['level_name'];
+        $normalized['time']                         = $record->datetime->format(\DateTimeInterface::RFC3339_EXTENDED);
         $normalized['logging.googleapis.com/trace'] = g_serverless_trace_id();
 
         // Remove keys that are not used by GCP

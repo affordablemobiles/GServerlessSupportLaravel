@@ -27,11 +27,12 @@ class Report
     {
         $options = [
             'metadataProvider' => MetadataProvider::instance(),
-            'batchEnabled' => false
+            'batchEnabled'     => false,
         ];
 
         self::$psrLogger = $psrLogger ?: (new LoggingClient())
-            ->psrLogger(self::DEFAULT_LOGNAME, $options);
+            ->psrLogger(self::DEFAULT_LOGNAME, $options)
+        ;
 
         register_shutdown_function([self::class, 'shutdownHandler']);
         set_exception_handler([self::class, 'exceptionHandler']);

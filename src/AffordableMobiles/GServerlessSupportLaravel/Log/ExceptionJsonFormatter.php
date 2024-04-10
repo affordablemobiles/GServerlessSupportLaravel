@@ -13,7 +13,4 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Log;
 
-class ExceptionJsonFormatter extends JsonFormatter
-{
-    
-}
+class ExceptionJsonFormatter extends JsonFormatter {}

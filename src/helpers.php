@@ -1,9 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTraceFormatter;
 use Google\Cloud\Core\Compute\Metadata;
 use OpenTelemetry\API\Trace\SpanContext;
-use OpenTelemetry\Extension\Propagator\CloudTrace\CloudTraceFormatter;
 
 if (!function_exists('is_cloud_run')) {
     function is_cloud_run()

@@ -10,7 +10,7 @@ use Google\Cloud\Core\Report\MetadataProviderInterface;
 
 class MetadataProvider implements MetadataProviderInterface
 {
-    public static function instance(): MetadataProvider
+    public static function instance(): self
     {
         if (is_g_serverless()) {
             return new self();
@@ -31,23 +31,25 @@ class MetadataProvider implements MetadataProviderInterface
         return once(static function (): array {
             if (is_gae_std()) {
                 return [
-                    'type' => 'gae_app',
+                    'type'   => 'gae_app',
                     'labels' => [
                         'project_id' => g_project(),
                         'version_id' => g_version(),
-                        'module_id' => g_service(),
+                        'module_id'  => g_service(),
                     ],
                 ];
-            } else if (is_cloud_run()) {
+            }
+            if (is_cloud_run()) {
                 $location = explode('/', (new Metadata())->get('instance/region'));
+
                 return [
-                    'type' => 'cloud_run_revision',
+                    'type'   => 'cloud_run_revision',
                     'labels' => [
                         'configuration_name' => $_SERVER['K_CONFIGURATION'],
-                        'location' => array_pop($location),
-                        'project_id' => g_project(),
-                        'revision_name' => g_version(),
-                        'service_name' => g_service(),
+                        'location'           => array_pop($location),
+                        'project_id'         => g_project(),
+                        'revision_name'      => g_version(),
+                        'service_name'       => g_service(),
                     ],
                 ];
             }
@@ -58,6 +60,7 @@ class MetadataProvider implements MetadataProviderInterface
 
     /**
      * Return the project id.
+     *
      * @return string
      */
     public function projectId()
@@ -67,6 +70,7 @@ class MetadataProvider implements MetadataProviderInterface
 
     /**
      * Return the service id.
+     *
      * @return string
      */
     public function serviceId()
@@ -76,6 +80,7 @@ class MetadataProvider implements MetadataProviderInterface
 
     /**
      * Return the version id.
+     *
      * @return string
      */
     public function versionId()
@@ -85,6 +90,7 @@ class MetadataProvider implements MetadataProviderInterface
 
     /**
      * Return the labels.
+     *
      * @return array
      */
     public function labels()

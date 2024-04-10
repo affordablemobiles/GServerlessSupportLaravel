@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
+use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTracePropagator;
 use AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory;
 use Google\Cloud\Storage\StorageClient;
 use OpenTelemetry\SDK\Sdk;
-use OpenTelemetry\Extension\Propagator\CloudTrace\CloudTracePropagator;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
 use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
@@ -15,14 +16,12 @@ use OpenTelemetry\SDK\Trace\TracerProviderBuilder;
 
 require __DIR__.'/helpers.php';
 
-// Load in the Laravel / Lumen support helpers, for the "env()" function,
+// Load in the Laravel support helpers, for the "env()" function,
 // as we may be loading before them, resulting in undefined function errors
 // in the Trace initialisation.
 $helpers = [
     __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php',
-    __DIR__.'/../../../illuminate/support/helpers.php',
     __DIR__.'/../../../laravel/framework/src/Illuminate/Collections/helpers.php',
-    __DIR__.'/../../../illuminate/collections/helpers.php',
 ];
 foreach ($helpers as $helper) {
     if (is_file($helper)) {
@@ -61,6 +60,8 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     $storage = new StorageClient();
     $storage->registerStreamWrapper();
 
+    require __DIR__.'AffordableMobiles/Trace/Propagator/_register.php';
+
     try {
         $propagator = CloudTracePropagator::getInstance();
 
@@ -87,9 +88,10 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
             ->setTracerProvider($tracerProvider)
             ->setPropagator($propagator)
             ->setAutoShutdown(true)
-            ->buildAndRegisterGlobal();
-    } catch (\Throwable $ex) {
-        \AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report::exceptionHandler($ex, 200);
+            ->buildAndRegisterGlobal()
+        ;
+    } catch (Throwable $ex) {
+        Report::exceptionHandler($ex, 200);
     }
 
     /* $loaderInterface = 'App\\Trace\\LowLevelLoader';

@@ -62,26 +62,23 @@ Pull in the package via Composer:
     ])->toArray(),
 ```
 
-**4.** Update `bootstrap/app.php` to load the overridden application class & initialise logging to Stackdriver:
+**4.** Update the `use` statement at the top of `bootstrap/app.php` from:
 
 ```php
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
-|
-*/
+use Illuminate\Foundation\Application;
+```
 
-$app = new AffordableMobiles\GServerlessSupportLaravel\Foundation\Application(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
+to:
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Foundation\Application;
 ```
 
 **5.** Update `bootstrap/app.php` to enable proper exception logging to Error Reporting & Logging:
+
+(want to find a way to remove the need to do this before release, by changes in the overriden `Application` class above).
+(also need to ensure that the error reporting class is only called if on a serverless platform).
+(should also document in the upgrade notes to switch from using our report class directly, to using Laravel's new `report($e)` helper now it is available).
 
 Change the following `use` statement:
 
@@ -112,4 +109,6 @@ SESSION_DRIVER=datastore
     }
 ```
 
-**2.** Follow the Laravel upgrade steps for all versions 6.x ... 9.x
+**2.** Follow the Laravel upgrade steps for all versions 9.x ... 11.x
+
+**3.** TODO...

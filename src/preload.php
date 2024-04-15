@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelBootInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTracePropagator;
 use AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory;
+use App\Trace\InstrumentationLoader;
 use Google\Cloud\Storage\StorageClient;
+use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
@@ -94,10 +97,15 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
         Report::exceptionHandler($ex, 200);
     }
 
-    /* $loaderInterface = 'App\\Trace\\LowLevelLoader';
+    $instrumentation = new CachedInstrumentation('g-serverless-support-laravel.opentelemetry.low-level');
+
+    LaravelBootInstrumentation::register($instrumentation);
+
+    $loaderInterface = InstrumentationLoader::class;
     if (!class_exists($loaderInterface)) {
-        // TODO: Different default arrays for Laravel vs Lumen?
-        $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader::class;
+        $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\InstrumentationLoader::class;
     }
-    $loaderInterface::load(); */
+    foreach ($loaderInterface::getInstrumentation() as $inst) {
+        $inst::register($instrumentation);
+    }
 }

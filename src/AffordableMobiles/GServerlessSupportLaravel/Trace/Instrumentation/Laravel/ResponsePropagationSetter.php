@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenTelemetry\Contrib\Instrumentation\Laravel;
+namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
 use Illuminate\Http\Response;
 use OpenTelemetry\Context\Propagation\PropagationSetterInterface;

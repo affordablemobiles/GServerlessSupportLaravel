@@ -8,6 +8,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Wa
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ClientRequestWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\QueryWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\RequestWatcher;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\SessionWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ViewWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\Watcher;
 use Illuminate\Contracts\Foundation\Application;
@@ -32,10 +33,11 @@ class LaravelInstrumentation
             '__construct',
             post: static function (Application $application, array $params, mixed $returnValue, ?\Throwable $exception) use ($instrumentation): void {
                 self::registerWatchers($application, new ViewWatcher($instrumentation));
+                self::registerWatchers($application, new SessionWatcher($instrumentation));
                 self::registerWatchers($application, new CacheWatcher());
                 self::registerWatchers($application, new ClientRequestWatcher($instrumentation));
                 self::registerWatchers($application, new QueryWatcher($instrumentation));
-                self::registerWatchers($application, new RequestWatcher());
+                self::registerWatchers($application, new RequestWatcher($instrumentation));
             },
         );
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation;
 
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
+use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\Context\Context;
 
 class SimpleSpan

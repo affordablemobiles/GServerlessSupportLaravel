@@ -37,7 +37,9 @@
         "barryvdh/laravel-debugbar": "Laravel Debugbar"
     },
     "conflict": {
-        "open-telemetry/extension-propagator-cloudtrace": "~0"
+        "open-telemetry/extension-propagator-cloudtrace": "~0",
+        "open-telemetry/opentelemetry-auto-laravel": "~0",
+        "open-telemetry/opentelemetry-auto-guzzle": "~0"
     },
     "autoload": {
         "psr-4": {

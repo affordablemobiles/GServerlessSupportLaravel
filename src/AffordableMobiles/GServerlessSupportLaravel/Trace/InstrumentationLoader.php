@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle\GuzzleInstrumentation;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelInstrumentation;
+
 /**
  * Class to return the low level trace modules to load.
  */
@@ -15,6 +18,8 @@ class InstrumentationLoader implements InstrumentationLoaderInterface
     public static function getInstrumentation()
     {
         return [
+            LaravelInstrumentation::class,
+            GuzzleInstrumentation::class,
         ];
     }
 }

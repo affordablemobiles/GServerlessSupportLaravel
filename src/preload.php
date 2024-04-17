@@ -66,6 +66,8 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     require __DIR__.'/AffordableMobiles/GServerlessSupportLaravel/Trace/Propagator/_register.php';
 
     try {
+        putenv('OTEL_PHP_DETECTORS=none');
+
         $propagator = CloudTracePropagator::getInstance();
 
         $spanProcessor = new SimpleSpanProcessor(

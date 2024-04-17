@@ -33,6 +33,8 @@ class LaravelBootInstrumentation
                 g_serverless_trace_context(),
             ),
         );
+        $parent->activate();
+
         $span   = $instrumentation->tracer()
             ->spanBuilder('laravel/bootstrap')
             ->setParent($parent)

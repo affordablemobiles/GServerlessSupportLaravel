@@ -10,9 +10,9 @@ use OpenTelemetry\Context\Context;
 
 class SimpleSpan
 {
-    public static function pre(CachedInstrumentation $instrumentation, string $name, array $attributes = []): void
+    public static function pre(CachedInstrumentation $instrumentation, string $name, array $attributes = [], ?ContextInterface $parentContext = null): void
     {
-        $parentContext = Context::getCurrent();
+        $parentContext ??= Context::getCurrent();
 
         $builder = $instrumentation->tracer()
             ->spanBuilder($name)

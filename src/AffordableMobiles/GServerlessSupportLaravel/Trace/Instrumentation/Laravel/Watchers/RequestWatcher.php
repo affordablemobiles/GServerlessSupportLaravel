@@ -6,9 +6,12 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Lara
 
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
+use Illuminate\Routing\Router;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\SemConv\TraceAttributes;
@@ -43,6 +46,31 @@ class RequestWatcher extends Watcher
         );
 
         hook(
+            Request::class,
+            'capture',
+            pre: function (mixed $request, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
+                SimpleSpan::pre($this->instrumentation, 'laravel/request/capture', []);
+            },
+            post: static function (mixed $request, array $params, mixed $response, ?\Throwable $exception): void {
+                SimpleSpan::post();
+            },
+        );
+
+        // Trace when routing begins,
+        // making it possible to infer how long the routing took by looking at when
+        // the middleware or the controller execution begin.
+        hook(
+            Router::class,
+            'dispatch',
+            pre: function (Router $router, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
+                SimpleSpan::pre($this->instrumentation, 'laravel/router', []);
+            },
+            post: static function (Router $router, array $params, mixed $response, ?\Throwable $exception): void {
+                SimpleSpan::post();
+            },
+        );
+
+        hook(
             Route::class,
             'run',
             pre: function (Route $route, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
@@ -62,6 +90,17 @@ class RequestWatcher extends Watcher
                 );
             },
             post: static function (Route $route, array $params, mixed $response, ?\Throwable $exception): void {
+                SimpleSpan::post();
+            },
+        );
+
+        hook(
+            Response::class,
+            'send',
+            pre: function (Response $resp, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
+                SimpleSpan::pre($this->instrumentation, 'laravel/response/send', []);
+            },
+            post: static function (Response $resp, array $params, mixed $response, ?\Throwable $exception): void {
                 SimpleSpan::post();
             },
         );

@@ -12,6 +12,7 @@ use Illuminate\Pipeline\Pipeline;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Str;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\SemConv\TraceAttributes;
@@ -76,11 +77,16 @@ class RequestWatcher extends Watcher
             pre: function (Route $route, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
                 $attributes = [];
 
-                $class = $route->getControllerClass();
-                if (!empty($class)) {
-                    $attributes['callable']  = $class.'::'.$route->getControllerMethod();
-                } else {
-                    $attributes['callable'] = 'Closure';
+                try {
+                    $class = $route->getControllerClass();
+                    if (!empty($class)) {
+                        $callback                = Str::parseCallback($route->action['uses']);
+                        $attributes['callable']  = $class.'::'.$callback[1];
+                    } else {
+                        $attributes['callable'] = 'Closure';
+                    }
+                } catch (\Throwable $ex) {
+                    report($ex);
                 }
 
                 SimpleSpan::pre(

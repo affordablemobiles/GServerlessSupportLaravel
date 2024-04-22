@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\View\Engines;
 
 use Illuminate\View\Engines\CompilerEngine as LaravelCompilerEngine;
@@ -9,8 +11,8 @@ class CompilerEngine extends LaravelCompilerEngine
     /**
      * Get the evaluated contents of the view.
      *
-     * @param  string  $path
-     * @param  array   $data
+     * @param string $path
+     *
      * @return string
      */
     public function get($path, array $data = [])
@@ -27,5 +29,15 @@ class CompilerEngine extends LaravelCompilerEngine
         array_pop($this->lastCompiled);
 
         return $results;
+    }
+
+    /**
+     * Get the exception message for an exception.
+     *
+     * @return string
+     */
+    protected function getMessage(\Throwable $e)
+    {
+        return $e->getMessage().' (View: '.last($this->lastCompiled).')';
     }
 }

@@ -1,6 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright 2017 OpenCensus Authors
+ * Copyright 2017 OpenCensus Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +22,10 @@ namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
 use Grpc\BaseStub;
 use Grpc\UnaryCall;
-use OpenCensus\Trace\Span;
-use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Integrations\IntegrationInterface;
 use OpenCensus\Trace\Propagator\GrpcMetadataPropagator;
+use OpenCensus\Trace\Span;
+use OpenCensus\Trace\Tracer;
 
 /**
  * This class handles instrumenting grpc requests using the opencensus extension.
@@ -37,74 +40,75 @@ use OpenCensus\Trace\Propagator\GrpcMetadataPropagator;
 class Grpc implements IntegrationInterface
 {
     /**
-     * Static method to add instrumentation to grpc requests
+     * Static method to add instrumentation to grpc requests.
      */
-    public static function load()
+    public static function load(): void
     {
-        if (!extension_loaded('opencensus')) {
+        if (!\extension_loaded('opencensus')) {
             trigger_error('opencensus extension required to load grpc integrations.', E_USER_WARNING);
+
             return;
         }
 
         // protected function _simpleRequest($method, $argument, $deserialize, array $metadata = [],
         //                                   array $options = [])
-        opencensus_trace_method(BaseStub::class, '_simpleRequest', function ($stub, $method) {
+        opencensus_trace_method(BaseStub::class, '_simpleRequest', static function ($stub, $method) {
             return [
-                'name' => 'gRPC::'.$method,
+                'name'       => 'gRPC::'.$method,
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method,
-                    'type' => 'simpleRequest'
+                    'uri'  => $method,
+                    'type' => 'simpleRequest',
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
-        opencensus_trace_method(UnaryCall::class, 'wait', function ($scope) {
+        opencensus_trace_method(UnaryCall::class, 'wait', static function ($scope) {
             return [
-                'name' => 'gRPC::wait',
+                'name'       => 'gRPC::wait',
                 'attributes' => [
-                    'type' => 'UnaryCall'
+                    'type' => 'UnaryCall',
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
         // protected function _clientStreamRequest($method, $argument, $deserialize, array $metadata = [],
         //                                         array $options = [])
-        opencensus_trace_method(BaseStub::class, '_clientStreamRequest', function ($stub, $method) {
+        opencensus_trace_method(BaseStub::class, '_clientStreamRequest', static function ($stub, $method) {
             return [
-                'name' => 'grpc/clientStreamRequest',
+                'name'       => 'grpc/clientStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri'  => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
         // protected function _serverStreamRequest($method, $argument, $deserialize, array $metadata = [],
         //                                         array $options = [])
-        opencensus_trace_method(BaseStub::class, '_serverStreamRequest', function ($stub, $method) {
+        opencensus_trace_method(BaseStub::class, '_serverStreamRequest', static function ($stub, $method) {
             return [
-                'name' => 'grpc/serverStreamRequest',
+                'name'       => 'grpc/serverStreamRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri'  => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
 
         // protected function _bidiRequest($method, $deserialize, array $metadata = [], array $options = [])
-        opencensus_trace_method(BaseStub::class, '_bidiRequest', function ($stub, $method) {
+        opencensus_trace_method(BaseStub::class, '_bidiRequest', static function ($stub, $method) {
             return [
-                'name' => 'grpc/bidiRequest',
+                'name'       => 'grpc/bidiRequest',
                 'attributes' => [
                     'host' => $stub->getTarget(),
-                    'uri' => $method
+                    'uri'  => $method,
                 ],
-                'kind' => Span::KIND_CLIENT
+                'kind' => Span::KIND_CLIENT,
             ];
         });
     }
@@ -125,8 +129,9 @@ class Grpc implements IntegrationInterface
      * $response = $call->wait();
      * ```
      *
-     * @param array $metadata
+     * @param array  $metadata
      * @param string $jwtAuthUri
+     *
      * @return array
      */
     public static function updateMetadata($metadata, $jwtAuthUri)
@@ -135,9 +140,10 @@ class Grpc implements IntegrationInterface
         if ($context->enabled()) {
             $propagator = new GrpcMetadataPropagator();
             $metadata += [
-                $propagator->key() => [$propagator->formatter()->serialize($context)]
+                $propagator->key() => [$propagator->formatter()->serialize($context)],
             ];
         }
+
         return $metadata;
     }
 }

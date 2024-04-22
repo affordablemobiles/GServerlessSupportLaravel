@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace\Integration\Guzzle;
 
-use OpenCensus\Trace\Tracer;
 use OpenCensus\Trace\Propagator\HttpHeaderPropagator;
 use OpenCensus\Trace\Propagator\PropagatorInterface;
+use OpenCensus\Trace\Tracer;
 use Psr\Http\Message\RequestInterface;
 
 class Middleware
@@ -29,7 +31,8 @@ class Middleware
      * Magic method which makes this object callable. Guzzle middleware are expected to be
      * callables.
      *
-     * @param  callable $handler The next handler in the HandlerStack
+     * @param callable $handler The next handler in the HandlerStack
+     *
      * @return callable
      */
     public function __invoke(callable $handler)
@@ -42,6 +45,7 @@ class Middleware
                     $this->propagator->formatter()->serialize($context)
                 );
             }
+
             return $handler($request, $options);
         };
     }

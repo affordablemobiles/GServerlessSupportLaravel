@@ -4,13 +4,9 @@ When IAP is turned on, you need a way to validate it's presence for the session,
 
 For this, we validate each request statelessly, using the request headers (from the remnents of the Users API).
 
-### Users API Headers
-
-Google have confirmed in their documentation that it is perfectly valid to trust the Users API headers, that they are already performing IAP JWT token validation as part of their serving plane, so this allows us to quickly verify the presence of IAP & the user account that is logged in.
-
 ### Usage
 
-Register the service provider in `config/app.php`:
+**1.** Register the service provider in `config/app.php`:
 
 ```php
     'providers' => [
@@ -18,21 +14,29 @@ Register the service provider in `config/app.php`:
     ];
 ```
 
-Switch to our handler in `config/auth.php`:
+**2.** Switch to our handler in `config/auth.php`:
 
 ```php
     'guards' => [
         'web' => [
-            'driver' => 'gae-users-api',
+            'driver' => 'gae-combined-iap',
         ],
 
         'api' => [
-            'driver' => 'gae-users-api',
+            'driver' => 'gae-combined-iap',
         ],
     ],
 ```
 
-Then to enable it for all requests (rather than via request middleware), add this in `app/Http/Kernel.php`:
+**3.** Add the expected audience (from "Signed Header JWT Audience" in Cloud Console, under IAP) to the environment.
+
+Usually done via a line in `.env`, e.g. :
+
+```bash
+IAP_AUDIENCE="/projects/<project_id>/apps/<project_name>"
+```
+
+**4.** Then to enable it for all requests (rather than via request middleware), add this in `app/Http/Kernel.php`:
 
 ```php
     /**
@@ -53,7 +57,7 @@ Then to enable it for all requests (rather than via request middleware), add thi
     ];
 ```
 
-The default action for failed authentication is to redirect to a guest accessible login page, but that won't work here.
+**5.** The default action for failed authentication is to redirect to a guest accessible login page, but that won't work here.
 
 You'll probably want to add this into `app/Exceptions/Handler.php`:
 
@@ -73,7 +77,7 @@ You'll probably want to add this into `app/Exceptions/Handler.php`:
     }
 ```
 
-To demonstrate our ability to view the signed in user's email, try adding this in `routes/web.php`:
+**6.** To demonstrate our ability to view the signed in user's email, try adding this in `routes/web.php`:
 
 ```php
 Route::get('/user/email', function () {

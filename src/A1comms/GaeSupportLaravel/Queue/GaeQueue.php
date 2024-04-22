@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Queue;
 
+use A1comms\GaeSupportLaravel\Integration\TaskQueue\PushTask;
+use Illuminate\Contracts\Queue\Queue as QueueContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Contracts\Queue\Queue as QueueContract;
-use A1comms\GaeSupportLaravel\Integration\TaskQueue\PushTask;
 
 class GaeQueue extends Queue implements QueueContract
 {
-    const PAYLOAD_REQ_PARAM_NAME = 'data';
+    public const PAYLOAD_REQ_PARAM_NAME = 'data';
 
     /**
      * The current request instance.
@@ -29,6 +31,7 @@ class GaeQueue extends Queue implements QueueContract
 
     /**
      * URL for push.
+     *
      * @var string
      */
     protected $url;
@@ -41,6 +44,13 @@ class GaeQueue extends Queue implements QueueContract
     protected $shouldEncrypt;
 
     /**
+     * Indicates is the messages should be compressed (useful when using ::withChain and/or larger job sizes).
+     *
+     * @var bool
+     */
+    protected $shouldCompress;
+
+    /**
      * The encrypter implementation.
      *
      * @var \Illuminate\Contracts\Encryption\Encrypter
@@ -48,18 +58,25 @@ class GaeQueue extends Queue implements QueueContract
     protected $encrypter;
 
     /**
-     * Create a new Gae queue instance.
+     * GaeQueue constructor.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $default
-     * @param  bool  $shouldEncrypt
+     * @param bool  $shouldEncrypt
+     * @param bool  $shouldCompress
+     * @param mixed $default
+     * @param mixed $url
      */
-    public function __construct(Request $request, $default, $url, $shouldEncrypt = false)
-    {
-        $this->request = $request;
-        $this->url = $url;
-        $this->default = $default;
-        $this->shouldEncrypt = $shouldEncrypt;
+    public function __construct(
+        Request $request,
+        $default,
+        $url,
+        $shouldEncrypt = false,
+        $shouldCompress = false
+    ) {
+        $this->request        = $request;
+        $this->url            = $url;
+        $this->default        = $default;
+        $this->shouldEncrypt  = $shouldEncrypt;
+        $this->shouldCompress = $shouldCompress;
 
         $this->encrypter = app('encrypter');
     }
@@ -67,9 +84,10 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Push a new job onto the queue.
      *
-     * @param  string  $job
-     * @param  mixed   $data
-     * @param  string  $queue
+     * @param string $job
+     * @param mixed  $data
+     * @param string $queue
+     *
      * @return mixed
      */
     public function push($job, $data = '', $queue = null)
@@ -80,34 +98,43 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Push a raw payload onto the queue.
      *
-     * @param  string  $payload
-     * @param  string  $queue
-     * @param  array   $options
+     * @param string $payload
+     * @param string $queue
+     *
      * @return mixed
      */
-    public function pushRaw($payload, $queue = null, array $options = array())
+    public function pushRaw($payload, $queue = null, array $options = [])
     {
         if ($this->shouldEncrypt) {
             $payload = $this->encrypter->encrypt($payload);
         }
+        if ($this->shouldCompress) {
+            $payload = base64_encode(gzencode($payload, 9));
+        }
 
-        $task = new PushTask($this->url,
-                             array(self::PAYLOAD_REQ_PARAM_NAME => $payload),
-                             $options);
+        $task = new PushTask(
+            $this->url,
+            [
+                static::PAYLOAD_REQ_PARAM_NAME => $payload,
+            ],
+            $options
+        );
+
         return $task->add($this->getQueue($queue));
     }
 
     /**
      * Push a raw payload onto the queue after encrypting the payload.
      *
-     * @param  string  $payload
-     * @param  string  $queue
-     * @param  int     $delay
+     * @param string $payload
+     * @param string $queue
+     * @param int    $delay
+     *
      * @return mixed
      */
-    public function recreate($payload, $queue = null, $delay)
+    public function recreate($payload, $queue, $delay)
     {
-        $options = array('delay_seconds' => $this->getSeconds($delay));
+        $options = ['delay_seconds' => $this->getSeconds($delay)];
 
         return $this->pushRaw($payload, $queue, $options);
     }
@@ -115,10 +142,11 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Push a new job onto the queue after a delay.
      *
-     * @param  \DateTime|int  $delay
-     * @param  string  $job
-     * @param  mixed   $data
-     * @param  string  $queue
+     * @param \DateTime|int $delay
+     * @param string        $job
+     * @param mixed         $data
+     * @param string        $queue
+     *
      * @return mixed
      */
     public function later($delay, $job, $data = '', $queue = null)
@@ -133,18 +161,20 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Pop the next job off of the queue.
      *
-     * @param  string  $queue
-     * @return \Illuminate\Queue\Jobs\Job|null
+     * @param string $queue
+     *
+     * @return null|\Illuminate\Queue\Jobs\Job
      */
     public function pop($queue = null)
     {
-        throw new \RuntimeException("Pop is not supported by GaeQueue.");
+        throw new \RuntimeException('Pop is not supported by GaeQueue.');
     }
 
     /**
      * Get the size of the queue.
      *
-     * @param  string  $queue
+     * @param string $queue
+     *
      * @return int
      */
     public function size($queue = null)
@@ -155,13 +185,12 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Delete a message from the Gae queue.
      *
-     * @param  string  $queue
-     * @param  string  $id
-     * @return void
+     * @param string $queue
+     * @param string $id
      */
-    public function deleteMessage($queue, $id)
+    public function deleteMessage($queue, $id): void
     {
-        throw new \RuntimeException("Delete is not supported by GaeQueue.");
+        throw new \RuntimeException('Delete is not supported by GaeQueue.');
     }
 
     /**
@@ -177,7 +206,13 @@ class GaeQueue extends Queue implements QueueContract
             // Ignore for security reasons!
             // So if we are being hacked
             // the hacker would think it went OK.
-            Log::warning('Marshalling Queue Request: Invalid job. ' . $e->getMessage());
+            Log::warning(
+                'Marshalling Queue Request: Invalid job. '.$e->getMessage(),
+                [
+                    'exception' => $e,
+                ]
+            );
+
             return new Response('OK');
         }
 
@@ -191,47 +226,10 @@ class GaeQueue extends Queue implements QueueContract
     }
 
     /**
-     * Marshal out the pushed job and payload.
-     *
-     * @return object
-     */
-    protected function marshalPushedJob()
-    {
-        $r = $this->request;
-
-        $body = $this->parseJobBody($r->input(self::PAYLOAD_REQ_PARAM_NAME));
-
-        return (object) array(
-            'id' => $r->header('X-AppEngine-TaskName'), 'body' => $body, 'pushed' => true,
-        );
-    }
-
-    /**
-     * Create a new GaeJob for a pushed job.
-     *
-     * @param  object  $job
-     * @return \A1comms\GaeSupportLaravel\Queue\GaeJob
-     */
-    protected function createPushedGaeJob($job)
-    {
-        return new GaeJob($this->container, $this, $job, true);
-    }
-
-    /**
-     * Parse the job body for firing.
-     *
-     * @param  string  $body
-     * @return string
-     */
-    protected function parseJobBody($body)
-    {
-        return $this->shouldEncrypt ? $this->encrypter->decrypt($body) : $body;
-    }
-
-    /**
      * Get the queue or return the default.
      *
-     * @param  string|null  $queue
+     * @param null|string $queue
+     *
      * @return string
      */
     public function getQueue($queue)
@@ -251,11 +249,59 @@ class GaeQueue extends Queue implements QueueContract
 
     /**
      * Set the request instance.
-     *
-     * @param \Illuminate\Http\Request $request
      */
-    public function setRequest(Request $request)
+    public function setRequest(Request $request): void
     {
         $this->request = $request;
+    }
+
+    /**
+     * Marshal out the pushed job and payload.
+     *
+     * @return object
+     */
+    protected function marshalPushedJob()
+    {
+        $r = $this->request;
+
+        $body = $this->parseJobBody($r->input(static::PAYLOAD_REQ_PARAM_NAME));
+
+        return (object) [
+            'id'     => $r->header('X-AppEngine-TaskName'),
+            'body'   => $body,
+            'pushed' => true,
+        ];
+    }
+
+    /**
+     * Create a new GaeJob for a pushed job.
+     *
+     * @param object $job
+     *
+     * @return \A1comms\GaeSupportLaravel\Queue\GaeJob
+     */
+    protected function createPushedGaeJob($job)
+    {
+        return new GaeJob($this->container, $this, $job, true);
+    }
+
+    /**
+     * Parse the job body for firing.
+     *
+     * @param string $body
+     *
+     * @return string
+     */
+    protected function parseJobBody($body)
+    {
+        if ($this->shouldCompress) {
+            $body = gzdecode(base64_decode($body, true));
+        }
+
+        if ($this->shouldEncrypt) {
+            $body = $this->encrypter->decrypt($body);
+        }
+
+        return $body;
     }
 }

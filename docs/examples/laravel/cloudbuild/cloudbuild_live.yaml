@@ -1,0 +1,76 @@
+steps:
+####
+## Environment Variables (.env file)
+####
+- id: "generate-env"
+  name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/generate_env_LIVE.sh"]
+  secretEnv:
+  - 'ENV_APP_KEY'
+  waitFor: ['-']
+####
+## Configure latest PHP builder image
+####
+- id: "find-php-builder"
+  name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/scripts/get_container_image.sh"]
+  waitFor: ['-']
+- id: "assign-php-builder"
+  name: "gcr.io/cloud-builders/docker"
+  entrypoint: "bash"
+  args: ["./cloudbuild/scripts/mark_container_image.sh"]
+  waitFor:
+  - "find-php-builder"
+####
+## composer
+####
+- id: "composer"
+  name: "gcr.io/gae-runtimes/buildpacks/php74/builder:latest"
+  entrypoint: "composer"
+  args: ["install", "--no-dev", "--no-progress", "-o"]
+  env:
+  - 'HOME=/workspace'
+  waitFor:
+  - "assign-php-builder"
+####
+## npm
+####
+- id: "npm-install"
+  name: "gcr.io/cloud-builders/npm"
+  args: ["install"]
+  env:
+  - 'JOBS=max'
+  waitFor: ['-']
+- id: "npm-run"
+  name: "gcr.io/cloud-builders/npm"
+  args: ["run", "production"]
+  waitFor:
+  - "npm-install"
+####
+## Deploy!!
+####
+- id: "deploy"
+  name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args: ["./cloudbuild/scripts/deploy_LIVE.sh"]
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'SHORT_SHA=$SHORT_SHA'
+  - 'DEPLOY_NO_PROMOTE=$_DEPLOY_NO_PROMOTE'
+  waitFor:
+  - "generate-env"
+  - "composer"
+  - "npm-run"
+####
+## SECRETS
+####
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/LARAVEL_APP_KEY/versions/latest
+    env: ENV_APP_KEY
+####
+## GLOBAL OPTIONS
+####
+timeout: 20m

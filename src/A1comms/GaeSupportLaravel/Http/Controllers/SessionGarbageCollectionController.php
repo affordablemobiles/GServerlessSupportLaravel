@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Http\Controllers;
 
+use A1comms\GaeSupportLaravel\Session\DatastoreSessionHandler;
 use Illuminate\Routing\Controller;
-use A1comms\GaeSupportLaravel\Session\DataStoreSessionHandler;
 
 /**
- * SessionGarbageCollectionController
+ * SessionGarbageCollectionController.
  *
  * @uses     Controller
  *
@@ -15,14 +17,11 @@ use A1comms\GaeSupportLaravel\Session\DataStoreSessionHandler;
 class SessionGarbageCollectionController extends Controller
 {
     /**
-     * run
-     *
-     * @access public
-     *
-     * @return void
+     * run.
      */
-    public function run(){
-        $s = new DataStoreSessionHandler();
+    public function run(): void
+    {
+        $s = new DatastoreSessionHandler();
         $s->googlegc();
     }
 }

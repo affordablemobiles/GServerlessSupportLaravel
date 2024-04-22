@@ -134,7 +134,7 @@ class GaeQueue extends Queue implements QueueContract
      */
     public function recreate($payload, $queue, $delay)
     {
-        $options = ['delay_seconds' => $this->getSeconds($delay)];
+        $options = ['delay_seconds' => $this->secondsUntil($delay)];
 
         return $this->pushRaw($payload, $queue, $options);
     }
@@ -151,7 +151,7 @@ class GaeQueue extends Queue implements QueueContract
      */
     public function later($delay, $job, $data = '', $queue = null)
     {
-        $delay_seconds = $this->getSeconds($delay);
+        $delay_seconds = $this->secondsUntil($delay);
 
         $payload = $this->createPayload($job, $data);
 

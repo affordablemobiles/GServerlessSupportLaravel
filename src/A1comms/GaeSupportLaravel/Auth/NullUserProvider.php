@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth;
 
-use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\UserProvider;
 
 class NullUserProvider implements UserProvider
 {
@@ -17,8 +19,7 @@ class NullUserProvider implements UserProvider
     /**
      * Create a new null user provider.
      *
-     * @param  string  $model
-     * @return void
+     * @param string $model
      */
     public function __construct($model)
     {
@@ -34,14 +35,15 @@ class NullUserProvider implements UserProvider
     {
         $class = '\\'.ltrim($this->model, '\\');
 
-        return new $class;
+        return new $class();
     }
 
     /**
      * Retrieve a user by their unique identifier.
      *
-     * @param  mixed  $identifier
-     * @return \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel|null
+     * @param string $identifier
+     *
+     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */
     public function retrieveById($identifier)
     {
@@ -55,9 +57,10 @@ class NullUserProvider implements UserProvider
     /**
      * Retrieve a user by their unique identifier and "remember me" token.
      *
-     * @param  mixed   $identifier
-     * @param  string  $token
-     * @return \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel|null
+     * @param string $identifier
+     * @param string $token
+     *
+     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */
     public function retrieveByToken($identifier, $token)
     {
@@ -67,20 +70,15 @@ class NullUserProvider implements UserProvider
     /**
      * Update the "remember me" token for the given user in storage.
      *
-     * @param  \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel  $user
-     * @param  string  $token
-     * @return void
+     * @param \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel $user
+     * @param string                                                  $token
      */
-    public function updateRememberToken(Authenticatable $user, $token)
-    {
-
-    }
+    public function updateRememberToken(Authenticatable $user, $token): void {}
 
     /**
      * Retrieve a user by the given credentials.
      *
-     * @param  array  $credentials
-     * @return \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel|null
+     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
      */
     public function retrieveByCredentials(array $credentials)
     {
@@ -90,8 +88,8 @@ class NullUserProvider implements UserProvider
     /**
      * Validate a user against the given credentials.
      *
-     * @param  \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel  $user
-     * @param  array  $credentials
+     * @param \A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel $user
+     *
      * @return bool
      */
     public function validateCredentials(Authenticatable $user, array $credentials)

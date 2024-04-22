@@ -1,24 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Trace\Integration\LowLevel;
 
-use OpenCensus\Trace\Integrations\IntegrationInterface;
+use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Foundation\Http\Kernel as LaravelKernel;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response as LaravelResponse;
-use Symfony\Component\HttpFoundation\Response as BaseResponse;
+use Illuminate\Pipeline\Pipeline as LaravelPipeline;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Routing\Router as LaravelRouter;
-use Illuminate\Pipeline\Pipeline as LaravelPipeline;
-use A1comms\GaeSupportLaravel\View\Engines\CompilerEngine;
+use Laravel\Lumen\Application as LumenApplication;
+use Laravel\Lumen\Routing\Pipeline as LumenPipeline;
+use OpenCensus\Trace\Integrations\IntegrationInterface;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class LaravelExtended implements IntegrationInterface
 {
-    public static function load()
+    public static function load(): void
     {
-        if (!extension_loaded('opencensus')) {
+        if (!\extension_loaded('opencensus')) {
             trigger_error('opencensus extension required to load Laravel integrations.', E_USER_WARNING);
+
             return;
         }
 
@@ -61,54 +66,68 @@ class LaravelExtended implements IntegrationInterface
         // ---
         // Alternative View Compiler for Pre-Compiled Views
         // ---
-        //opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
+        opencensus_trace_method(CompilerEngine::class, 'get', [self::class, 'handleView']);
+
+        // ---
+        // Lumen compatiility...
+        // ---
+        opencensus_trace_method(LumenApplication::class, '__construct', [self::class, 'handleApplicationConstruct']);
+
+        opencensus_trace_method(LumenApplication::class, 'handle', [self::class, 'handleKernelRequestHandle']);
+        opencensus_trace_method(LumenApplication::class, 'run', [self::class, 'handleKernelRequestHandle']);
+
+        opencensus_trace_method(LumenApplication::class, 'dispatch', [self::class, 'handleRouterDispatch']);
+
+        opencensus_trace_method(LumenApplication::class, 'callActionOnArrayBasedRoute', [self::class, 'handleControllerRun']);
+
+        opencensus_trace_method(LumenPipeline::class, 'through', [self::class, 'handlePipeline']);
     }
 
     public static function handleApplicationConstruct($scope, $basePath = null)
     {
         return [
-            'name' => 'laravel/app/construct',
-            'attributes' => []
+            'name'       => 'laravel/app/construct',
+            'attributes' => [],
         ];
     }
 
     public static function handleKernelRequestHandle($scope, $request)
     {
         return [
-            'name' => 'laravel/kernel/handle',
-            'attributes' => []
+            'name'       => 'laravel/kernel/handle',
+            'attributes' => [],
         ];
     }
 
     public static function handleRequestCapture()
     {
         return [
-            'name' => 'laravel/request/capture',
-            'attributes' => []
+            'name'       => 'laravel/request/capture',
+            'attributes' => [],
         ];
     }
 
     public static function handleResponseSend($scope)
     {
         return [
-            'name' => 'laravel/response/send',
-            'attributes' => []
+            'name'       => 'laravel/response/send',
+            'attributes' => [],
         ];
     }
 
     public static function handleKernelRequestTerminate($scope, $request, $response)
     {
         return [
-            'name' => 'laravel/kernel/terminate',
-            'attributes' => []
+            'name'       => 'laravel/kernel/terminate',
+            'attributes' => [],
         ];
     }
 
     public static function handleRouterDispatch($scope, $request)
     {
         return [
-            'name' => 'laravel/router/dispatch',
-            'attributes' => []
+            'name'       => 'laravel/router/dispatch',
+            'attributes' => [],
         ];
     }
 
@@ -118,53 +137,52 @@ class LaravelExtended implements IntegrationInterface
         // then force a trace on all children.
         $tracedMiddleware = [];
         foreach ($pipes as $p) {
-            if (is_callable($p)) {
+            if (\is_callable($p)) {
                 // Can't handle closures yet.
-            } elseif (! is_object($p)) {
-                list($name, $parameters) = self::parsePipeString($p);
-                $tracedMiddleware[] = $name;
+            } elseif (!\is_object($p)) {
+                [$name, $parameters] = self::parsePipeString($p);
+                $tracedMiddleware[]  = $name;
                 // ---
                 // Disable this as it's causing segfaults, see:
                 // https://github.com/census-instrumentation/opencensus-php/issues/200
                 // ---
-                //opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
-            } else {
-                // Can't handle already objects yet.
+                // opencensus_trace_method($name, 'handle', [self::class, 'handleMiddlewareRun']);
             }
+            // Can't handle already objects yet.
         }
 
         return [
-            'name' => 'laravel/pipeline/register',
-            'attributes' => $tracedMiddleware
+            'name'       => 'laravel/pipeline/register',
+            'attributes' => $tracedMiddleware,
         ];
     }
 
     public static function handleMiddlewareRun($scope)
     {
         return [
-            'name' => 'laravel/middleware/run',
+            'name'       => 'laravel/middleware/run',
             'attributes' => [
-                'name' => get_class($scope),
-            ]
+                'name' => $scope::class,
+            ],
         ];
     }
 
     public static function handleControllerRun($scope)
     {
         return [
-            'name' => 'laravel/controller/run',
-            'attributes' => []
+            'name'       => 'laravel/controller/run',
+            'attributes' => [],
         ];
     }
 
     public static function handleView($scope, $path, $data)
     {
         return [
-            'name' => 'laravel/view',
+            'name'       => 'laravel/view',
             'attributes' => [
-                'path' => $path,
+                'path'         => $path,
                 'pre-compiled' => true,
-            ]
+            ],
         ];
     }
 
@@ -174,9 +192,9 @@ class LaravelExtended implements IntegrationInterface
     */
     public static function parsePipeString($pipe)
     {
-        list($name, $parameters) = array_pad(explode(':', $pipe, 2), 2, []);
+        [$name, $parameters] = array_pad(explode(':', $pipe, 2), 2, []);
 
-        if (is_string($parameters)) {
+        if (\is_string($parameters)) {
             $parameters = explode(',', $parameters);
         }
 

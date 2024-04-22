@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Console;
 
-use Illuminate\Console\Command;
-use A1comms\GaeSupportLaravel\View\ViewServiceProvider;
 use A1comms\GaeSupportLaravel\Foundation\ProviderRepository;
+use A1comms\GaeSupportLaravel\View\ViewServiceProvider;
+use Illuminate\Console\Command;
 
 /**
  * Deployment command for running on GAE.
@@ -25,7 +27,6 @@ class GaePrepareCommand extends Command
      */
     protected $description = 'Deployment command for production App Engine';
 
-
     /**
      * Prefix for all console logs.
      *
@@ -35,8 +36,6 @@ class GaePrepareCommand extends Command
 
     /**
      * Create a new config cache command instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -45,12 +44,10 @@ class GaePrepareCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): int
     {
-        $this->info($this->logPrefix . "Starting...");
+        $this->info($this->logPrefix.'Starting...');
 
         $this->call('config:clear');
 
@@ -58,23 +55,24 @@ class GaePrepareCommand extends Command
 
         $this->runRefreshManifest();
 
-        $this->info($this->logPrefix . "Ready to Deploy!");
+        $this->info($this->logPrefix.'Ready to Deploy!');
+
+        return 0;
     }
 
-    public function runViewCompiler()
+    public function runViewCompiler(): void
     {
-        if (in_array(ViewServiceProvider::class, config('app.providers')))
-        {
-            $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...");
+        if (\in_array(ViewServiceProvider::class, config('app.providers'), true)) {
+            $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...');
             $this->call('gae:viewcompile');
-            $this->info($this->logPrefix . "Pre-Compiled View Provider active, compiling views...done");
+            $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...done');
         }
     }
 
-    public function runRefreshManifest()
+    public function runRefreshManifest(): void
     {
-        $this->info($this->logPrefix . "Generating provider manifest...");
+        $this->info($this->logPrefix.'Generating provider manifest...');
         (new ProviderRepository())->preCompileManifest();
-        $this->info($this->logPrefix . "Generating provider manifest...done");
+        $this->info($this->logPrefix.'Generating provider manifest...done');
     }
 }

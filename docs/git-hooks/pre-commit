@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "Validating code conformity..."
+echo 
+
+composer install && echo && make
+
+if [ $? -eq 0 ]
+then
+  echo
+  echo "All looks ok, continue..."
+  echo
+  exit 0
+else
+  echo
+  echo "!!! Validation Failed !!!" >&2
+  echo "Please run \"make fix\" to auto-format code." >&2
+  echo
+  exit 1
+fi

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Auth\Model;
 
 use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
@@ -7,7 +9,7 @@ use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
 class IAPUser implements NullUserModel
 {
     /**
-     * User's Email
+     * User's Email.
      *
      * @var string
      */
@@ -16,12 +18,11 @@ class IAPUser implements NullUserModel
     /**
      * Fill the model with an array of attributes.
      *
-     * @param  array  $attributes
      * @return $this
      */
     public function fill(array $attributes)
     {
-        foreach($attributes as $k => $v) {
+        foreach ($attributes as $k => $v) {
             $this->{$k} = $v;
         }
 
@@ -55,7 +56,7 @@ class IAPUser implements NullUserModel
      */
     public function getAuthPassword()
     {
-        return "";
+        return '';
     }
 
     /**
@@ -65,18 +66,17 @@ class IAPUser implements NullUserModel
      */
     public function getRememberToken()
     {
-        return "";
+        return '';
     }
 
     /**
      * Set the token value for the "remember me" session.
      *
-     * @param  string  $value
-     * @return void
+     * @param string $value
      */
     public function setRememberToken($value)
     {
-        return "";
+        return '';
     }
 
     /**

@@ -1,14 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\View\Compilers;
 
-use InvalidArgumentException;
-use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Compilers\Compiler;
 use Illuminate\View\Compilers\CompilerInterface;
 
-class FakeCompiler implements CompilerInterface
+class FakeCompiler extends Compiler implements CompilerInterface
 {
-
     /**
      * Get the cache path for the compiled views.
      *
@@ -19,41 +19,25 @@ class FakeCompiler implements CompilerInterface
     /**
      * Create a new compiler instance.
      *
-     * @param  string  $cachePath
-     * @return void
+     * @param string $cachePath
      *
      * @throws \InvalidArgumentException
      */
     public function __construct($cachePath)
     {
-        if (! $cachePath) {
-            throw new InvalidArgumentException('Please provide a valid cache path.');
+        if (!$cachePath) {
+            throw new \InvalidArgumentException('Please provide a valid cache path.');
         }
 
         $this->cachePath = $cachePath;
-    }
-
-    /**
-     * Get the path to the compiled version of a view.
-     *
-     * @param  string  $path
-     * @return string
-     */
-    public function getCompiledPath($path)
-    {
-        /**
-         * Note: $path is the relative path passed through from
-         *       what we returned in our custom FileViewFinder,
-         *       so the SHA1 hash will be different than when
-         *       outside of GAE.
-         */
-        return $this->cachePath.'/'.sha1($path).'.php';
+        $this->basePath  = '';
     }
 
     /**
      * Determine if the view at the given path is expired.
      *
-     * @param  string  $path
+     * @param string $path
+     *
      * @return bool
      */
     public function isExpired($path)
@@ -64,6 +48,8 @@ class FakeCompiler implements CompilerInterface
     /**
      * Don't actually compile,
      * we're a fake!
+     *
+     * @param mixed $path
      */
     public function compile($path)
     {
@@ -73,14 +59,9 @@ class FakeCompiler implements CompilerInterface
     /**
      * Register a handler for custom directives.
      *
-     * @param  string  $name
-     * @param  callable  $handler
-     * @return void
+     * @param string $name
      */
-    public function directive($name, callable $handler)
-    {
-
-    }
+    public function directive($name, callable $handler): void {}
 
     /**
      * Get the list of custom directives.

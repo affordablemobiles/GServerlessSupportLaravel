@@ -1,246 +1,156 @@
 <?php
 
+declare(strict_types=1);
+
 namespace A1comms\GaeSupportLaravel\Session;
 
-use GDS;
-use Carbon\Carbon;
-use SessionHandlerInterface;
-use Illuminate\Support\Facades\Log;
 use A1comms\GaeSupportLaravel\Integration\Datastore\DatastoreFactory;
+use Carbon\Carbon;
+use Google\Cloud\Core\ExponentialBackoff;
+use Google\Cloud\Datastore\DatastoreClient;
+use Google\Cloud\Datastore\Key;
 
-/**
- * class DataStoreSessionHandler
- *
- * @uses SessionHandlerInterface
- *
- * @package A1comms\GaeSupportLaravel\Session
- */
-class DatastoreSessionHandler implements SessionHandlerInterface
+class DatastoreSessionHandler implements \SessionHandlerInterface
 {
-    /**
-     * $expire
-     *
-     * @var mixed
-     *
-     * @access private
-     */
-    private $expire;
+    /** @const string[] */
+    private const excludeFromIndexes = [
+        'data',
+        'expireAt',
+    ];
 
-    /**
-     * $lastaccess
-     *
-     * @var mixed
-     *
-     * @access private
-     */
-    private $lastaccess;
+    /** @var DatastoreClient */
+    private $datastore;
 
-    /**
-     * $deleteTime
-     *
-     * @var mixed
-     *
-     * @access private
-     */
-    private $deleteTime;
+    /** @var string */
+    private $namespaceId;
 
-    /**
-     * $obj_schema
-     *
-     * @var mixed
-     *
-     * @access private
-     */
-    private $obj_schema;
+    /** @var string */
+    private $kind;
 
-    /**
-     * $obj_store
-     *
-     * @var mixed
-     *
-     * @access private
-     */
-    private $obj_store;
-
-    /**
-     * $orig_data
-     *
-     * @var mixed
-     *
-     * @access private
-     */
+    /** @var string */
     private $orig_data;
 
-    /**
-     * $orig_id
-     *
-     * @var mixed
-     *
-     * @access private
-     */
+    /** @var string */
     private $orig_id;
 
-    /**
-     * __construct
-     *
-     * @access public
-     *
-     * @return mixed Value.
-     */
-    public function __construct()
+    public function __construct($kind = 'sessions', $namespaceId = null)
     {
-        // Get session max lifetime to leverage Memcache expire functionality.
-        $this->expire = ini_get("session.gc_maxlifetime");
-        $this->lastaccess = $this->getTimeStamp();
-        $this->deleteTime = Carbon::now()->subSeconds($this->expire)->toDateTimeString();
-
-        $obj_gateway = DatastoreFactory::make();
-
-        $this->obj_schema = (new GDS\Schema('sessions'))
-            ->addString('data', false)
-            ->addDateTime('lastaccess');
-
-        $this->obj_store = new GDS\Store($this->obj_schema, $obj_gateway);
+        $this->datastore   = new DatastoreClient();
+        $this->kind        = $kind;
+        $this->namespaceId = $namespaceId;
     }
 
-    /**
-     * open - Re-initializes existing session, or creates a new one.
-     *
-     * @param string $savePath    Save path
-     * @param string $sessionName Session name
-     *
-     * @access public
-     *
-     * @return bool
-     */
-    public function open($savePath, $sessionName)
+    public function open(string $savePath, string $sessionName): bool
     {
         return true;
     }
 
-    /**
-     * close - Closes the current session.
-     *
-     * @access public
-     *
-     * @return bool
-     */
-    public function close()
+    public function close(): bool
     {
         return true;
     }
 
-    /**
-     * read - Reads the session data.
-     *
-     * @param string $id Session ID.
-     *
-     * @access public
-     *
-     * @return string
-     */
-    public function read($id)
+    public function read(string $id): false|string
     {
-        $obj_sess = $this->obj_store->fetchByName($id);
+        try {
+            $key    = $this->getKey($id);
+            $entity = (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'lookup'], [$key]);
+            if (null !== $entity && isset($entity['data'])) {
+                $this->orig_id   = $id;
+                $this->orig_data = $entity['data'];
 
-        if($obj_sess instanceof GDS\Entity) {
-            $this->orig_id = $id;
-            $this->orig_data = $obj_sess->data;
-
-            //Log::info("Got session data for ID (" . $id . ")", [$obj_sess->data]);
-            return $obj_sess->data;
-        }
-
-        //Log::info("No data returned for session ID (" . $id . ")", [var_export($obj_sess, true)]);
-        return "";
-    }
-
-    /**
-     * write - Writes the session data to the storage
-     *
-     * @param string $id   Session ID
-     * @param string $data Serialized session data to save
-     *
-     * @access public
-     *
-     * @return string
-     */
-    public function write($id, $data)
-    {
-        $obj_sess = $this->obj_store->createEntity([
-            'data'          => $data,
-            'lastaccess'    => $this->lastaccess
-        ])->setKeyName($id);
-
-        if ( ($this->orig_id != $id) || ($this->orig_data != $data) ){
-            //Log::info("Writing session data for ID (" . $id . ")");
-            $this->obj_store->upsert($obj_sess);
-        }
-
-        return true;
-    }
-
-    /**
-     * destroy - Destroys a session.
-     *
-     * @param tring $id Session ID
-     *
-     * @access public
-     *
-     * @return bool
-     */
-    public function destroy($id)
-    {
-        $obj_sess = $this->obj_store->fetchByName($id);
-
-        if($obj_sess instanceof GDS\Entity) {
-            //Log::info("Deleting session data for ID (" . $id . ")");
-            $this->obj_store->delete($obj_sess);
-        }
-
-        return true;
-    }
-
-    /**
-     * gc - Cleans up expired sessions (garbage collection).
-     *
-     * @param string|int $maxlifetime Sessions that have not updated for the last maxlifetime seconds will be removed
-     *
-     * @access public
-     *
-     * @return bool
-     */
-    public function gc($maxlifetime)
-    {
-        return true;
-    }
-
-    /**
-     * googlegc - Cleans up expired sessions in GAE datastore (garbage collection).
-     *
-     * @access public
-     *
-     * @return mixed Value.
-     */
-    public function googlegc()
-    {
-        $rowCount = 0;
-        do {
-            // TODO: This should really be a keys only query - loads cheaper & faster!
-            //       Does php-gds support this?
-            $arr = $this->obj_store->fetchAll("SELECT * FROM sessions WHERE lastaccess < @old", ['old' => $this->deleteTime]);
-            $rowCount = count($arr);
-            syslog(LOG_INFO, 'Found '.$rowCount.' records');
-
-            if (!empty($arr)) {
-                $this->obj_store->delete($arr);
+                return $entity['data'];
             }
-        } while ($rowCount > 0);
+        } catch (Exception $e) {
+            trigger_error(
+                sprintf('Datastore lookup failed: %s', $e->getMessage()),
+                E_USER_WARNING
+            );
+        }
+
+        return '';
     }
 
-    private function getTimeStamp()
+    public function write(string $id, string $data): bool
     {
-        $timeStamp = Carbon::now()->toDateTimeString();
-        return $timeStamp;
+        if (($this->orig_id !== $id) || ($this->orig_data !== $data)) {
+            try {
+                $key    = $this->getKey($id);
+                $entity = $this->datastore->entity(
+                    $key,
+                    [
+                        'data'       => $data,
+                        'lastaccess' => $this->getTimeStamp(),
+                        'expireAt'   => $this->getExpiryTimeStamp(),
+                    ],
+                    $this->getQueryOptions(),
+                );
+                (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'upsert'], [$entity]);
+            } catch (Exception $e) {
+                trigger_error(
+                    sprintf('Datastore upsert failed: %s', $e->getMessage()),
+                    E_USER_WARNING
+                );
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function destroy(string $id): bool
+    {
+        try {
+            $key = $this->getKey($id);
+            (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'delete'], [$key]);
+        } catch (Exception $e) {
+            trigger_error(
+                sprintf('Datastore delete failed: %s', $e->getMessage()),
+                E_USER_WARNING
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public function gc($maxlifetime): false|int
+    {
+        return false;
+    }
+
+    public function googlegc(): void
+    {
+        throw new \LogicException('PHP based Session GC is deprecated, please use the Go app in Cloud Functions');
+    }
+
+    protected function getKey($id): Key
+    {
+        return $this->datastore->key(
+            $this->kind,
+            $id,
+            ['namespaceId' => $this->namespaceId],
+        );
+    }
+
+    protected function getQueryOptions(): array
+    {
+        return [
+            'excludeFromIndexes' => self::excludeFromIndexes,
+        ];
+    }
+
+    protected function getTimeStamp(): \DateTimeInterface
+    {
+        return Carbon::now();
+    }
+
+    protected function getExpiryTimeStamp(): \DateTimeInterface
+    {
+        return Carbon::now()->addMinutes(
+            config('session.lifetime'),
+        );
     }
 }

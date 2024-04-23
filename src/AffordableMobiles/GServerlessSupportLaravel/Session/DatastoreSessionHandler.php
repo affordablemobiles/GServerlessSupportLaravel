@@ -33,6 +33,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
     public function __construct($kind = 'sessions', $namespaceId = null, $databaseId = '')
     {
         $this->datastore   = new DatastoreClient([
+            'projectId'   => g_project(),
             'namespaceId' => $namespaceId,
             'databaseId'  => $databaseId,
         ]);

@@ -19,14 +19,11 @@ class LaravelBootInstrumentation
 
     public static function register(CachedInstrumentation $instrumentation): void
     {
-        $timestamp = null;
-        if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            $timestamp = $_SERVER['REQUEST_TIME_FLOAT'];
-        } elseif (\defined('LARAVEL_START')) {
-            $timestamp = LARAVEL_START;
-        } else {
+        if (!\defined('LARAVEL_START')) {
             return;
         }
+
+        $timestamp = LARAVEL_START;
 
         $parent = Context::getCurrent()->withContextValue(
             Span::wrap(

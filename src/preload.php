@@ -35,7 +35,7 @@ foreach ($helpers as $helper) {
 
 if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
     try {
-        putenv("GOOGLE_CLOUD_BATCH_DAEMON_FAILURE_DIR=false");
+        putenv('GOOGLE_CLOUD_BATCH_DAEMON_FAILURE_DIR=false');
         putenv('OTEL_PHP_DETECTORS=none');
 
         require __DIR__.'/AffordableMobiles/GServerlessSupportLaravel/Trace/Propagator/_register.php';

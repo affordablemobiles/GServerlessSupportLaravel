@@ -102,7 +102,9 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
             ErrorBootstrap::exceptionHandler($ex, 200);
         }
     } else {
-        g_serverless_basic_log('exception', 'WARNING', 'OpenTelemetry Tracing disabled as module isn\'t loaded. Add "extension=opentelemetry.so" to "php.ini".');
+        if (empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
+            g_serverless_basic_log('exception', 'WARNING', 'OpenTelemetry Tracing disabled as module isn\'t loaded. Add "extension=opentelemetry.so" to "php.ini".');
+        }
     }
 
     // Set up exception logging properly...

@@ -17,6 +17,8 @@ use OpenTelemetry\SDK\Trace\SpanDataInterface;
  */
 class TimeDataCollector extends BaseTimeDataCollector implements Renderable
 {
+    public const MICROS_PER_SECOND = 1_000_000;
+
     public function mapSpan(SpanDataInterface $span): array
     {
         $start = $this->epochNanoToMicrotime(
@@ -101,6 +103,6 @@ class TimeDataCollector extends BaseTimeDataCollector implements Renderable
     {
         $micro = (int) ($nanos / ClockInterface::NANOS_PER_MICROSECOND);
 
-        return (float) $micro / ClockInterface::MICROS_PER_SECOND;
+        return (float) $micro / self::MICROS_PER_SECOND;
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Illuminate\Foundation\Bootstrap\RegisterFacades;
 use Illuminate\Foundation\Bootstrap\RegisterProviders;
 use Illuminate\Foundation\Configuration\ApplicationBuilder;
+use Illuminate\Http\Request;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 
 use function OpenTelemetry\Instrumentation\hook;
@@ -98,6 +99,17 @@ class LaravelExtendedInstrumentation
                 SimpleSpan::pre($instrumentation, 'laravel/bootstrap/facades', []);
             },
             post: static function (RegisterFacades $scope, array $params, mixed $returnValue, ?\Throwable $exception): void {
+                SimpleSpan::post();
+            },
+        );
+
+        hook(
+            Request::class,
+            'capture',
+            pre: static function (mixed $request, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): void {
+                SimpleSpan::pre($instrumentation, 'laravel/request/capture', []);
+            },
+            post: static function (mixed $request, array $params, mixed $response, ?\Throwable $exception): void {
                 SimpleSpan::post();
             },
         );

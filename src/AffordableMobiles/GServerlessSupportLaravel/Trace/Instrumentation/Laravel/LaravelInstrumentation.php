@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\AuthenticationWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\CacheWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ClientRequestWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\QueryWatcher;
@@ -40,6 +41,7 @@ class LaravelInstrumentation
                 self::registerWatchers($application, new ClientRequestWatcher($instrumentation));
                 self::registerWatchers($application, new QueryWatcher($instrumentation));
                 self::registerWatchers($application, new RequestWatcher($instrumentation));
+                self::registerWatchers($application, new AuthenticationWatcher($instrumentation));
             },
         );
 

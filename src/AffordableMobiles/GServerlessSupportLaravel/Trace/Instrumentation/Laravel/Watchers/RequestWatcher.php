@@ -6,7 +6,6 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Lara
 
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Routing\Events\RouteMatched;
@@ -43,17 +42,6 @@ class RequestWatcher extends Watcher
                     }
                     // Can't handle already objects yet.
                 }
-            },
-        );
-
-        hook(
-            Request::class,
-            'capture',
-            pre: function (mixed $request, array $params, string $class, string $function, ?string $filename, ?int $lineno): void {
-                SimpleSpan::pre($this->instrumentation, 'laravel/request/capture', []);
-            },
-            post: static function (mixed $request, array $params, mixed $response, ?\Throwable $exception): void {
-                SimpleSpan::post();
             },
         );
 

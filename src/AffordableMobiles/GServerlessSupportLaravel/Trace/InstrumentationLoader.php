@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Datastore\Eloquent\EloquentDatastoreInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle\GuzzleInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelBootInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelInstrumentation;
@@ -24,6 +25,8 @@ class InstrumentationLoader implements InstrumentationLoaderInterface
             LaravelInstrumentation::class,
 
             GuzzleInstrumentation::class,
+
+            EloquentDatastoreInstrumentation::class,
         ];
     }
 }

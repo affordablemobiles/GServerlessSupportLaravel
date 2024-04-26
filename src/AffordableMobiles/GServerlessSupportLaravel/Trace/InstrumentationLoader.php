@@ -10,12 +10,12 @@ use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\La
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelInstrumentation;
 
 /**
- * Class to return the low level trace modules to load.
+ * Class to return the trace instrumentation to load.
  */
 class InstrumentationLoader implements InstrumentationLoaderInterface
 {
     /**
-     * Static method to get the list of trace modules to load.
+     * Static method to get the list of trace instrumentation to load.
      */
     public static function getInstrumentation()
     {

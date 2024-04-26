@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\ApplicationBuilder;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
@@ -13,7 +14,7 @@ use OpenTelemetry\SDK\Common\Time\ClockInterface;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class LaravelBootInstrumentation
+class LaravelBootInstrumentation implements InstrumentationInterface
 {
     public const NAME = 'laravel-boot';
 

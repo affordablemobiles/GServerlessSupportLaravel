@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
 use Illuminate\Foundation\Bootstrap\BootProviders;
 use Illuminate\Foundation\Bootstrap\HandleExceptions;
@@ -17,7 +18,7 @@ use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class LaravelExtendedInstrumentation
+class LaravelExtendedInstrumentation implements InstrumentationInterface
 {
     public const NAME = 'laravel-extended';
 

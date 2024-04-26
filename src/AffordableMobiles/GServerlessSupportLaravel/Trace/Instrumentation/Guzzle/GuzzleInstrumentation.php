@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use GuzzleHttp\ClientInterface as GuzzleClient;
 use GuzzleHttp\Promise\PromiseInterface;
 use OpenTelemetry\API\Globals;
@@ -18,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class GuzzleInstrumentation
+class GuzzleInstrumentation implements InstrumentationInterface
 {
     /** @psalm-suppress ArgumentTypeCoercion */
     public const NAME = 'guzzle';

@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Datastore\Eloquent;
 
 use AffordableMobiles\EloquentDatastore\Client\DatastoreClient;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class EloquentDatastoreInstrumentation
+class EloquentDatastoreInstrumentation implements InstrumentationInterface
 {
     /** @psalm-suppress ArgumentTypeCoercion */
     public const NAME = 'eloquent-datastore';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\AuthenticationWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\CacheWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ClientRequestWatcher;
@@ -20,7 +21,7 @@ use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class LaravelInstrumentation
+class LaravelInstrumentation implements InstrumentationInterface
 {
     public const NAME = 'laravel';
 

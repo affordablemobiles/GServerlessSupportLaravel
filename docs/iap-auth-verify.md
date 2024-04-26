@@ -1,8 +1,8 @@
-## IAP (Identity Aware Proxy) Authentication into Laravel
+## IAP (Identity Aware Proxy) Authentication in Laravel
 
 When IAP is turned on, you need a way to validate it's presence for the session, plus register the session with Laravel's user system.
 
-For this, we validate each request statelessly, using the request headers (from the remnents of the Users API).
+For this, we validate each request statelessly, using the request header `X-Goog-IAP-JWT-Assertion`.
 
 ### Usage
 
@@ -59,22 +59,26 @@ IAP_AUDIENCE="/projects/<project_id>/apps/<project_name>"
 
 **5.** The default action for failed authentication is to redirect to a guest accessible login page, but that won't work here.
 
-You'll probably want to add this into `app/Exceptions/Handler.php`:
+You'll probably want to add this into `bootstrap/app.php`:
 
 ```php
-    /**
-     * Convert an authentication exception into a response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Auth\AuthenticationException  $exception
-     * @return \Illuminate\Http\Response
-     */
-    protected function unauthenticated($request, \Illuminate\Auth\AuthenticationException $exception)
-    {
-        return $request->expectsJson()
-                    ? response()->json(['message' => $exception->getMessage()], 401)
-                    : response($exception->getMessage(), 401);
-    }
+use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
+
+...
+    ->withExceptions(function (Exceptions $exceptions) {
+        ...
+
+        $exceptions->report(function (AuthenticationException $e, Request $request) {
+            return $request->expectsJson()
+                    ? response()->json(['message' => $ex->getMessage()], 401)
+                    : response($ex->getMessage(), 401);
+        });
+
+        ...
+    })
+    ...
+...
 ```
 
 **6.** To demonstrate our ability to view the signed in user's email, try adding this in `routes/web.php`:

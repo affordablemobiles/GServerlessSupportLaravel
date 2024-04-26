@@ -15,11 +15,11 @@ index 8c73e3b..7433671 100644
 +++ b/config/app.php
 @@ -19,6 +19,7 @@
          // Package Service Providers...
-         AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
-         AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
+         \AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
+         \AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
 +        AffordableMobiles\GServerlessSupportLaravel\Integration\Debugbar\DebugbarServiceProvider::class,
      ])->replace([
-         \Illuminate\View\ViewServiceProvider::class => AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
+         \Illuminate\View\ViewServiceProvider::class => \AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
      ])->toArray(),
 ```
 

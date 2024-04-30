@@ -22,7 +22,7 @@ class Application extends LaravelApplication
      * Begin configuring a new Laravel application instance.
      *
      * @param  string|null  $basePath
-     * @return ApplicationBuilder
+     * @return Configuration\ApplicationBuilder
      */
     public static function configure(?string $basePath = null)
     {
@@ -31,7 +31,7 @@ class Application extends LaravelApplication
             default => static::inferBasePath(),
         };
 
-        return (new ApplicationBuilder(new static($basePath)))
+        return (new Configuration\ApplicationBuilder(new static($basePath)))
             ->withKernels()
             ->withEvents()
             ->withCommands()

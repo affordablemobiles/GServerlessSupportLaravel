@@ -96,7 +96,7 @@ class MetadataProvider implements MetadataProviderInterface
     public function labels()
     {
         return [
-            'logging.googleapis.com/trace' => g_serverless_trace_id(),
+            (is_gae_std() ? 'appengine.googleapis.com/trace_id' : 'run.googleapis.com/trace_id') => g_serverless_trace_id(),
         ];
     }
 }

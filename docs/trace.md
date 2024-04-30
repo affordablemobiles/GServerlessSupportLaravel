@@ -1,135 +1,167 @@
-# StackDriver Trace Integration
+# Cloud Trace Integration
 
-This package includes built in support for tracing important components to StackDriver Trace.
+This package includes built in support for tracing important events during a request to Cloud Trace.
 
 By default, this includes:
-* Laravel startup
-  * (currently doesn't render in the tree view properly)
-* Laravel internals (including more granular startup).
-  * Application construct
+* Laravel startup, as `laravel/bootstrap`.
+  * From first entering `public/index.php`, to Laravel being fully booted.
+* Extended Laravel bootstrapping view (disabled by default)
+  * Application configuration, i.e. `Application::configure(...)->...->create()`
   * Request capture
-  * Request handle
-  * Response send
-  * Request terminate (cleanup)
-* Application specific
-  * (soon) Middleware
-  * Time in Router
-  * Controller / Route-Closure Runtime
+  * Environment variables init
+  * Configuration init
+  * Providers init
+  * Exception handler init
+  * Providers boot
+* Laravel's HTTP request lifecycle
+  * Session handler
+  * Middleware
+  * Router
+  * Controller
   * Blade view compile/render
 * External calls / RPC
-  * memcached
-  * (soon) redis
-  * MySQL
-  * PDO
-  * Eloquent (Laravel)
-  * Datastore (GDS aka php-gds)
-  * Guzzle (HTTP(s))
+  * Guzzle (HTTP(s)) including trace propagation.
+  * Laravel cache (as events)
+  * Laravel DB / Eloquent SQL
+  * Datastore (Eloquent by default, GDS aka php-gds available)
 
-It also allows you to register your own trace providers to be registered as the application boots, via the config file for this package (`trace_providers` in `gaesupport.php`).
+It is also possible to extend this functionality with your own trace hooks, see [Customization](#customization) below.
+
+## Example
+
+![Trace Example Screenshot](images/trace-example.png)
 
 ## Architecture
-There are two different levels of trace integration:
 
-* Low Level (to catch Laravel core boot)
-* Higher level (via Service Provider)
+Tracing is implemented using OpenTelemetry, mainly via it's [PECL extension](https://github.com/open-telemetry/opentelemetry-php-instrumentation) that allows hooking functions during execution, based on [zend_observer](https://www.datadoghq.com/blog/engineering/php-8-observability-baked-right-in/).
 
-All of the trace providers at all levels should implement the interface `OpenCensus\Trace\Integrations\IntegrationInterface`, which providers a static `load` method where the trace hooks are registered.
+This library will automatically load all the tracing functionality when running on Google's serverless platform, as long as the `opentelemetry` extension is loaded, which usually means putting a `php.ini` in the document root before deploying with the line, `extension=opentelemetry.so`.
 
-### Low level
-To allow us to capture the startup of Laravel in more detail and to make sure the core is ready to be traced before any of it runs, we set up the OpenCensus trace library and register some trace hooks before loading Laravel.
+You can stop this by defining an environment variable as: `G_SERVERLESS_TRACE_STOP=true`
 
-We do this by asking composer to include `src/preload.php` once it has set up the autoloader, the same way helper functions are initialised.
+A request's trace ID is loaded from the `X-Cloud-Trace-Context` request header and used for application logging (see [here](logging.md)), as well as for tracing - Google defines how frequently requests are traced, documented as:
 
-`src/preload.php` will first include `src/helpers.php` to register our helper functions (which is done because composer can't guarantee load order if we specify an array of files to load in `composer.json` and we need our helper functions before the preload functions run).
+> For App Engine and Cloud Run, requests are sampled at a maximum rate of 0.1 requests per second for each instance.
 
-By default, the list of low level providers is provided by calling `AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoader`, but this can be overridden by creating your own `LowLevelLoader` that implements `AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoaderInterface` at `App\Trace\LowLevelLoader`, which we check for before loading the default.
+## Customization
 
-Example `app/Trace/LowLevelLoader.php` that just loads `Memcached` tracing:
+Ensuring relevant parts of the request are traced is handled by instrumentation, which are classes that implement the [InstrumentationInterface](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/InstrumentationInterface.php) interface and are loaded as part of [src/preload.php](../src/preload.php) during the composer autoloader initialisation.
+
+By default, instrumation is loaded from [InstrumentationLoader](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/InstrumentationLoader.php), which implements the [InstrumentationLoaderInterface](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/InstrumentationLoaderInterface.php).
+
+When the autoloader code runs, it first checks for the existance of `App\Trace\InstrumentationLoader` and if it exists, uses that instead: so if you want to customize what instrumentation is loaded, you could implement `App\Trace\InstrumentationLoader` like this (in `app/Trace/InstrumentationLoader.php`):
 
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Trace;
 
-use AffordableMobiles\GServerlessSupportLaravel\Trace\LowLevelLoaderInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\InstrumentationLoader as BaseInstrumentationLoader;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelExtendedInstrumentation;
 
-class LowLevelLoader implements LowLevelLoaderInterface
+/**
+ * Class to return the trace instrumentation to load.
+ */
+class InstrumentationLoader extends BaseInstrumentationLoader
 {
-    public static function getList()
+    /**
+     * Static method to get the list of trace instrumentation to load.
+     */
+    public static function getInstrumentation()
+    {
+        return array_merge(
+            parent::getInstrumentation(),
+            [
+              LaravelExtendedInstrumentation::class,
+            ],
+        );
+    }
+}
+```
+
+or, if you only wanted to load your own instrumentation, you could implement it like this:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Trace;
+
+use App\Trace\Instrumentation\Models\CustomerInstrumentation;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\InstrumentationLoaderInterface;
+
+/**
+ * Class to return the trace instrumentation to load.
+ */
+class InstrumentationLoader implements InstrumentationLoaderInterface
+{
+    /**
+     * Static method to get the list of trace instrumentation to load.
+     */
+    public static function getInstrumentation()
     {
         return [
-            OpenCensus\Trace\Integrations\Memcached::class,
+          CustomerInstrumentation::class,
         ];
     }
 }
 ```
 
-### Higher Level
-For trace providers that can be registered after Laravel has loaded and during the service provider boot, when other service providers may already be running, we can register them via the `TraceServiceProvider` and have Laravel functionality available if required.
-
-Firstly, the `TraceServiceProvider` will register an event for `laravel/boostrap`, with a start time set to `LARAVEL_START` as set in the top of `public/index.php`, to document the point in execution when it was run, as an indication of when Laravel finished loading.
-
-Next, it will look in the application config for our service (`gaesupport.php`) and run the `load` function for any classes listed in the `trace_providers` array, allowing you to add trace hooks for your own application.
-
-As an example, to trace the `enqueue` function of a model class `CustomQueue`,  I'd start by creating the file `app/Trace/CustomQueueModel.php` with the contents:
+with `CustomerInstrumentation` looking something like this (as an example, putting a span around a method named `calculate`):
 
 ```php
 <?php
 
-namespace App\Trace;
+declare(strict_types=1);
 
-use OpenCensus\Trace\Integrations\IntegrationInterface;
-use App\CustomQueue;
+namespace App\Trace\Models;
 
-class CustomQueueModel implements IntegrationInterface
+use App\Models\Customer;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
+use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
+
+use function OpenTelemetry\Instrumentation\hook;
+
+class CustomerInstrumentation implements InstrumentationInterface
 {
-    public static function load()
-    {
-        if (!extension_loaded('opencensus')) {
-            trigger_error('opencensus extension required to load Laravel integrations.', E_USER_WARNING);
-            return;
-        }
+    /** @psalm-suppress ArgumentTypeCoercion */
+    public const NAME = 'customer-model';
 
-        opencensus_trace_method(CustomQueue::class, 'enqueue', [self::class, 'handleEnqueue']);
-    }
-
-    public static function handleResponseSend($scope, $job)
+    public static function register(CachedInstrumentation $instrumentation): void
     {
-        return [
-            'name' => 'model/CustomQueue/enqueue',
-            'attributes' => [
-              'job' => $job,
-            ]
-        ];
+        hook(
+            Customer::class,
+            'calculate',
+            pre: static function (Customer $model, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): void {
+                SimpleSpan::pre(
+                    $instrumentation,
+                    'model/customer/calculate',
+                    [
+                        'id' => $model->id,
+                    ]
+                );
+            },
+            post: static function (Customer $model, array $params, mixed $returnValue, ?\Throwable $exception): void {
+                SimpleSpan::post([
+                  'calculated_value' => $returnValue,
+                ]);
+            },
+        );
     }
 }
 ```
 
-To note here is the importance of the parameters passed to the callback function, with the first being the instance of the class as it was called, then all of the parameters to the function as it was called.
+As you can see, the simplest way to add trace spans on hooked functions is with [SimpleSpan](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/SimpleSpan.php), so please check it out for the functionality supported:
 
-For more information, see the OpenCensus PECL extension documentation.
+The main things to note are the ability to add contextual attributes both before hooked function execution (`pre` closure above), and after (`post` closure above).
 
-https://github.com/census-instrumentation/opencensus-php/blob/master/docs/content/using-the-extension.md
+## Optional Instrumentation
 
-Next, update your `gaesupport.php` configuration file to include that trace provider into the array:
+Following the customization guide above, there are several instrumentation modules you can load that aren't loaded by default:
 
-```php
-    'trace_providers' => [
-        App\Trace\CustomQueueModel:class,
-    ],
-```
-
-## Installation
-Since the low level trace setup is done as part of the composer autoloader initialisation, most of the installation is taken care of once you've installed the package, although for the higher level & custom trace providers, you'll need to make sure the `GaeSupportServiceProvider` and `TraceServiceProvider` are both loaded into Laravel.
-
-In Laravel 5.5, service providers are automatically discovered by default, so unless you've disabled this functionality, you shouldn't need to do anything else either.
-
-## Guzzle
-By default, the Low Level tracing component attaches to Guzzle's request handler.
-
-This means you should automatically see external calls made with Guzzle as trace spans.
-
-### Guzzle Sub-Request Trace Merging
-StackDriver Trace has the ability to show trace points from sub-requests within the same organization (to other App Engine microservices, either in the same project, or outside of it, as long as they are part of the organization container) into the same trace entry in the GUI, allowing you to view the aggregate impact of a whole request in a micro-service environment.
-
-To take advantage of this, replace your `GuzzleHttp\Client` with `AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\Client`.
+* [Laravel Extended Startup Information](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Laravel/LaravelExtendedInstrumentation.php)
+* [Datastore via GDS aka php-gds](../src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Datastore/GDS/GDSInstrumentation.php)

@@ -11,13 +11,12 @@ Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpas
 
 ## Functionality
 * Google Cloud Operations Suite integration
-    * Cloud Logging destination with structured logs.
-    * Cloud Trace (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/trace.md))
-        * Guzzle propagation support (optional, see [docs/trace.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/trace.md#guzzle))
-* Identity Aware Proxy (IAP) integration (optional, see [docs/iap-auth-verify.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/iap-auth-verify.md))
-* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/blade-pre-compile.md))
-* Queue Driver for Cloud Tasks (optional, see [docs/queue.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/queue.md))
-* Examples for deployment to App Engine from Git via Cloud Build, plus encrypted secrets with Secret Manager (optional, see [docs/cloudbuild.md](https://github.com/affordablemobiles/GServerlessSupportLaravel/blob/php8.3-laravel11.x/docs/cloudbuild.md))
+    * Cloud Logging destination with structured logs (see [docs/logging.md](docs/logging.md)).
+    * Cloud Trace (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
+        * Distributed trace propagation via Guzzle.
+* Identity Aware Proxy (IAP) integration (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md))
+* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
+* Examples for deployment to App Engine from Git via Cloud Build, plus encrypted secrets with Secret Manager (optional, see [docs/cloudbuild.md](docs/cloudbuild.md))
 
 ## Installation
 
@@ -55,10 +54,10 @@ Pull in the package via Composer:
 
     'providers' => \Illuminate\Support\ServiceProvider::defaultProviders()->merge([
         // Package Service Providers...
-        AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
-        AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
+        \AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
+        \AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
     ])->replace([
-        \Illuminate\View\ViewServiceProvider::class => AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
+        \Illuminate\View\ViewServiceProvider::class => \AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
     ])->toArray(),
 ```
 

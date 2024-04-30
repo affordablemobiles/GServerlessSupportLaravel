@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
-use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelBootInstrumentation;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle\GuzzleInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTracePropagator;
 use AffordableMobiles\OpenTelemetry\CloudTrace\SpanExporterFactory;
 use App\Trace\InstrumentationLoader;
 use Google\Cloud\Storage\StorageClient;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
+use OpenTelemetry\API\Trace\Span;
+use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOffSampler;
 use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
@@ -33,6 +34,79 @@ foreach ($helpers as $helper) {
 }
 
 if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
+    putenv('GOOGLE_CLOUD_BATCH_DAEMON_FAILURE_DIR=false');
+
+    if (extension_loaded('opentelemetry')) {
+        try {
+            putenv('OTEL_PHP_DETECTORS=none');
+
+            require __DIR__.'/AffordableMobiles/GServerlessSupportLaravel/Trace/Propagator/_register.php';
+
+            Context::getCurrent()->withContextValue(
+                Span::wrap(
+                    g_serverless_trace_context(),
+                ),
+            )->activate();
+
+            $instrumentation = new CachedInstrumentation('g-serverless-support-laravel.opentelemetry.low-level');
+
+            $loaderInterface = InstrumentationLoader::class;
+            if (!class_exists($loaderInterface)) {
+                $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\InstrumentationLoader::class;
+            }
+            $preregisterList = [
+                GuzzleInstrumentation::class,
+            ];
+            $instrumentationList = $loaderInterface::getInstrumentation();
+
+            foreach ($preregisterList as $pre) {
+                if (in_array($pre, $instrumentationList, true)) {
+                    $instrumentationList = array_filter($instrumentationList, static fn ($var) => $var !== $pre);
+                    $pre::register($instrumentation);
+                }
+            }
+
+            $propagator = CloudTracePropagator::getInstance();
+
+            $spanProcessor = new SimpleSpanProcessor(
+                (new SpanExporterFactory())->create(),
+            );
+
+            $sampler = new ParentBased(
+                new AlwaysOnSampler(),
+            );
+            if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
+                $sampler = new AlwaysOffSampler();
+            } elseif (is_g_serverless_development()) {
+                $sampler = new AlwaysOnSampler();
+            }
+
+            $tracerProvider = (new TracerProviderBuilder())
+                ->addSpanProcessor($spanProcessor)
+                ->setSampler($sampler)
+                ->build()
+            ;
+
+            Sdk::builder()
+                ->setTracerProvider($tracerProvider)
+                ->setPropagator($propagator)
+                ->setAutoShutdown(true)
+                ->buildAndRegisterGlobal()
+            ;
+
+            foreach ($instrumentationList as $inst) {
+                $inst::register($instrumentation);
+            }
+        } catch (Throwable $ex) {
+            ErrorBootstrap::init();
+            ErrorBootstrap::exceptionHandler($ex, 200);
+        }
+    } else {
+        if (empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
+            g_serverless_basic_log('exception', 'WARNING', 'OpenTelemetry Tracing disabled as module isn\'t loaded. Add "extension=opentelemetry.so" to "php.ini".');
+        }
+    }
+
     // Set up exception logging properly...
     ErrorBootstrap::init();
 
@@ -60,52 +134,8 @@ if (is_g_serverless() && (PHP_SAPI !== 'cli')) {
         $_SERVER['HTTPS'] = $_SERVER['HTTP_X_APPENGINE_HTTPS'];
     }
 
-    $storage = new StorageClient();
+    $storage = new StorageClient([
+        'projectId' => g_project(),
+    ]);
     $storage->registerStreamWrapper();
-
-    require __DIR__.'/AffordableMobiles/GServerlessSupportLaravel/Trace/Propagator/_register.php';
-
-    try {
-        $propagator = CloudTracePropagator::getInstance();
-
-        $spanProcessor = new SimpleSpanProcessor(
-            (new SpanExporterFactory())->create(),
-        );
-
-        $sampler = new ParentBased(
-            new AlwaysOnSampler(),
-        );
-        if (!empty($_SERVER['G_SERVERLESS_TRACE_STOP'])) {
-            $sampler = new AlwaysOffSampler();
-        } elseif (is_g_serverless_development()) {
-            $sampler = new AlwaysOnSampler();
-        }
-
-        $tracerProvider = (new TracerProviderBuilder())
-            ->addSpanProcessor($spanProcessor)
-            ->setSampler($sampler)
-            ->build()
-        ;
-
-        Sdk::builder()
-            ->setTracerProvider($tracerProvider)
-            ->setPropagator($propagator)
-            ->setAutoShutdown(true)
-            ->buildAndRegisterGlobal()
-        ;
-    } catch (Throwable $ex) {
-        Report::exceptionHandler($ex, 200);
-    }
-
-    $instrumentation = new CachedInstrumentation('g-serverless-support-laravel.opentelemetry.low-level');
-
-    LaravelBootInstrumentation::register($instrumentation);
-
-    $loaderInterface = InstrumentationLoader::class;
-    if (!class_exists($loaderInterface)) {
-        $loaderInterface = AffordableMobiles\GServerlessSupportLaravel\Trace\InstrumentationLoader::class;
-    }
-    foreach ($loaderInterface::getInstrumentation() as $inst) {
-        $inst::register($instrumentation);
-    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use OpenTelemetry\API\Globals;
@@ -18,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class HttpInstrumentation
+class HttpInstrumentation implements InstrumentationInterface
 {
     public static function register(CachedInstrumentation $instrumentation): void
     {

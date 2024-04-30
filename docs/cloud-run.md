@@ -15,7 +15,7 @@ We are using [Google's buildpacks from the App Engine PHP runtimes](https://cons
 
 ## Cloud Build Example
 
-See our [Laravel](examples/laravel/buildpack-cloud-run) or [Lumen](examples/lumen/buildpack-cloud-run) examples.
+See our [Laravel](examples/laravel/buildpack-cloud-run).
 
 ## Runtime differences
 

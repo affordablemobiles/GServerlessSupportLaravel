@@ -1,10 +1,10 @@
 ## Blade View Pre-Compiler
 
-Templating in Laravel is done using [Blade Templates](https://laravel.com/docs/5.5/blade).
+Templating in Laravel is done using [Blade Templates](https://laravel.com/docs/11.x/blade).
 
 As it states in their documentation:
 
-> ... all Blade views are compiled into plain PHP code and cached until they are modified ...
+> ... aall Blade templates are compiled into plain PHP code and cached until they are modified ...
 
 This is a problem on App Engine, as generating files at runtime isn't well suited for an environment with a read-only file system, that also runs on many instances which can't share the results easily.
 
@@ -46,15 +46,14 @@ So with this in mind, we chose to pre-compile all of our views at deploy time (u
 To enable, you'll first need to include our `ViewServiceProvider` in `config/app.php`, replacing the default Laravel one:
 
 ```php
-    'providers' => [
-        //Illuminate\View\ViewServiceProvider::class,
-        AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
-    ];
+    'providers' => \Illuminate\Support\ServiceProvider::defaultProviders->replace([
+        \Illuminate\View\ViewServiceProvider::class => \AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
+    ])->toArray(),
 ```
 
-This will enable the functionality only when running on App Engine, plus when `APP_ENV=production` is set in `.env`, making sure you always use the default templating system during development, so you don't need to worry about seeing out-of-date views.
+This will enable the functionality only when running on App Engine or Cloud Run, plus when `APP_ENV=production` is set in `.env`, making sure you always use the default templating system during development, so you don't need to worry about seeing out-of-date views.
 
-Compiling the views is handled by the command `php artisan gae:viewcompile`, however, if you've already added `php artisan gae:prepare` to your composer scripts, it will auto-detect when our `ViewServiceProvider` is enabled and auto compile all of the views every time composer runs.
+Compiling the views is handled by the command `php artisan g-serverless:viewcompile`, however, if you've already added `php artisan g-serverless:prepare` to your composer scripts, it will auto-detect when our `ViewServiceProvider` is enabled and auto compile all of the views every time composer runs.
 
 ### How it works
 

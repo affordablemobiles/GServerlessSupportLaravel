@@ -30,7 +30,7 @@ class Report
             'batchEnabled'     => false,
         ];
 
-        self::$psrLogger = $psrLogger ?: (new LoggingClient())
+        self::$psrLogger = $psrLogger ?: (new LoggingClient(['projectId' => g_project()]))
             ->psrLogger(self::DEFAULT_LOGNAME, $options)
         ;
 

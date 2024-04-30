@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\AuthenticationWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\CacheWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ClientRequestWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\QueryWatcher;
@@ -11,13 +13,15 @@ use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Wa
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\SessionWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\ViewWatcher;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\Watchers\Watcher;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\SimpleSpan;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Console\ServeCommand;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class LaravelInstrumentation
+class LaravelInstrumentation implements InstrumentationInterface
 {
     public const NAME = 'laravel';
 
@@ -38,6 +42,18 @@ class LaravelInstrumentation
                 self::registerWatchers($application, new ClientRequestWatcher($instrumentation));
                 self::registerWatchers($application, new QueryWatcher($instrumentation));
                 self::registerWatchers($application, new RequestWatcher($instrumentation));
+                self::registerWatchers($application, new AuthenticationWatcher($instrumentation));
+            },
+        );
+
+        hook(
+            Kernel::class,
+            'terminate',
+            pre: static function (Kernel $kernel, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): void {
+                SimpleSpan::pre($instrumentation, 'laravel/terminate', []);
+            },
+            post: static function (Kernel $kernel, array $params, mixed $response, ?\Throwable $exception): void {
+                SimpleSpan::post();
             },
         );
 

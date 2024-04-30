@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle;
 
-use GuzzleHttp\ClientInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
+use GuzzleHttp\ClientInterface as GuzzleClient;
 use GuzzleHttp\Promise\PromiseInterface;
 use OpenTelemetry\API\Globals;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
@@ -18,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function OpenTelemetry\Instrumentation\hook;
 
-class GuzzleInstrumentation
+class GuzzleInstrumentation implements InstrumentationInterface
 {
     /** @psalm-suppress ArgumentTypeCoercion */
     public const NAME = 'guzzle';
@@ -26,9 +27,9 @@ class GuzzleInstrumentation
     public static function register(CachedInstrumentation $instrumentation): void
     {
         hook(
-            ClientInterface::class,
+            GuzzleClient::class,
             'transfer',
-            pre: static function (ClientInterface $client, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): array {
+            pre: static function (GuzzleClient $client, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): array {
                 $request = $params[0];
                 \assert($request instanceof RequestInterface);
 
@@ -38,7 +39,7 @@ class GuzzleInstrumentation
                 /** @psalm-suppress ArgumentTypeCoercion */
                 $spanBuilder = $instrumentation
                     ->tracer()
-                    ->spanBuilder(sprintf('%s', $request->getMethod()))
+                    ->spanBuilder('GuzzleHttp/request')
                     ->setParent($parentContext)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setAttribute(TraceAttributes::URL_FULL, (string) $request->getUri())
@@ -49,10 +50,7 @@ class GuzzleInstrumentation
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $request->getUri()->getHost())
                     ->setAttribute(TraceAttributes::SERVER_PORT, $request->getUri()->getPort())
                     ->setAttribute(TraceAttributes::URL_PATH, $request->getUri()->getPath())
-                    ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
-                    ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)
-                    ->setAttribute(TraceAttributes::CODE_FILEPATH, $filename)
-                    ->setAttribute(TraceAttributes::CODE_LINENO, $lineno)
+                    ->setAttribute('stackTrace', serialize(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)))
                 ;
 
                 foreach ($propagator->fields() as $field) {
@@ -75,7 +73,7 @@ class GuzzleInstrumentation
 
                 return [$request];
             },
-            post: static function (ClientInterface $client, array $params, PromiseInterface $promise, ?\Throwable $exception): void {
+            post: static function (GuzzleClient $client, array $params, PromiseInterface $promise, ?\Throwable $exception): void {
                 $scope = Context::storage()->scope();
                 $scope?->detach();
 

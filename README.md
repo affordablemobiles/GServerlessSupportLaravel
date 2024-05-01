@@ -38,7 +38,28 @@ Pull in the package via Composer:
     },
 ```
 
-**2.** For Laravel, configure the service providers within `config/app.php` by adding:
+**2.** Update the `use` statement at the top of `bootstrap/app.php` from:
+
+```php
+use Illuminate\Foundation\Application;
+```
+
+to:
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Foundation\Application;
+```
+
+This will enable automatic exception reporting to Cloud Logging & Error Reporting, alongside adjusting the emergency logger to work correctly inside the containerized environment by writing to `stderr`.
+
+**Important:** the Logging API & the Trace API need to be enabled within your project, and the service account being used by your serverless app needs to have IAM permissions to use them:
+
+* [Enable the Logs API](https://console.cloud.google.com/apis/api/logging.googleapis.com/overview) - _append `?project=<project-name>` to the URL if necessary._
+* Assign the IAM permission "Logs Writer" to your service account.
+* [Enable the Trace API](https://console.cloud.google.com/apis/api/cloudtrace.googleapis.com/overview) - _append `?project=<project-name>` to the URL if necessary._
+* Assign the IAM permission "Cloud Trace Agent" to your service account.
+
+**3.** Configure the service providers within `config/app.php` by adding:
 
 ```php
     /*
@@ -61,42 +82,42 @@ Pull in the package via Composer:
     ])->toArray(),
 ```
 
-**4.** Update the `use` statement at the top of `bootstrap/app.php` from:
+**4.** Add the following environment variables:
 
-```php
-use Illuminate\Foundation\Application;
-```
-
-to:
-
-```php
-use AffordableMobiles\GServerlessSupportLaravel\Foundation\Application;
-```
-
-**5.** Update `bootstrap/app.php` to enable proper exception logging to Error Reporting & Logging:
-
-(want to find a way to remove the need to do this before release, by changes in the overriden `Application` class above).
-(also need to ensure that the error reporting class is only called if on a serverless platform).
-(should also document in the upgrade notes to switch from using our report class directly, to using Laravel's new `report($e)` helper now it is available).
-
-Change the following `use` statement:
-
-```php
-    ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->report(function (Throwable $e) {
-            \AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report::exceptionHandler($e);
-        })->stop();
-    })
-```
-
-**7.** In `.env`, set the following:
+_This can be done either in `.env`, inside `app.yaml`, or as part of the Cloud Run service configuration - we recommend the latter two options where possible._
 
 ```
 LOG_CHANNEL=stderr
-LOG_STDERR_FORMATTER=AffordableMobiles\GServerlessSupportLaravel\Log\JsonFormatter
+LOG_STDERR_FORMATTER=AffordableMobiles\GServerlessSupportLaravel\Log\Formatter\JsonFormatter
+
 CACHE_DRIVER=array
+
 SESSION_DRIVER=datastore
 ```
+
+If you are using an external CDN such as Cloudflare, also configure the following environment variable with the name of the HTTP header used for passing the client's IP address:
+
+```
+SOURCE_IP_HEADER=CF-Connecting-IP
+```
+
+And if you need to disable OpenTelemetry tracing (we highly recommend you leave it enabled), define the following environment variable:
+
+```
+G_SERVERLESS_TRACE_STOP=true
+```
+
+Also, if running in a development environment, please also set the following:
+
+```
+G_SERVERLESS_DEVELOPMENT=true
+```
+
+This does several things, such as:
+
+* Alters the local storage location to include `HTTP_HOST`.
+* Turns OpenTelemetry tracing on for every request.
+* Turns off sticky database connections per instance.
 
 ## Upgrading (from Laravel 9.x LTS)
 
@@ -111,3 +132,5 @@ SESSION_DRIVER=datastore
 **2.** Follow the Laravel upgrade steps for all versions 9.x ... 11.x
 
 **3.** TODO...
+
+(should also document in the upgrade notes to switch from using our report class directly, to using Laravel's new `report($e)` helper now it is available).

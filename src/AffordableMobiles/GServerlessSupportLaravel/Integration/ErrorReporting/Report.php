@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting;
 
-use AffordableMobiles\GServerlessSupportLaravel\Log\MetadataProvider;
+use AffordableMobiles\GServerlessSupportLaravel\Log\Metadata\MetadataProvider;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
 

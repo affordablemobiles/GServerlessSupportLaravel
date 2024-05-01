@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AffordableMobiles\GServerlessSupportLaravel\Log;
+namespace AffordableMobiles\GServerlessSupportLaravel\Log\Metadata;
 
 use Google\Cloud\Core\Compute\Metadata;
 use Google\Cloud\Core\Report\EmptyMetadataProvider;

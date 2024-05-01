@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace AffordableMobiles\GServerlessSupportLaravel\Log;
+namespace AffordableMobiles\GServerlessSupportLaravel\Log\Formatter;
 
 use Monolog\Formatter\JsonFormatter as ParentJsonFormatter;
 use Monolog\LogRecord;

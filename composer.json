@@ -34,7 +34,8 @@
     },
     "suggest": {
         "a1comms/php-gds": "Provides legacy Datastore support",
-        "barryvdh/laravel-debugbar": "Laravel Debugbar"
+        "barryvdh/laravel-debugbar": "Laravel Debugbar",
+        "lcobucci/jwt": "JWT library can be used with IAMSigner"
     },
     "conflict": {
         "open-telemetry/extension-propagator-cloudtrace": "~0",

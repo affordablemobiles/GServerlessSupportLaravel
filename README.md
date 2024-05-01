@@ -24,7 +24,7 @@ Google Serverless runtime support package for **Laravel 11.x**.
 
 Supporting Cloud Run & App Engine (Standard Environment).
 
-Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpasser https://github.com/shpasser/GaeSupportL5
+Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasser/GaeSupportL5) using the `php55` runtime) by [@shpasser](https://github.com/shpasser).
 
 ## Functionality
 * Google Cloud Operations Suite integration

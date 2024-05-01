@@ -69,7 +69,7 @@ use Illuminate\Auth\AuthenticationException;
     ->withExceptions(function (Exceptions $exceptions) {
         ...
 
-        $exceptions->report(function (AuthenticationException $e, Request $request) {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             return $request->expectsJson()
                     ? response()->json(['message' => $ex->getMessage()], 401)
                     : response($ex->getMessage(), 401);

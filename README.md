@@ -20,7 +20,7 @@ Based on original work for App Engine Standard (on the PHP5.5 runtime) by @shpas
 
 ## Installation
 
-Pull in the package via Composer:
+**1.** Pull in the package via Composer:
 
 ```js
     "require": {
@@ -28,7 +28,7 @@ Pull in the package via Composer:
     }
 ```
 
-**1.** Add the following to `composer.json`:
+**2.** Add the following to `composer.json`:
 
 ```json
     "scripts": {
@@ -38,7 +38,11 @@ Pull in the package via Composer:
     },
 ```
 
-**2.** Update the `use` statement at the top of `bootstrap/app.php` from:
+This is to automatically run the artisan command that prepares our app for deployment after composer finishes running: this creates any necessary cache files and if enabled, pre-compiles all of the blade views.
+
+If you are deploying with Cloud Build, `composer install` is likely to run just before packaging/deployment to your chosen serverless product, so this will ensure everything else required runs as part of that step.
+
+**3.** Update the `use` statement at the top of `bootstrap/app.php` from:
 
 ```php
 use Illuminate\Foundation\Application;
@@ -59,7 +63,7 @@ This will enable automatic exception reporting to Cloud Logging & Error Reportin
 * [Enable the Trace API](https://console.cloud.google.com/apis/api/cloudtrace.googleapis.com/overview) - _append `?project=<project-name>` to the URL if necessary._
 * Assign the IAM permission "Cloud Trace Agent" to your service account.
 
-**3.** Configure the service providers within `config/app.php` by adding:
+**4.** Configure the service providers within `config/app.php` by adding:
 
 ```php
     /*
@@ -82,7 +86,7 @@ This will enable automatic exception reporting to Cloud Logging & Error Reportin
     ])->toArray(),
 ```
 
-**4.** Add the following environment variables:
+**5.** Add the following environment variables:
 
 _This can be done either in `.env`, inside `app.yaml`, or as part of the Cloud Run service configuration - we recommend the latter two options where possible._
 

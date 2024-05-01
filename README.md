@@ -1,21 +1,15 @@
 # GServerlessSupportLaravel
 
 <div align="center">
-    <a href="https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel">
-        <img alt="Latest Stable Version" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/v/stable?style=for-the-badge">
-    </a>
-    <a href="https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel">
-        <img alt="PHP Version Require" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/require/php?style=for-the-badge">
-    </a>
-    <a href="https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel">
-        <img alt="Monthly Downloads" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/d/monthly?style=for-the-badge">
-    </a>
-    <a href="https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel">
-        <img alt="Total Downloads" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/downloads?style=for-the-badge">
-    </a>
-    <a href="https://packagist.org/packages/affordablemobiles/g-serverless-support-laravel">
-        <img alt="License" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/license?style=for-the-badge">
-    </a>
+    <img alt="Latest Stable Version" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/v/stable?style=for-the-badge">
+    &nbsp;
+    <img alt="PHP Version Require" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/require/php?style=for-the-badge">
+    &nbsp;
+    <img alt="Monthly Downloads" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/d/monthly?style=for-the-badge">
+    &nbsp;
+    <img alt="Total Downloads" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/downloads?style=for-the-badge">
+    &nbsp;
+    <img alt="License" src="https://poser.pugx.org/affordablemobiles/g-serverless-support-laravel/license?style=for-the-badge">
     <br>
     <br>
     <img alt="Google App Engine" width="100" src="docs/images/icons/app-engine.png">

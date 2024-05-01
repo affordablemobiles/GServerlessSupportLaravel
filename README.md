@@ -116,6 +116,14 @@ CACHE_DRIVER=array
 SESSION_DRIVER=datastore
 ```
 
+When using Cloud Tasks, you'll also want to configure:
+
+```
+CLOUD_TASKS_REGION=europe-west1 (or similar, required)
+TASK_QUEUE_SERVICE_ACCOUNT=<project-name>@appspot.gserviceaccount.com (default, required for Cloud Run)
+OIDC_AUDIENCE=<OAuth2 Client ID used by IAP, if enabled for inbound calls to your app> (required for Cloud Run)
+```
+
 If you are using an external CDN such as Cloudflare, also configure the following environment variable with the name of the HTTP header used for passing the client's IP address:
 
 ```

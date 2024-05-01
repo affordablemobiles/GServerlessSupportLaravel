@@ -16,10 +16,6 @@ return [
     |
     */
 
-    'trace_instrumentation' => [
-        // ...
-    ],
-
     'cloud-tasks' => [
         'region'          => env('CLOUD_TASKS_REGION'),
         'service-account' => env('TASK_QUEUE_SERVICE_ACCOUNT', gae_project().'@appspot.gserviceaccount.com'),

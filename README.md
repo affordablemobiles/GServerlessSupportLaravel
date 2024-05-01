@@ -27,13 +27,26 @@ Supporting Cloud Run & App Engine (Standard Environment).
 Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasser/GaeSupportL5) using the `php55` runtime) by [@shpasser](https://github.com/shpasser).
 
 ## Functionality
-* Google Cloud Operations Suite integration
-    * Cloud Logging destination with structured logs (see [docs/logging.md](docs/logging.md)).
-    * Cloud Trace (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
+* **Google Cloud Operations Suite** integration
+    * **Cloud Logging** destination with structured logs (see [docs/logging.md](docs/logging.md)).
+    * **Error Reporting** integration for aggregation of reported exceptions (see [docs/logging.md](docs/logging.md#error-reporting)).
+    * **Cloud Trace** (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
         * Distributed trace propagation via Guzzle.
-* Identity Aware Proxy (IAP) integration (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md))
-* Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
-* Examples for deployment to App Engine from Git via Cloud Build, plus encrypted secrets with Secret Manager (optional, see [docs/cloudbuild.md](docs/cloudbuild.md))
+        * Integration with [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar) (optional, see [docs/debugbar.md](docs/debugbar.md)).
+* **Identity Aware Proxy (IAP)** integration (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md))
+* **Cloud SQL** integration
+    * **IAM Authentication** (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#iam-authentication)).
+    * Automatic failover between read replicas (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#multiple-read-replicas)).
+    * **Query Insights** integration via [eloquent-sqlcommenter](https://github.com/affordablemobiles/eloquent-sqlcommenter) (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#query-insights)).
+* **Cloud Firestore in Datastore mode** integration
+    * **Session handler** (optional, see [docs/sessions.md](docs/sessions.md)).
+    * **Eloquent driver** via [eloquent-datastore](https://github.com/affordablemobiles/eloquent-datastore).
+* Optimizations for containerized deployment
+    * `bootstrap/cache` generation before deployment (see [g-serverless:prepare](src/AffordableMobiles/GServerlessSupportLaravel/Console/GServerlessPrepareCommand.php)).
+    * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
+* [Domain Wide Delegation (DWD)](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php#12) support via [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest) (no key file required).
+* [IAMSigner](src/AffordableMobiles/GServerlessSupportLaravel/Integration/JWT/Signer/IAMSigner.php) for [lcobucci/jwt](https://github.com/lcobucci/jwt) using [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest).
+* Examples for deployment to App Engine from Git via Cloud Build with Secret Manager  (optional, see [docs/cloudbuild.md](docs/cloudbuild.md))
 
 ## Installation
 

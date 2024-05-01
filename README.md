@@ -46,7 +46,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
     * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
 * [Domain Wide Delegation (DWD)](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php#12) support via [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest) (no key file required).
 * [IAMSigner](src/AffordableMobiles/GServerlessSupportLaravel/Integration/JWT/Signer/IAMSigner.php) for [lcobucci/jwt](https://github.com/lcobucci/jwt) using [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest).
-* Examples for deployment to App Engine from Git via Cloud Build with Secret Manager  (optional, see [docs/cloudbuild.md](docs/cloudbuild.md))
+* Examples for push-to-deploy from Git via Cloud Build with Secret Manager (optional, see [docs/cloudbuild.md](docs/cloudbuild.md))
 
 ## Installation
 

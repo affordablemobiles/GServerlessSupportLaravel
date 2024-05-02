@@ -111,6 +111,7 @@ This will enable automatic exception reporting to Cloud Logging & Error Reportin
         // Package Service Providers...
         \AffordableMobiles\GServerlessSupportLaravel\GServerlessSupportServiceProvider::class,
         \AffordableMobiles\GServerlessSupportLaravel\Auth\AuthServiceProvider::class,
+        \AffordableMobiles\GServerlessSupportLaravel\Database\DatabaseServiceProvider::class,
     ])->replace([
         \Illuminate\View\ViewServiceProvider::class => \AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider::class,
     ])->toArray(),

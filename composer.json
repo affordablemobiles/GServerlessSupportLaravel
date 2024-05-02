@@ -6,6 +6,14 @@
         {
             "name": "Samuel Melrose",
             "email": "sam.melrose@affordablemobiles.co.uk"
+        },
+        {
+            "name": "Lewis Blount",
+            "email": "lewis.blount@affordablemobiles.co.uk"
+        },
+        {
+            "name": "Ron Shpasser",
+            "email": "shpasser@gmail.com"
         }
     ],
     "require": {

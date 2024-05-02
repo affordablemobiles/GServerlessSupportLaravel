@@ -40,8 +40,8 @@ return [
 
         'mysql' => [
             ...
-            'username'       => static fn () => env('DB_USERNAME', app(IAMAuthentication::class)->username()),
-            'password'       => static fn () => env('DB_PASSWORD', app(IAMAuthentication::class)->password()),
+            'username' => static fn () => env('DB_USERNAME', app(IAMAuthentication::class)->username()),
+            'password' => static fn () => env('DB_PASSWORD', app(IAMAuthentication::class)->password()),
             ...
         ],
 
@@ -92,10 +92,10 @@ return [
 
         'mysql' => [
             ...
-            'read'           => [
+            'read'  => [
                 'unix_socket' => env('DB_READ_SOCKET', ''),
             ],
-            'write'       => [
+            'write' => [
                 'unix_socket' => env('DB_SOCKET', ''),
             ],
             ...
@@ -119,12 +119,12 @@ return [
 
         'mysql' => [
             ...
-            'read'           => [
+            'read'  => [
                 'unix_socket' => collect(
                     explode('|', env('DB_INSTANCES', 'invalid'))
                 )->map(static fn ($instance) => '/cloudsql/'.$instance)->toArray(),
             ],
-            'write'       => [
+            'write' => [
                 'unix_socket' => '/cloudsql/invalid',
             ],
             ...

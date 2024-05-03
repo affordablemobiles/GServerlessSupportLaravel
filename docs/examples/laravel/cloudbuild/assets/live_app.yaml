@@ -1,4 +1,4 @@
-runtime: php74
+runtime: php83
 
 automatic_scaling:
   max_concurrent_requests: 2

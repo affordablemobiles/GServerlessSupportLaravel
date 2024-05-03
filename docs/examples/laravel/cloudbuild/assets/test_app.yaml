@@ -1,0 +1,31 @@
+runtime: php83
+
+automatic_scaling:
+  max_concurrent_requests: 2
+
+entrypoint: serve --workers=2 public/index.php
+
+inbound_services:
+- warmup
+
+handlers:
+- url: /favicon.ico
+  static_files: public/favicon.ico
+  upload: public/favicon.ico
+
+- url: /robots.txt
+  static_files: public/robots.txt
+  upload: public/robots.txt
+
+- url: /fonts
+  static_dir: public/fonts
+
+- url: /css
+  static_dir: public/css
+
+- url: /js
+  static_dir: public/js
+
+- url: .*
+  secure: always
+  script: auto

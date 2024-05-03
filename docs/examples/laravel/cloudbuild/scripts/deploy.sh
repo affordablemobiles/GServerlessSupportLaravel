@@ -4,7 +4,7 @@
 cd /workspace;
 
 ## Move our app.yaml in to place.
-mv ./cloudbuild/assets/LIVE_app.yaml ./app.yaml
+mv ./cloudbuild/assets/${1}_app.yaml ./app.yaml
 
 ## Deploy the application to App Engine.
 if [[ -z "${DEPLOY_NO_PROMOTE}" ]]; then

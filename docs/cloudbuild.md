@@ -9,17 +9,21 @@ Cloud Build allows the deployments to be re-producible from clearly defined conf
 ### 1. Cloud Build Configuration (inside the repository)
 First, you'll need to add Cloud Build configuration to your repository.
 
-As a starting point, you'll find an example `cloudbuild` folder, along with a useful `.gcloudignore` file in `docs/examples/laravel`. If you want to deploy within Cloud Run, instead of GAE, you'll find a "buildpack-cloud-run" folder for each in the same location.
+As a starting point, assuming you'll be deploying to App Engine, you'll find an example `cloudbuild` folder, along with a useful `.gcloudignore` file in `docs/examples/laravel`.
 
-In both these examples, there is a single set of configuration and scripts to support a deployment called `LIVE`, but you can add extra sets of config/scripts to support multiple, such as `staging` and `test` as required.
+If you want to deploy within Cloud Run, see the [Cloud Run section](cloudbuild.md#deploying-to-cloud-run) below.
+
+The configuration files & scripts are designed to support a homogeneous deployment across multiple environment, e.g. "live", "staging" & "test": you control this by configuring the `_ENVIRONMENT` variable in your Cloud Build trigger (the default is `test`).
 
 The files you'll want to edit are:
 
-* `cloudbuild/generate_env_LIVE.sh`
-* `cloudbuild/assets/LIVE_app.yaml`
+* `cloudbuild/cloudbuild.yaml`
+* `cloudbuild/generate_env_{ENVIRONMENT}.sh`
+* `cloudbuild/assets/{ENVIRONMENT}_app.yaml`
 
 Also make sure you book in these files:
 
+* `php.ini`
 * `.gcloudignore`
 * `composer.json`
 * `composer.lock`
@@ -33,7 +37,9 @@ We call this `deployment/live` for `LIVE`, but you can also have `deployment/tes
 
 ### 3. Cloud Build setup in Cloud Console
 
-Add some trigers to your project in Cloud Console, specifying the branch as your deployment branch, e.g. `deployment/live`, plus the Cloud Build configuration as the path to the yaml file, e.g. `cloudbuild/cloudbuild_live.yaml`.
+Add some trigers to your project in Cloud Console, specifying the branch as your deployment branch, e.g. `deployment/live`, plus the Cloud Build configuration as the path to the yaml file, e.g. `cloudbuild/cloudbuild.yaml`.
+
+Ensure you configure the `_ENVIRONMENT` variable against your trigger, as described above.
 
 
 https://console.cloud.google.com/cloud-build/triggers
@@ -45,3 +51,7 @@ The newer, more accepted method of managing secrets with Cloud Build is using Se
 In the future, this will be further replaced by direct integration with Secret Manager from App Engine, similar to what Cloud Run has, but until then, we convert the secret references to plain text at deploy time.
 
 Secrets can be managed in Secret Manager from Cloud Console, then referenced in the Cloud Build YAML config, as detailed in the examples.
+
+## Deploying to Cloud Run
+
+TODO

@@ -1,3 +1,6 @@
+substitutions:
+  _ENVIRONMENT: 'test'
+  _NPM_ENVIRONMENT: 'production'
 steps:
 ####
 ## Environment Variables (.env file)
@@ -5,35 +8,29 @@ steps:
 - id: "generate-env"
   name: "gcr.io/cloud-builders/gcloud"
   entrypoint: "bash"
-  args: ["./cloudbuild/generate_env_LIVE.sh"]
+  args: ["./cloudbuild/generate_env_${_ENVIRONMENT}.sh"]
   secretEnv:
   - 'ENV_APP_KEY'
   waitFor: ['-']
 ####
 ## Configure latest PHP builder image
 ####
-- id: "find-php-builder"
-  name: "gcr.io/cloud-builders/gcloud"
-  entrypoint: "bash"
-  args: ["./cloudbuild/scripts/get_container_image.sh"]
-  waitFor: ['-']
-- id: "assign-php-builder"
+- id: "generate-php-builder"
   name: "gcr.io/cloud-builders/docker"
   entrypoint: "bash"
-  args: ["./cloudbuild/scripts/mark_container_image.sh"]
-  waitFor:
-  - "find-php-builder"
+  args: ["./cloudbuild/scripts/build_container_image.sh"]
+  waitFor: ['-']
 ####
 ## composer
 ####
 - id: "composer"
-  name: "gcr.io/gae-runtimes/buildpacks/php74/builder:latest"
+  name: "gcr.io/gae-runtimes/buildpacks/php83/run:latest-composer"
   entrypoint: "composer"
   args: ["install", "--no-dev", "--no-progress", "-o"]
   env:
   - 'HOME=/workspace'
   waitFor:
-  - "assign-php-builder"
+  - "generate-php-builder"
 ####
 ## npm
 ####
@@ -45,7 +42,7 @@ steps:
   waitFor: ['-']
 - id: "npm-run"
   name: "gcr.io/cloud-builders/npm"
-  args: ["run", "production"]
+  args: ["run", "$_NPM_ENVIRONMENT"]
   waitFor:
   - "npm-install"
 ####
@@ -54,7 +51,7 @@ steps:
 - id: "deploy"
   name: "gcr.io/cloud-builders/gcloud"
   entrypoint: "bash"
-  args: ["./cloudbuild/scripts/deploy_LIVE.sh"]
+  args: ["./cloudbuild/scripts/deploy.sh", "${_ENVIRONMENT}"]
   env:
   - 'PROJECT_ID=$PROJECT_ID'
   - 'SHORT_SHA=$SHORT_SHA'
@@ -68,7 +65,7 @@ steps:
 ####
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_ID/secrets/LARAVEL_APP_KEY/versions/latest
+  - versionName: projects/$PROJECT_ID/secrets/LARAVEL_APP_KEY_${_ENVIRONMENT}/versions/latest
     env: ENV_APP_KEY
 ####
 ## GLOBAL OPTIONS

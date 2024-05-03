@@ -214,4 +214,4 @@ Otherwise, you'll need to require it via composer yourself, as it is no longer r
 
 Migrate to the `google/auth` compatible [GCEDWDCredentials](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php).
 
-**11.** Update your `app.yaml` files to specify `runtime: php83`.
+**11.** Update your `app.yaml` file(s) to specify `runtime: php83`.

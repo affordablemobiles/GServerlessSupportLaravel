@@ -25,7 +25,7 @@ Instead of using a MySQL username/password combination to authenticate with the 
 
 Since we'll be using the metadata server, the identity your application will authenticate with is the service account configured for your service: on App Engine, this defaults to `<project-name>@appspot.gserviceaccount.com`, but is [configurable per deployment](https://cloud.google.com/appengine/docs/standard/configure-service-accounts#set_a_version-specific_service_account).
 
-We implement the required functionality in the [IAMAuthentication](../src/AffordableMobiles/GServerlessSupportLaravel/Database/Auth/IAMAuthentication.php) class, which is configured as a [singleton](https://laravel.com/docs/11.x/container#binding-a-singleton) in the [DatabaseServiceProvider](../src/AffordableMobiles/GServerlessSupportLaravel/Database/DatabaseServiceProvider.php#29), so that a single instance of the class is used & the results can be cached during a request.
+We implement the required functionality in the [IAMAuthentication](../src/AffordableMobiles/GServerlessSupportLaravel/Database/Auth/IAMAuthentication.php) class, which is configured as a [singleton](https://laravel.com/docs/11.x/container#binding-a-singleton) in the [DatabaseServiceProvider](../src/AffordableMobiles/GServerlessSupportLaravel/Database/DatabaseServiceProvider.php#L29), so that a single instance of the class is used & the results can be cached during a request.
 
 This can be used in `config/database.php` as follows:
 

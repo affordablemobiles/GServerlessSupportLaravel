@@ -31,7 +31,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
     * **Cloud Logging** destination with structured logs (see [docs/logging.md](docs/logging.md)).
     * **Error Reporting** integration for aggregation of reported exceptions (see [docs/logging.md](docs/logging.md#error-reporting)).
     * **Cloud Trace** (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
-        * Distributed trace propagation via [Guzzle](src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Guzzle/GuzzleInstrumentation.php#70).
+        * Distributed trace propagation via [Guzzle](src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Guzzle/GuzzleInstrumentation.php#L70).
         * Integration with [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar) (optional, see [docs/debugbar.md](docs/debugbar.md)).
 * **Identity Aware Proxy (IAP)** integration
     * **Inbound authentication** via Laravel's Guards (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md)).
@@ -46,7 +46,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
 * Optimizations for containerized deployment
     * `bootstrap/cache` generation before deployment (see [g-serverless:prepare](src/AffordableMobiles/GServerlessSupportLaravel/Console/GServerlessPrepareCommand.php)).
     * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
-* [Domain Wide Delegation (DWD)](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php#12) support via [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest) (no key file required).
+* [Domain Wide Delegation (DWD)](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php#L12) support via [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest) (no key file required).
 * [IAMSigner](src/AffordableMobiles/GServerlessSupportLaravel/Integration/JWT/Signer/IAMSigner.php) for [lcobucci/jwt](https://github.com/lcobucci/jwt) using [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest).
 * Examples for push-to-deploy from Git via Cloud Build with Secret Manager (see [docs/cloudbuild.md](docs/cloudbuild.md))
 

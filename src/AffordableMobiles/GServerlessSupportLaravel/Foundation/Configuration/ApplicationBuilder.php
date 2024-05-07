@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AffordableMobiles\GServerlessSupportLaravel\Foundation;
+namespace AffordableMobiles\GServerlessSupportLaravel\Foundation\Configuration;
 
 use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report;
 use Illuminate\Foundation\Application;

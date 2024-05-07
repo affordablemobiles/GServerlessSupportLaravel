@@ -31,7 +31,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
     * **Cloud Logging** destination with structured logs (see [docs/logging.md](docs/logging.md)).
     * **Error Reporting** integration for aggregation of reported exceptions (see [docs/logging.md](docs/logging.md#error-reporting)).
     * **Cloud Trace** (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
-        * Distributed trace propagation via Guzzle.
+        * Distributed trace propagation via [Guzzle](src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Guzzle/GuzzleInstrumentation.php#70).
         * Integration with [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar) (optional, see [docs/debugbar.md](docs/debugbar.md)).
 * **Identity Aware Proxy (IAP)** integration
     * **Inbound authentication** via Laravel's Guards (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md)).

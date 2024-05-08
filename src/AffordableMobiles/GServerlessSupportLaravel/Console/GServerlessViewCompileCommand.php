@@ -66,6 +66,9 @@ class GServerlessViewCompileCommand extends Command
         foreach ($hints as $namespace => $paths) {
             $viewPaths = array_merge($paths, $viewPaths);
         }
+        $viewPaths = array_merge([
+            base_path('vendor/laravel/framework/src/Illuminate/Foundation/resources'),
+        ], $viewPaths);
 
         $this->info('Blade Compiler: Cleaning view storage directory ('.$compiledDirectory.')...');
         $this->files->cleanDirectory($compiledDirectory);

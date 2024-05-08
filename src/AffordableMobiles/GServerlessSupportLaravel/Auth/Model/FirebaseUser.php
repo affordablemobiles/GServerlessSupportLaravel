@@ -99,6 +99,16 @@ class FirebaseUser implements NullUserModel
     }
 
     /**
+     * Get the name of the password attribute for the user.
+     *
+     * @return string
+     */
+    public function getAuthPasswordName()
+    {
+        return 'password';
+    }
+
+    /**
      * Get the password for the user.
      *
      * @return string

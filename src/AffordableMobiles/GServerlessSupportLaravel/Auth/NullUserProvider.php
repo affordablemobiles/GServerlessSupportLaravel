@@ -97,4 +97,16 @@ class NullUserProvider implements UserProvider
     {
         return false;
     }
+
+    /**
+     * Rehash the user's password if required and supported.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
+     * @param  array  $credentials
+     * @param  bool  $force
+     * @return void
+     */
+    public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false){
+        return;
+    }
 }

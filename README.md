@@ -127,7 +127,7 @@ _This can be done either in `.env`, inside `app.yaml`, or as part of the Cloud R
 LOG_CHANNEL=stderr
 LOG_STDERR_FORMATTER=AffordableMobiles\GServerlessSupportLaravel\Log\Formatter\JsonFormatter
 
-CACHE_DRIVER=array
+CACHE_STORE=array
 
 SESSION_DRIVER=datastore
 ```

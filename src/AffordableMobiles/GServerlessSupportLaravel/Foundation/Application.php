@@ -13,16 +13,6 @@ use Illuminate\Routing\RoutingServiceProvider;
 class Application extends LaravelApplication
 {
     /**
-     * Create a new Illuminate application instance.
-     *
-     * @param null|string $basePath
-     */
-    public function __construct($basePath = null)
-    {
-        return parent::__construct($basePath);
-    }
-
-    /**
      * Begin configuring a new Laravel application instance.
      *
      * @return Configuration\ApplicationBuilder

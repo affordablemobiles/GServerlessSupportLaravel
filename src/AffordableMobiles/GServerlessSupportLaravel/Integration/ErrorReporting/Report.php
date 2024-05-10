@@ -7,6 +7,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting
 use AffordableMobiles\GServerlessSupportLaravel\Log\Metadata\MetadataProvider;
 use Google\Cloud\Logging\LoggingClient;
 use Google\Cloud\Logging\PsrLogger;
+use Psr\Log\LogLevel;
 
 /**
  * Static methods for bootstrapping Stackdriver Error Reporting.
@@ -39,11 +40,11 @@ class Report
         set_error_handler([self::class, 'errorHandler']);
     }
 
-    public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = []): void
+    public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = [], string $level = LogLevel::ERROR): void
     {
         $message = sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {
-            self::$psrLogger->error($message, [
+            $logContext = [
                 'context' => array_merge($context, [
                     'reportLocation' => [
                         'filePath'     => $ex->getFile(),
@@ -60,13 +61,17 @@ class Report
                         'responseStatusCode' => $status_code,
                         'remoteIp'           => $_SERVER['REMOTE_ADDR'] ?? '',
                     ],
-                    'user' => self::getUserNameForReport(),
+                    'user' => self::getUserNameForReport($context['userId'] ?? null),
                 ]),
                 'serviceContext' => [
                     'service' => g_service(),
                     'version' => g_version(),
                 ],
-            ]);
+            ];
+
+            method_exists(self::$psrLogger, $level)
+                ? self::$psrLogger->{$level}($message, $logContext)
+                : self::$psrLogger->log($level, $message, $logContext);
         }
     }
 
@@ -290,8 +295,12 @@ class Report
         return implode('', array_reverse($functionName));
     }
 
-    private static function getUserNameForReport()
+    private static function getUserNameForReport($userId = null)
     {
+        if (!empty($userId)) {
+            return $userId;
+        }
+
         if (\defined('ERROR_REPORTING_USER')) {
             return ERROR_REPORTING_USER;
         }

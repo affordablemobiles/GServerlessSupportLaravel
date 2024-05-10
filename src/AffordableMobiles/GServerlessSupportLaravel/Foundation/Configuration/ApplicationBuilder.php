@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Foundation\Configuration;
 
-use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\Report;
+use AffordableMobiles\GServerlessSupportLaravel\Foundation\Exceptions\Handler;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\ApplicationBuilder as LaravelApplicationBuilder;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -12,20 +13,24 @@ use Illuminate\Foundation\Configuration\Exceptions;
 class ApplicationBuilder extends LaravelApplicationBuilder
 {
     /**
-     * Get the application instance.
+     * Register and configure the application's exception handler.
      *
-     * @return Application
+     * @return $this
      */
-    public function create()
+    public function withExceptions(?callable $using = null)
     {
-        if (is_g_serverless()) {
-            $this->withExceptions(static function (Exceptions $exceptions): void {
-                $exceptions->report(static function (\Throwable $e): void {
-                    Report::exceptionHandler($e);
-                })->stop();
-            });
-        }
+        $this->app->singleton(
+            ExceptionHandler::class,
+            Handler::class,
+        );
 
-        return $this->app;
+        $using ??= static fn () => true;
+
+        $this->app->afterResolving(
+            Handler::class,
+            static fn ($handler) => $using(new Exceptions($handler)),
+        );
+
+        return $this;
     }
 }

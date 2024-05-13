@@ -11,11 +11,26 @@ use Illuminate\Support\Arr;
 
 class ConnectionFactory extends BaseConnectionFactory
 {
-    protected function resolveRuntimeConfig(array $config)
+    /**
+     * Parse and prepare the database configuration.
+     *
+     * @param string $name
+     *
+     * @return array
+     */
+    protected function parseConfig(array $config, $name)
     {
+        $config = parent::parseConfig($config, $name);
+
         if (\array_key_exists('username', $config)) {
             $config['username'] = value($config['username']);
         }
+
+        return $config;
+    }
+
+    protected function resolveRuntimeConfig(array $config)
+    {
         if (\array_key_exists('password', $config)) {
             $config['password'] = value($config['password']);
         }

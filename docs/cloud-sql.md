@@ -30,7 +30,7 @@ We implement the required functionality in the [IAMAuthentication](../src/Afford
 This can be used in `config/database.php` as follows:
 
 ```php
-use A1comms\GaeSupportLaravel\Database\Auth\IAMAuthentication;
+use \AffordableMobiles\GServerlessSupportLaravel\Database\Auth\IAMAuthentication;
 ...
 
 return [

@@ -11,17 +11,8 @@ use Illuminate\Support\Arr;
 
 class ConnectionFactory extends BaseConnectionFactory
 {
-    /**
-     * Parse and prepare the database configuration.
-     *
-     * @param string $name
-     *
-     * @return array
-     */
-    protected function parseConfig(array $config, $name)
+    protected function resolveRuntimeConfig(array $config)
     {
-        $config = parent::parseConfig($config, $name);
-
         if (\array_key_exists('username', $config)) {
             $config['username'] = value($config['username']);
         }
@@ -72,7 +63,8 @@ class ConnectionFactory extends BaseConnectionFactory
                 \Log::info('Connecting to DB unix_socket: '.$socket);
 
                 try {
-                    $connection = $this->createConnector($config)->connect($config);
+                    $runtimeConfig = $this->resolveRuntimeConfig($config);
+                    $connection    = $this->createConnector($runtimeConfig)->connect($runtimeConfig);
 
                     InstanceLocalCache::forever($cacheKey, $socket);
 
@@ -102,5 +94,45 @@ class ConnectionFactory extends BaseConnectionFactory
         }
 
         return $sockets;
+    }
+
+    /**
+     * Create a new Closure that resolves to a PDO instance with a specific host or an array of hosts.
+     *
+     * @return \Closure
+     *
+     * @throws \PDOException
+     */
+    protected function createPdoResolverWithHosts(array $config)
+    {
+        return function () use ($config) {
+            foreach (Arr::shuffle($this->parseHosts($config)) as $host) {
+                $config['host'] = $host;
+
+                try {
+                    $runtimeConfig = $this->resolveRuntimeConfig($config);
+
+                    return $this->createConnector($runtimeConfig)->connect($runtimeConfig);
+                } catch (PDOException $e) {
+                    continue;
+                }
+            }
+
+            throw $e;
+        };
+    }
+
+    /**
+     * Create a new Closure that resolves to a PDO instance where there is no configured host.
+     *
+     * @return \Closure
+     */
+    protected function createPdoResolverWithoutHosts(array $config)
+    {
+        return function () use ($config) {
+            $runtimeConfig = $this->resolveRuntimeConfig($config);
+
+            return $this->createConnector($runtimeConfig)->connect($runtimeConfig);
+        };
     }
 }

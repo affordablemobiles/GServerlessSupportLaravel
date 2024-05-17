@@ -4,6 +4,13 @@ FROM ${IMAGE}:${TAG}
 
 USER root
 
+ADD git-credential-gcloud.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/git-credential-gcloud.sh && \
+    echo >> /etc/gitconfig && \
+    echo "[credential \"https://source.developers.google.com\"]" >> /etc/gitconfig && \
+    echo "    helper = gcloud.sh" >> /etc/gitconfig
+
 ADD composer-install.sh /usr/local/bin/
 
 RUN cd /usr/local/bin && \

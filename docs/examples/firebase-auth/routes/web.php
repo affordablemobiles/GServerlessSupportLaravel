@@ -1,5 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Http\Controllers\Firebase;
+use Illuminate\Support\Facades\Auth;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,19 +16,17 @@
 |
 */
 
-Route::get('/login', function () {
-    if ( \Illuminate\Support\Facades\Auth::check() ) {
+Route::get('/login', static function () {
+    if (Auth::check()) {
         return redirect('/');
     }
 
     return view('login');
 })->name('login');
 
-Route::post('/login', [\AffordableMobiles\GServerlessSupportLaravel\Auth\Http\Controllers\Firebase::class, 'login']);
-Route::get('/logout', [\AffordableMobiles\GServerlessSupportLaravel\Auth\Http\Controllers\Firebase::class, 'logout']);
+Route::post('/login', [Firebase::class, 'login']);
+Route::get('/logout', [Firebase::class, 'logout']);
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    });
+Route::middleware(['auth'])->group(static function (): void {
+    Route::get('/', static fn () => view('welcome'));
 });

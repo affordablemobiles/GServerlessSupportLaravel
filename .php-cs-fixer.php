@@ -2,21 +2,26 @@
 
 declare(strict_types=1);
 
-$finder = PhpCsFixer\Finder::create()
+use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
+
+$finder = Finder::create()
     ->ignoreDotFiles(false)
     ->ignoreVCSIgnored(true)
-    ->in(__DIR__ . '/src')
+    ->in(__DIR__)
 ;
 
-$config = new PhpCsFixer\Config();
+$config = new Config();
 $config
+    ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRiskyAllowed(true)
     ->setRules([
-        '@PHP83Migration' => true,
-        '@PHP80Migration:risky' => true,
-        'heredoc_indentation' => false,
-        '@PhpCsFixer' => true,
-        '@PhpCsFixer:risky' => true,
+        '@PHP83Migration'        => true,
+        '@PHP80Migration:risky'  => true,
+        'heredoc_indentation'    => false,
+        '@PhpCsFixer'            => true,
+        '@PhpCsFixer:risky'      => true,
         'binary_operator_spaces' => [
             'default' => 'align',
         ],

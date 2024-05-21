@@ -11,18 +11,16 @@ class Tools
     public static function isConnectionError(\Throwable $ex, int $timeout = 2)
     {
         if ($ex instanceof ConnectException) {
-            $regex = '/Operation timed out after '.(string) $timeout.'[0-9]{3} milliseconds/';
-            if ($timeout < 1) {
-                $regex = '/Operation timed out after [0-9]{3} milliseconds/';
-            }
+            $regex = self::getRegexp($timeout < 1 ? '' : (string) $timeout);
 
-            if (preg_match($regex, (string) $ex)) {
-                return true;
-            }
-
-            return false;
+            return 1 === preg_match($regex, (string) $ex);
         }
 
         return false;
+    }
+
+    protected static function getRegexp(string $timeout): string
+    {
+        return '/(Operation|Connection) (timed out|timeout) after '.$timeout.'[0-9]{3} (ms|milliseconds)/';
     }
 }

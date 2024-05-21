@@ -69,31 +69,35 @@ class AuthTokenMiddleware
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            if (!empty($options['auth'])) {
-                switch ($options['auth']) {
-                    case 'google_oidc':
-                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOIDCToken(
-                            $request->getUri()
-                        ));
+            $authType = $options['auth'] ?? 'google_dynamic';
 
-                        break;
+            switch ($authType) {
+                case 'google_oidc':
+                    $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOIDCToken(
+                        $request->getUri()
+                    ));
 
-                    case 'google_oauth2':
-                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOAuth2Token(
-                            $request->getUri()
-                        ));
+                    break;
 
-                        break;
+                case 'google_oauth2':
+                    $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOAuth2Token(
+                        $request->getUri()
+                    ));
 
-                    case 'google_dynamic':
-                        $request = $request->withHeader('authorization', 'Bearer '.$this->fetchDynamicToken(
-                            $request->getUri()
-                        ));
+                    break;
 
-                        // no break
-                    default:
-                        break;
-                }
+                case 'google_dynamic':
+                    $token = $this->fetchDynamicToken(
+                        $request->getUri()
+                    );
+                    if (!empty($token)) {
+                        $request = $request->withHeader('authorization', 'Bearer '.$token);
+                    }
+
+                    break;
+
+                default:
+                    break;
             }
 
             return $handler($request, $options);
@@ -101,11 +105,42 @@ class AuthTokenMiddleware
     }
 
     /**
-     * Call dynamic handler to fetch the token.
+     * Provides a closure that can be pushed onto the handler stack,
+     *  with a default, reusable implementation.
      *
-     * @return string
+     * Example:
+     * <code>$handlerStack->push(AuthTokenMiddleware::factory());</code>
+     *
+     * @param array<string,string> $audienceMap
      */
-    protected function fetchDynamicToken(UriInterface $request_uri)
+    public static function factory(array $audienceMap = []): self
+    {
+        if (empty($audienceMap)) {
+            $audienceMap = config(
+                config('gserverlesssupport.auth.middleware.audience_map_location'),
+                [],
+            );
+        }
+
+        $audienceSource = static fn (UriInterface $request_uri) => $audienceMap[$request_uri->getHost()];
+
+        $tokenTypeSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            $audience = $audienceMap[$request_uri->getHost()] ?? false;
+
+            if ('oauth2' === $audience) {
+                return 'oauth2';
+            }
+
+            return false !== $audience ? 'oidc' : false;
+        };
+
+        return new static($audienceSource, $tokenTypeSource);
+    }
+
+    /**
+     * Call dynamic handler to fetch the token.
+     */
+    protected function fetchDynamicToken(UriInterface $request_uri): ?string
     {
         $tokenType = \call_user_func($this->tokenTypeSource, $request_uri);
 
@@ -117,16 +152,14 @@ class AuthTokenMiddleware
                 return $this->fetchOAuth2Token($request_uri);
 
             default:
-                throw new \Exception('Invalid Token Type from callback');
+                return null;
         }
     }
 
     /**
      * Call OIDC handler to fetch the token.
-     *
-     * @return string
      */
-    protected function fetchOIDCToken(UriInterface $request_uri)
+    protected function fetchOIDCToken(UriInterface $request_uri): string
     {
         $target_audience = \call_user_func($this->audienceSource, $request_uri);
 
@@ -135,10 +168,8 @@ class AuthTokenMiddleware
 
     /**
      * Call OAuth2 handler to fetch the token.
-     *
-     * @return string
      */
-    protected function fetchOAuth2Token(UriInterface $request_uri)
+    protected function fetchOAuth2Token(UriInterface $request_uri): string
     {
         return OAuth2::fetchToken();
     }

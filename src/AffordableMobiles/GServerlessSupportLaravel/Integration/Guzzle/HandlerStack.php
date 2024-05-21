@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
 use GuzzleHttp\HandlerStack as BaseHandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Utils;
@@ -35,6 +36,7 @@ class HandlerStack extends BaseHandlerStack
         $stack->push(Middleware::cookies(), 'cookies');
         $stack->push(Middleware::prepareBody(), 'prepare_body');
         $stack->push(GuzzleRetryMiddleware::factory(), 'retry');
+        $stack->push(AuthTokenMiddleware::factory(), 'auth_token');
 
         return $stack;
     }

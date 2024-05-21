@@ -24,6 +24,9 @@ return [
 
     // Authentication Settings
     'auth' => [
+        'middleware' => [
+            'audience_map_location' => 'auth.middleware.audience',
+        ],
         'firebase' => [
             'cookie_name'         => '__identity_session',
             'cookie_httpOnly'     => true,

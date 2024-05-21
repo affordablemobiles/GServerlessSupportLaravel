@@ -8,7 +8,7 @@ use GuzzleHttp\Exception\ConnectException;
 
 class Tools
 {
-    public static function isConnectionError(\Throwable $ex, int $timeout = 2)
+    public static function isConnectionError(\Throwable $ex, float $timeout = 2)
     {
         if ($ex instanceof ConnectException) {
             $regex = self::getRegexp($timeout < 1 ? '' : (string) $timeout);

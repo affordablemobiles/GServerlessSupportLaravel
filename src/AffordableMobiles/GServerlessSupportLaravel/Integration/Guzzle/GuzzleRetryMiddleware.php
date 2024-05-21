@@ -168,7 +168,7 @@ class GuzzleRetryMiddleware
             case 0     === $this->countRemainingRetries($options):
                 return false;
 
-            case Tools::isConnectionError($reason, (int) $options['connect_timeout']):
+            case Tools::isConnectionError($reason, $options['connect_timeout']):
                 return true;
 
                 // Conditions met; see if status code matches one that can be retried

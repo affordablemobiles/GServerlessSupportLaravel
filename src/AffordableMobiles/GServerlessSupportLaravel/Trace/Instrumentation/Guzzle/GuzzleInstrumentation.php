@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\GuzzleRetryMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\InstrumentationInterface;
 use GuzzleHttp\ClientInterface as GuzzleClient;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 use OpenTelemetry\API\Globals;
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 use OpenTelemetry\API\Trace\Span;
@@ -31,6 +35,7 @@ class GuzzleInstrumentation implements InstrumentationInterface
             'transfer',
             pre: static function (GuzzleClient $client, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): array {
                 $request = $params[0];
+                $options = $params[1];
                 \assert($request instanceof RequestInterface);
 
                 $propagator    = Globals::propagator();
@@ -71,7 +76,29 @@ class GuzzleInstrumentation implements InstrumentationInterface
 
                 Context::storage()->attach($context);
 
-                return [$request];
+                try {
+                    if (!empty(env('INJECT_GUZZLE_MIDDLEWARE', null))) {
+                        if ($options['handler'] instanceof HandlerStack) {
+                            $options['handler']->remove('retry');
+                            $options['handler']->push(GuzzleRetryMiddleware::factory(), 'retry');
+
+                            $app = app();
+                            if ($app instanceof ApplicationContract) {
+                                if ($app->isBooted()) {
+                                    $options['handler']->remove('auth_token');
+                                    $options['handler']->push(AuthTokenMiddleware::factory(), 'auth_token');
+                                }
+                            }
+                        }
+                    }
+                } catch (\Throwable $ex) {
+                    file_put_contents('php://stderr', $ex->getMessage()."\n", FILE_APPEND);
+                }
+
+                return [
+                    $request,
+                    $options,
+                ];
             },
             post: static function (GuzzleClient $client, array $params, PromiseInterface $promise, ?\Throwable $exception): void {
                 $scope = Context::storage()->scope();

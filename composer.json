@@ -25,17 +25,7 @@
         "guzzlehttp/guzzle": "^7.8.1",
         "google/cloud": ">=0.239.0 <1.0.0",
         "kelvinmo/simplejwt": "^0.8.2",
-        "illuminate/support": "~11",
-        "illuminate/contracts": "~11",
-        "illuminate/http": "~11",
-        "illuminate/cache": "~11",
-        "illuminate/console": "~11",
-        "illuminate/queue": "~11",
-        "illuminate/view": "~11",
-        "illuminate/container": "~11",
-        "illuminate/encryption": "~11",
-        "illuminate/filesystem": "~11",
-        "illuminate/collections": "~11"
+        "illuminate/framework": "~11"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.6"

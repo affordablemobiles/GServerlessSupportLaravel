@@ -26,6 +26,7 @@ require __DIR__.'/helpers.php';
 $helpers = [
     __DIR__.'/../../../laravel/framework/src/Illuminate/Support/helpers.php',
     __DIR__.'/../../../laravel/framework/src/Illuminate/Collections/helpers.php',
+    __DIR__.'/../../../laravel/framework/src/Illuminate/Foundation/helpers.php',
 ];
 foreach ($helpers as $helper) {
     if (is_file($helper)) {

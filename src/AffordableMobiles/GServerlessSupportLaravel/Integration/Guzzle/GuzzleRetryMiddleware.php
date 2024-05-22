@@ -37,7 +37,7 @@ class GuzzleRetryMiddleware
         'connect_timeout'                  => 2,
 
         // Set a maximum number of attempts per request
-        'max_retry_attempts'               => 6,
+        'max_retry_attempts'               => 4,
 
         // Callback to trigger before delay occurs (accepts count, delay, request, response, options)
         'on_retry_callback'                => null,
@@ -72,7 +72,7 @@ class GuzzleRetryMiddleware
             $options['retry_count'] = 0;
         }
 
-        $timeout         = (int) $options['timeout'];
+        $timeout         = (int) ($options['timeout'] ?? -1);
         $connect_timeout = (int) $options['connect_timeout'];
         if ($timeout === $connect_timeout) {
             if ($timeout > $this->defaultOptions['connect_timeout']) {

@@ -35,7 +35,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
         * Integration with [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar) (optional, see [docs/debugbar.md](docs/debugbar.md)).
 * **Identity Aware Proxy (IAP)** integration
     * **Inbound authentication** via Laravel's Guards (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md)).
-    * **Outbound authentication** via Guzzle middleware (optional, see [docs/guzzle-auth.md](docs/guzzle-auth.md)).
+    * **Outbound authentication** via Guzzle middleware (optional, see [docs/guzzle.md](docs/guzzle.md#authtokenmiddleware)).
 * **Cloud SQL** integration
     * **IAM Authentication** (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#iam-authentication)).
     * Automatic failover between read replicas (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#multiple-read-replicas)).
@@ -46,6 +46,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
 * Optimizations for containerized deployment
     * `bootstrap/cache` generation before deployment (see [g-serverless:prepare](src/AffordableMobiles/GServerlessSupportLaravel/Console/GServerlessPrepareCommand.php)).
     * Blade View Pre-Compiler (optional, see [docs/blade-pre-compile.md](docs/blade-pre-compile.md))
+    * Automatic retries for outbound connections on network layer failure with Guzzle (optional, see [docs/guzzle.md](docs/guzzle.md#guzzleretrymiddleware))
 * [Domain Wide Delegation (DWD)](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php#L12) support via [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest) (no key file required).
 * [IAMSigner](src/AffordableMobiles/GServerlessSupportLaravel/Integration/JWT/Signer/IAMSigner.php) for [lcobucci/jwt](https://github.com/lcobucci/jwt) using [IAM Credentials API](https://cloud.google.com/iam/docs/reference/credentials/rest).
 * Examples for push-to-deploy from Git via Cloud Build with Secret Manager (see [docs/cloudbuild.md](docs/cloudbuild.md))

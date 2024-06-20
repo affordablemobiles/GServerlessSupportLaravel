@@ -9,25 +9,26 @@
         }
     ],
     "require": {
-        "php": "^8.1",
-        "a1comms/eloquent-datastore": "~1",
-        "a1comms/eloquent-sqlcommenter": "~9",
+        "php": "^8.3",
+        "a1comms/eloquent-datastore": "~11",
+        "a1comms/eloquent-sqlcommenter": "~11",
         "a1comms/opencensus": "~0",
         "a1comms/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "^7.4.1",
         "google/cloud": ">=0.175.0 <1.0.0",
-        "kelvinmo/simplejwt": "^0.6.2",
-        "illuminate/support": "~9",
-        "illuminate/contracts": "~9",
-        "illuminate/http": "~9",
-        "illuminate/cache": "~9",
-        "illuminate/console": "~9",
-        "illuminate/queue": "~9",
-        "illuminate/view": "~9",
-        "illuminate/container": "~9",
-        "illuminate/encryption": "~9",
-        "illuminate/filesystem": "~9",
-        "illuminate/collections": "~9",
+        "firebase/php-jwt": "^6.3", 
+        "illuminate/support": "~11",
+        "illuminate/contracts": "~11",
+        "illuminate/http": "~11",
+        "illuminate/cache": "~11",
+        "illuminate/console": "~11",
+        "illuminate/queue": "~11",
+        "illuminate/view": "~11",
+        "illuminate/container": "~11",
+        "illuminate/encryption": "~11",
+        "illuminate/filesystem": "~11",
+        "illuminate/collections": "~11",
+        "symfony/console": "^7.0",
         "xantios/mimey": "^2.2"
     },
     "require-dev": {
@@ -57,6 +58,11 @@
                 "A1comms\\GaeSupportLaravel\\GaeSupportServiceProvider",
                 "A1comms\\GaeSupportLaravel\\Trace\\TraceServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }

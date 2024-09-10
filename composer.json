@@ -37,6 +37,9 @@
     "suggest": {
         "a1comms/php-gds": "Provides legacy Datastore support"
     },
+    "replace": {
+        "a1comms/gae-support-laravel": "self.version"
+    },
     "autoload": {
         "psr-4": {
             "A1comms\\GaeSupportLaravel\\": "src/A1comms/GaeSupportLaravel/"

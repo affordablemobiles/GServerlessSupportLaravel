@@ -40,6 +40,9 @@
         "open-telemetry/opentelemetry-auto-laravel": "~0",
         "open-telemetry/opentelemetry-auto-guzzle": "~0"
     },
+    "replace": {
+        "a1comms/gae-support-laravel": "self.version"
+    },
     "autoload": {
         "psr-4": {
             "AffordableMobiles\\GServerlessSupportLaravel\\": "src/AffordableMobiles/GServerlessSupportLaravel/"

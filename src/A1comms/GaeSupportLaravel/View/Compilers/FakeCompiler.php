@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\View\Compilers;
 
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\Compilers\Compiler;
 use Illuminate\View\Compilers\CompilerInterface;
 
-class FakeCompiler extends Compiler implements CompilerInterface
+class FakeCompiler extends BladeCompiler implements CompilerInterface
 {
     /**
      * Get the cache path for the compiled views.
@@ -51,9 +52,21 @@ class FakeCompiler extends Compiler implements CompilerInterface
      *
      * @param mixed $path
      */
-    public function compile($path)
+    public function compile($path = null)
     {
         return false;
+    }
+
+    /**
+     * Compile the given Blade template contents.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    public function compileString($value)
+    {
+        throw new \Exception('dynamic compile unsupported');
     }
 
     /**
@@ -62,6 +75,13 @@ class FakeCompiler extends Compiler implements CompilerInterface
      * @param string $name
      */
     public function directive($name, callable $handler): void {}
+
+    /**
+     * Register an "if" statement directive.
+     *
+     * @param string $name
+     */
+    public function if($name, callable $callback): void {}
 
     /**
      * Get the list of custom directives.

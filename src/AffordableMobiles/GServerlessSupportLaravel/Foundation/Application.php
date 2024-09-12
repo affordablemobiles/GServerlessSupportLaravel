@@ -7,9 +7,14 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Foundation;
 use AffordableMobiles\GServerlessSupportLaravel\Log\LogServiceProvider;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Events\EventServiceProvider;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application as LaravelApplication;
+use Illuminate\Foundation\PackageManifest;
+use Illuminate\Foundation\ProviderRepository;
+use Illuminate\Foundation\Providers\FoundationServiceProvider;
 use Illuminate\Log\Context\ContextServiceProvider;
 use Illuminate\Routing\RoutingServiceProvider;
+use Illuminate\Support\Collection;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
@@ -52,6 +57,26 @@ class Application extends LaravelApplication
         $kernel->terminate($input, $status);
 
         return $status;
+    }
+
+    /**
+     * Register all of the configured providers.
+     */
+    public function registerConfiguredProviders(): void
+    {
+        $providers = Collection::make($this->make('config')->get('app.providers'))
+            ->partition(static fn ($provider) => str_starts_with($provider, 'Illuminate\\'))
+        ;
+
+        $providers[0]->transform(static fn ($item) => FoundationServiceProvider::class === $item ? Providers\FoundationServiceProvider::class : $item);
+
+        $providers->splice(1, 0, [$this->make(PackageManifest::class)->providers()]);
+
+        (new ProviderRepository($this, new Filesystem(), $this->getCachedServicesPath()))
+            ->load($providers->collapse()->toArray())
+        ;
+
+        $this->fireAppCallbacks($this->registeredCallbacks);
     }
 
     /**

@@ -24,6 +24,8 @@ class ProviderRepository extends LaravelProviderRepository
             ->partition(static fn ($provider) => str_starts_with($provider, 'Illuminate\\'))
         ;
 
+        $providers[0]->transform(static fn ($item) => FoundationServiceProvider::class === $item ? Providers\FoundationServiceProvider::class : $item);
+
         $providers->splice(1, 0, [$this->app->make(PackageManifest::class)->providers()]);
 
         $this->compileManifest($providers->collapse()->toArray());

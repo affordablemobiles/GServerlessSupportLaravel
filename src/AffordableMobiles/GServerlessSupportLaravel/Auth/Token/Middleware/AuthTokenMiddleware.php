@@ -122,9 +122,24 @@ class AuthTokenMiddleware
             );
         }
 
-        $audienceSource = static fn (UriInterface $request_uri) => $audienceMap[$request_uri->getHost()];
+        $audienceSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            if (self::isCloudFunction($request_uri)) {
+                return sprintf(
+                    '%s://%s%s',
+                    $request_uri->getScheme(),
+                    $request_uri->getHost(),
+                    $request_uri->getPath(),
+                );
+            }
+
+            return $audienceMap[$request_uri->getHost()];
+        };
 
         $tokenTypeSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            if (self::isCloudFunction($request_uri)) {
+                return 'oidc';
+            }
+
             $audience = $audienceMap[$request_uri->getHost()] ?? false;
 
             if ('oauth2' === $audience) {
@@ -172,5 +187,13 @@ class AuthTokenMiddleware
     protected function fetchOAuth2Token(UriInterface $request_uri): string
     {
         return OAuth2::fetchToken();
+    }
+
+    /**
+     * Does the URL belong to Google Cloud Functions (GCF)?
+     */
+    protected static function isCloudFunction(UriInterface $request_uri): bool
+    {
+        return str_ends_with($request_uri->getHost(), '.cloudfunctions.net');
     }
 }

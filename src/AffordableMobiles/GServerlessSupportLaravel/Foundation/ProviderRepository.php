@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Foundation;
 
 use Illuminate\Foundation\PackageManifest;
 use Illuminate\Foundation\ProviderRepository as LaravelProviderRepository;
+use Illuminate\Foundation\Providers\FoundationServiceProvider;
 use Illuminate\Support\Collection;
 
 class ProviderRepository extends LaravelProviderRepository

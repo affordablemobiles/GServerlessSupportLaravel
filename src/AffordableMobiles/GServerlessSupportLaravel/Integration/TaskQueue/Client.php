@@ -47,8 +47,12 @@ class Client
 
     private function fetchLocation()
     {
-        if (!empty(config('gserverlesssupport.cloud-tasks.region'))) {
-            return config('gserverlesssupport.cloud-tasks.region');
+        $region = value(
+            config('gserverlesssupport.cloud-tasks.region'),
+        );
+
+        if (!empty($region)) {
+            return $region;
         }
 
         throw new \Exception('Cloud Tasks Region Must Be Specified');

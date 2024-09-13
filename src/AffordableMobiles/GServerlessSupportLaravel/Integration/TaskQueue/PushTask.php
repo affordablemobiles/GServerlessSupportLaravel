@@ -20,14 +20,24 @@ class PushTask
 
     public function __construct($url_path, $query_data = [], $options = [])
     {
-        if (is_cloud_run() && empty($options['target'])) {
+        $viaHTTP = value(config('gserverlesssupport.cloud-tasks.via-http')) || (is_cloud_run() && empty($options['target']));
+
+        if ($viaHTTP) {
             $this->pushTask = new HttpRequest();
 
             $this->pushTask->setUrl(URL::to($url_path));
 
             $token = new OidcToken();
-            $token->setServiceAccountEmail(config('gserverlesssupport.cloud-tasks.service-account'));
-            $token->setAudience(config('gserverlesssupport.cloud-tasks.audience'));
+            $token->setServiceAccountEmail(
+                value(
+                    config('gserverlesssupport.cloud-tasks.service-account'),
+                ),
+            );
+            $token->setAudience(
+                value(
+                    config('gserverlesssupport.cloud-tasks.audience'),
+                )
+            );
 
             $this->pushTask->setOidcToken($token);
         } else {
@@ -68,7 +78,7 @@ class PushTask
         }
 
         $this->task = new Task();
-        if (is_cloud_run() && empty($options['target'])) {
+        if ($viaHTTP) {
             $this->task->setHttpRequest($this->pushTask);
         } else {
             $this->task->setAppEngineHttpRequest($this->pushTask);

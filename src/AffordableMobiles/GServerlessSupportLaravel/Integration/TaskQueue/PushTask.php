@@ -66,10 +66,21 @@ class PushTask
             }
         }
 
-        $this->pushTask->setBody(http_build_query($query_data));
-        $this->pushTask->setHeaders([
-            'Content-Type' => 'application/x-www-form-urlencoded',
-        ]);
+        if ($options['json'] ?? false) {
+            $this->pushTask->setBody(
+                json_encode($query_data, JSON_PRETTY_PRINT),
+            );
+            $this->pushTask->setHeaders([
+                'Content-Type' => 'application/json',
+            ]);
+        } else {
+            $this->pushTask->setBody(
+                http_build_query($query_data),
+            );
+            $this->pushTask->setHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ]);
+        }
 
         if (!empty($options['method'])) {
             $this->pushTask->setHttpMethod(

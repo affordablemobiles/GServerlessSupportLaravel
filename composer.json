@@ -28,7 +28,8 @@
         "illuminate/encryption": "~9",
         "illuminate/filesystem": "~9",
         "illuminate/collections": "~9",
-        "xantios/mimey": "^2.2"
+        "xantios/mimey": "^2.2",
+        "mlocati/ip-lib": "^1.18"
     },
     "require-dev": {
         "phpmd/phpmd" : "@stable",

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use IPLib\Factory;
 
 if (!empty($_ENV['BLOCK_NON_CF'])) {
     define('BLOCK_NON_CF', $_ENV['BLOCK_NON_CF']);
@@ -12,8 +13,6 @@ if (!defined('BLOCK_NON_CF')) {
 
 require __DIR__.'/../../../../helpers.php';
 
-require __DIR__.'/ip_in_range.php';
-
 // Only run if we're on GAE
 if (is_gae()) {
     // Check if it's an allowed App Engine internal request and run our checks if not.
@@ -24,14 +23,17 @@ if (is_gae()) {
     if (!($gaeCRON || $gaeWARM || isset($_SERVER['HTTP_X_APPENGINE_QUEUENAME']))) {
         $is_cf = isset($_SERVER['HTTP_CF_CONNECTING_IP']);
 
+        $address = Factory::parseAddressString($_SERVER['REMOTE_ADDR']);
+
         $accepted_cf = false;
 
         if (!str_contains($_SERVER['REMOTE_ADDR'], ':')) {
             // IPv4
             $cf_ip_ranges = require __DIR__.'/cf-ipv4.php';
 
-            foreach ($cf_ip_ranges as $range) {
-                if (ipv4_in_range($_SERVER['REMOTE_ADDR'], $range)) {
+            foreach ($cf_ip_ranges as $raw_range) {
+                $range = Factory::parseRangeString($raw_range);
+                if ($range->contains($address)) {
                     if ($is_cf) {
                         // TODO: Change logging here to support new runtimes.
                         gae_basic_log('cloudflare', 'INFO', 'Cloudflare IP changed from '.$_SERVER['REMOTE_ADDR'].' to '.$_SERVER['HTTP_CF_CONNECTING_IP'], [
@@ -50,7 +52,8 @@ if (is_gae()) {
             $cf_ip_ranges = require __DIR__.'/cf-ipv6.php';
 
             foreach ($cf_ip_ranges as $range) {
-                if (ipv6_in_range($_SERVER['REMOTE_ADDR'], $range)) {
+                $range = Factory::parseRangeString($raw_range);
+                if ($range->contains($address)) {
                     if ($is_cf) {
                         // TODO: Change logging here to support new runtimes.
                         gae_basic_log('cloudflare', 'INFO', 'Cloudflare IP changed from '.$_SERVER['REMOTE_ADDR'].' to '.$_SERVER['HTTP_CF_CONNECTING_IP'], [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Http\Middleware;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class TaskCronAuthentication
@@ -16,7 +17,7 @@ class TaskCronAuthentication
     /**
      * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      *
      * @return mixed
      */

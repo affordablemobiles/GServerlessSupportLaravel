@@ -23,7 +23,7 @@ class Report
      *
      * @codeCoverageIgnore
      */
-    public static function init(PsrLogger $psrLogger = null): void
+    public static function init(?PsrLogger $psrLogger = null): void
     {
         $options = ['batchEnabled' => false];
 
@@ -137,7 +137,7 @@ class Report
 
     public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = []): void
     {
-        $message = sprintf('PHP Notice: %s', (string) $ex);
+        $message = \sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {
             $service = gae_service();
             $version = gae_version();
@@ -178,7 +178,7 @@ class Report
         if (!($level & error_reporting())) {
             return true;
         }
-        $message = sprintf(
+        $message = \sprintf(
             '%s: %s in %s on line %d',
             self::getErrorPrefix($level),
             $message,
@@ -235,7 +235,7 @@ class Report
                 case E_CORE_ERROR:
                     $service = gae_service();
                     $version = gae_version();
-                    $message = sprintf(
+                    $message = \sprintf(
                         '%s: %s in %s on line %d',
                         self::getErrorPrefix($err['type']),
                         $err['message'],
@@ -275,7 +275,7 @@ class Report
      *
      * @param array $trace The stack trace returned from Exception::getTrace()
      */
-    private static function getFunctionNameForReport(array $trace = null)
+    private static function getFunctionNameForReport(?array $trace = null)
     {
         if (null === $trace) {
             return '<unknown function>';

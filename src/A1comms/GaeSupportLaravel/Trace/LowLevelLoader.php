@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Trace;
 
+use A1comms\GaeSupportLaravel\Trace\Integration\Guzzle\TraceProvider;
+use A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\GDS;
+use A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\Grpc;
+use A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelAuth;
+use A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelExtended;
+use OpenCensus\Trace\Integrations\Laravel;
+use OpenCensus\Trace\Integrations\Memcached;
+use OpenCensus\Trace\Integrations\Mysql;
+use OpenCensus\Trace\Integrations\PDO;
+
 /**
  * Class to return the low level trace modules to load.
  */
@@ -17,20 +27,20 @@ class LowLevelLoader implements LowLevelLoaderInterface
         return [
             // OpenCensus provides a basic Laravel trace adapter,
             // which covered Eloquent and view compilation.
-            \OpenCensus\Trace\Integrations\Laravel::class,
+            Laravel::class,
             // Also load our own extended Laravel trace set.
-            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelExtended::class,
+            LaravelExtended::class,
             // Authentication Guards...
-            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\LaravelAuth::class,
+            LaravelAuth::class,
             // Trace our other basic functions...
-            \OpenCensus\Trace\Integrations\Mysql::class,
-            \OpenCensus\Trace\Integrations\PDO::class,
-            \OpenCensus\Trace\Integrations\Memcached::class,
-            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\Grpc::class,
+            Mysql::class,
+            PDO::class,
+            Memcached::class,
+            Grpc::class,
             // Plus GDS (Datastore)...
-            \A1comms\GaeSupportLaravel\Trace\Integration\LowLevel\GDS::class,
+            GDS::class,
             // Guzzle calls...
-            \A1comms\GaeSupportLaravel\Trace\Integration\Guzzle\TraceProvider::class,
+            TraceProvider::class,
         ];
     }
 }

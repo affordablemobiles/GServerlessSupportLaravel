@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use Google\Cloud\Core\Compute\Metadata;
+use OpenCensus\Trace\Tracer;
 
 if (!function_exists('is_cloud_run')) {
     function is_cloud_run()
@@ -98,7 +100,7 @@ if (!function_exists('gae_project')) {
                 return $_SERVER['GOOGLE_CLOUD_PROJECT'];
             }
 
-            return (new \Google\Cloud\Core\Compute\Metadata())->getProjectId();
+            return (new Metadata())->getProjectId();
         }
 
         return false;
@@ -202,7 +204,7 @@ if (!function_exists('gae_basic_log')) {
             'message'                      => $message,
             'context'                      => $context,
             'customLogName'                => $logName,
-            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.\OpenCensus\Trace\Tracer::spanContext()->traceId(),
+            'logging.googleapis.com/trace' => 'projects/'.gae_project().'/traces/'.Tracer::spanContext()->traceId(),
             'time'                         => (new DateTimeImmutable())->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
 

@@ -31,7 +31,7 @@ class GaeViewCompileCommand extends Command
     /**
      * The filesystem instance.
      *
-     * @var \Illuminate\Filesystem\Filesystem
+     * @var Filesystem
      */
     protected $files;
 
@@ -87,7 +87,7 @@ class GaeViewCompileCommand extends Command
                 $filePath         = $file->getPathname();
                 $fileRelativePath = FileViewFinder::getRelativePath(base_path(), $filePath);
 
-                if (!preg_match('/(.*)\\.blade\\.php$/', $filePath)) {
+                if (!preg_match('/(.*)\.blade\.php$/', $filePath)) {
                     $this->info("Blade Compiler: \tSkipping view (".($g + 1).'/'.\count($files).') '.$fileRelativePath);
 
                     continue;

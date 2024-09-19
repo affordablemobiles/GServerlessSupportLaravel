@@ -37,7 +37,7 @@ class StaticFilesMiddleware
      *
      * @param \SplFileInfo|string $file
      *
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return BinaryFileResponse
      */
     public function file($file, array $headers = [])
     {

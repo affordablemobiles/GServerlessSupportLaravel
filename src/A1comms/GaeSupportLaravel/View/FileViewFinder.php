@@ -17,7 +17,7 @@ class FileViewFinder extends LaravelFileViewFinder
 
     private $pathCache = [];
 
-    public function __construct(Filesystem $files, array $paths, array $extensions = null, string $cachePath = null)
+    public function __construct(Filesystem $files, array $paths, ?array $extensions = null, ?string $cachePath = null)
     {
         $this->files = $files;
         $this->paths = $paths;

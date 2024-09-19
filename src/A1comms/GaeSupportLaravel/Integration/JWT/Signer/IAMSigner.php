@@ -19,8 +19,6 @@ class IAMSigner implements Signer
 {
     /**
      * Returns the algorithm id.
-     *
-     * @return string
      */
     public function algorithmId(): string
     {
@@ -38,14 +36,9 @@ class IAMSigner implements Signer
     /**
      * Returns a signature for given data.
      *
-     * @param string $payload
-     * @param Key $key
-     *
-     * @return string
-     *
-     * @throws CannotSignPayload  When payload signing fails.
-     * @throws InvalidKeyProvided When issue key is invalid/incompatible.
-     * @throws ConversionFailed   When signature could not be converted.
+     * @throws CannotSignPayload  when payload signing fails
+     * @throws InvalidKeyProvided when issue key is invalid/incompatible
+     * @throws ConversionFailed   when signature could not be converted
      */
     public function sign(string $payload, Key $key): string
     {
@@ -55,14 +48,8 @@ class IAMSigner implements Signer
     /**
      * Returns if the expected hash matches with the data and key.
      *
-     * @param string $expected
-     * @param string $payload
-     * @param Key $key
-     *
-     * @return bool
-     *
-     * @throws InvalidKeyProvided When issue key is invalid/incompatible.
-     * @throws ConversionFailed   When signature could not be converted.
+     * @throws InvalidKeyProvided when issue key is invalid/incompatible
+     * @throws ConversionFailed   when signature could not be converted
      */
     public function verify(string $expected, string $payload, Key $key): bool
     {
@@ -88,7 +75,7 @@ class IAMSigner implements Signer
 
         $service = new \Google_Service_IAMCredentials($client);
 
-        $keyID = sprintf('projects/-/serviceAccounts/%s', $key->contents());
+        $keyID = \sprintf('projects/-/serviceAccounts/%s', $key->contents());
 
         $requestBody = new \Google_Service_IAMCredentials_SignBlobRequest();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth\Token;
 
+use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Token\Type\JWT;
 
 class IAP
@@ -33,7 +34,7 @@ class IAP
      *
      * @return array returns array containing "sub" and "email" if token is valid
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
+     * @throws InvalidTokenException if the token is invalid
      */
     public static function validateToken($iap_jwt, $expected_audience)
     {

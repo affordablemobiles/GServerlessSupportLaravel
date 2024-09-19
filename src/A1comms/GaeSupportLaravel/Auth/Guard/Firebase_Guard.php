@@ -8,6 +8,7 @@ use A1comms\GaeSupportLaravel\Auth\Contracts\Guard\StatelessValidator;
 use A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException;
 use A1comms\GaeSupportLaravel\Auth\Model\FirebaseUser;
 use A1comms\GaeSupportLaravel\Auth\Token\Firebase;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,9 +19,9 @@ class Firebase_Guard implements StatelessValidator
      * Authenticate a user based on request information,
      * return a valid user object if successful, or null.
      *
-     * @return null|\Illuminate\Contracts\Auth\Authenticatable
+     * @return null|Authenticatable
      */
-    public static function validate(Request $request, UserProvider $provider = null)
+    public static function validate(Request $request, ?UserProvider $provider = null)
     {
         $expected_audience = env('FIREBASE_PROJECT');
         if (empty($expected_audience)) {
@@ -43,7 +44,7 @@ class Firebase_Guard implements StatelessValidator
         return static::returnUser($provider, $return);
     }
 
-    protected static function returnUser(UserProvider $provider = null, array $data)
+    protected static function returnUser(?UserProvider $provider, array $data)
     {
         if (empty($provider)) {
             $user = new FirebaseUser();

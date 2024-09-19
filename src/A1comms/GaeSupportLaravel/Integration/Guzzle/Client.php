@@ -45,7 +45,7 @@ class Client extends GuzzleClient
                 $config['handler']->push(new TraceMiddleware());
             }
         } else {
-            Log::warning('A1comms\\GaeSupportLaravel\\Integration\\Guzzle\\Client: Unable to modify handler stack, no push method defined');
+            Log::warning('A1comms\GaeSupportLaravel\Integration\Guzzle\Client: Unable to modify handler stack, no push method defined');
         }
 
         return parent::__construct($config);

@@ -13,7 +13,7 @@ class GaeJob extends Job implements JobContract
     /**
      * The Gae queue instance.
      *
-     * @var \A1comms\GaeSupportLaravel\Queue\GaeQueue
+     * @var GaeQueue
      */
     protected $gaeQueue;
 
@@ -108,7 +108,7 @@ class GaeJob extends Job implements JobContract
     /**
      * Get the IoC container instance.
      *
-     * @return \Illuminate\Container\Container
+     * @return Container
      */
     public function getContainer()
     {
@@ -118,7 +118,7 @@ class GaeJob extends Job implements JobContract
     /**
      * Get the underlying Gae queue instance.
      *
-     * @return \A1comms\GaeSupportLaravel\Queue\GaeQueue
+     * @return GaeQueue
      */
     public function getGaeQueue()
     {

@@ -16,7 +16,7 @@ trait HandlesFirebaseLogin
     /**
      * fetchSessionToken.
      */
-    protected function fetchSessionToken(string $idToken, null|string $tenantId = null): string
+    protected function fetchSessionToken(string $idToken, ?string $tenantId = null): string
     {
         return Token::fetchToken(
             env('FIREBASE_PROJECT'),
@@ -29,7 +29,7 @@ trait HandlesFirebaseLogin
     /**
      * fetchUserData.
      */
-    protected function fetchUserData(string $idToken, string $uid, null|string $tenantId = null): array
+    protected function fetchUserData(string $idToken, string $uid, ?string $tenantId = null): array
     {
         return Token::userLookup(
             env('FIREBASE_PROJECT'),
@@ -56,7 +56,7 @@ trait HandlesFirebaseLogin
     /**
      * attachLoginCookie.
      */
-    protected function attachLoginCookie(string $token, int $expiryMinutes = 2628000, null|string $path = null, null|string $domain = null): void
+    protected function attachLoginCookie(string $token, int $expiryMinutes = 2628000, ?string $path = null, ?string $domain = null): void
     {
         CookieHelper::queue(
             $this->fetchLoginCookie($token, $expiryMinutes, $path, $domain),
@@ -66,7 +66,7 @@ trait HandlesFirebaseLogin
     /**
      * refreshLoginCookie.
      */
-    protected function refreshLoginCookie(Request $request, int $expiryMinutes = 2628000, null|string $path = null, null|string $domain = null): void
+    protected function refreshLoginCookie(Request $request, int $expiryMinutes = 2628000, ?string $path = null, ?string $domain = null): void
     {
         $cookieName = config('gaesupport.auth.firebase.cookie_name');
 
@@ -85,7 +85,7 @@ trait HandlesFirebaseLogin
     /**
      * forgetLoginCookie.
      */
-    protected function forgetLoginCookie(null|string $path = null, null|string $domain = null): void
+    protected function forgetLoginCookie(?string $path = null, ?string $domain = null): void
     {
         CookieHelper::queue(
             CookieHelper::forget(
@@ -106,7 +106,7 @@ trait HandlesFirebaseLogin
         );
     }
 
-    private function fetchLoginCookie(string $token, int $expiryMinutes = 2628000, null|string $path = null, null|string $domain = null): Cookie
+    private function fetchLoginCookie(string $token, int $expiryMinutes = 2628000, ?string $path = null, ?string $domain = null): Cookie
     {
         return CookieHelper::make(
             config('gaesupport.auth.firebase.cookie_name'),     // name

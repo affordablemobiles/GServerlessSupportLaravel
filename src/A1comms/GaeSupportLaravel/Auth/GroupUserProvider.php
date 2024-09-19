@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth;
 
+use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 use A1comms\GaeSupportLaravel\Integration\Google\Credentials\GCEDWDCredentials;
 use Google\Client;
@@ -40,7 +41,7 @@ class GroupUserProvider extends NullUserProvider
      *
      * @param string $identifier
      *
-     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveById($identifier)
     {

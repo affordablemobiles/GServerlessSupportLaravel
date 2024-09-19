@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Cache;
 
 use Illuminate\Cache\CacheManager;
+use Illuminate\Contracts\Cache\Repository;
 
 class InstanceLocal extends CacheManager
 {
@@ -28,7 +29,7 @@ class InstanceLocal extends CacheManager
     /**
      * Get a singleton instance of this class.
      *
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return Repository
      */
     public static function getInstance()
     {
@@ -44,7 +45,7 @@ class InstanceLocal extends CacheManager
      *
      * @param null|string $name
      *
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return Repository
      */
     public function store($name = null)
     {
@@ -54,7 +55,7 @@ class InstanceLocal extends CacheManager
     /**
      * Get the driver instance.
      *
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return Repository
      */
     private function getDriver()
     {

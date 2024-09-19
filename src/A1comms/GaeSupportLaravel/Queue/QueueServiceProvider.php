@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Queue;
 
+use Illuminate\Queue\QueueManager;
 use Illuminate\Queue\QueueServiceProvider as LaravelQueueServiceProvider;
 
 class QueueServiceProvider extends LaravelQueueServiceProvider
@@ -11,7 +12,7 @@ class QueueServiceProvider extends LaravelQueueServiceProvider
     /**
      * Register the connectors on the queue manager.
      *
-     * @param \Illuminate\Queue\QueueManager $manager
+     * @param QueueManager $manager
      */
     public function registerConnectors($manager): void
     {
@@ -22,7 +23,7 @@ class QueueServiceProvider extends LaravelQueueServiceProvider
     /**
      * Register the GAE queue connector.
      *
-     * @param \Illuminate\Queue\QueueManager $manager
+     * @param QueueManager $manager
      */
     protected function registerGaeConnector($manager): void
     {

@@ -97,7 +97,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     /**
      * Register the Blade engine implementation.
      *
-     * @param \Illuminate\View\Engines\EngineResolver $resolver
+     * @param EngineResolver $resolver
      */
     public function registerGaeBladeEngine($resolver): void
     {

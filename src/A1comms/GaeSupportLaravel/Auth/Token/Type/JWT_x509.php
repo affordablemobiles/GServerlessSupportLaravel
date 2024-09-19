@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth\Token\Type;
 
+use Jose\Component\KeyManagement\JWKFactory;
 use SimpleJWT\Keys\KeyFactory;
 use SimpleJWT\Keys\KeySet;
 
@@ -20,7 +21,7 @@ class JWT_x509 extends JWT
      *
      * @param string $jwk_url URL of the JWK public key file
      *
-     * @return \SimpleJWT\Keys\KeySet
+     * @return KeySet
      */
     protected static function get_jwk_set($jwk_url)
     {
@@ -35,7 +36,7 @@ class JWT_x509 extends JWT
                     json_encode(
                         array_merge(
                             ['kid' => $id],
-                            \Jose\Component\KeyManagement\JWKFactory::createFromCertificate($key)->all()
+                            JWKFactory::createFromCertificate($key)->all()
                         )
                     ),
                     'auto'

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth;
 
+use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
 use Illuminate\Support\Facades\Log;
 
 class ListUserProvider extends NullUserProvider
@@ -32,7 +33,7 @@ class ListUserProvider extends NullUserProvider
      *
      * @param string $identifier
      *
-     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveById($identifier)
     {

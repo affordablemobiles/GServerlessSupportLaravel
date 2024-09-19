@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace A1comms\GaeSupportLaravel\Queue;
 
 use A1comms\GaeSupportLaravel\Integration\TaskQueue\PushTask;
+use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Contracts\Queue\Queue as QueueContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Queue\Jobs\Job;
 use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +20,7 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * The current request instance.
      *
-     * @var \Illuminate\Http\Request
+     * @var Request
      */
     protected $request;
 
@@ -53,7 +55,7 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * The encrypter implementation.
      *
-     * @var \Illuminate\Contracts\Encryption\Encrypter
+     * @var Encrypter
      */
     protected $encrypter;
 
@@ -163,7 +165,7 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param string $queue
      *
-     * @return null|\Illuminate\Queue\Jobs\Job
+     * @return null|Job
      */
     public function pop($queue = null)
     {
@@ -196,7 +198,7 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Marshal a push queue request and fire the job.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function marshal()
     {
@@ -240,7 +242,7 @@ class GaeQueue extends Queue implements QueueContract
     /**
      * Get the request instance.
      *
-     * @return \Illuminate\Http\Request
+     * @return Request
      */
     public function getRequest()
     {
@@ -278,7 +280,7 @@ class GaeQueue extends Queue implements QueueContract
      *
      * @param object $job
      *
-     * @return \A1comms\GaeSupportLaravel\Queue\GaeJob
+     * @return GaeJob
      */
     protected function createPushedGaeJob($job)
     {

@@ -63,7 +63,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
             }
         } catch (Exception $e) {
             trigger_error(
-                sprintf('Datastore lookup failed: %s', $e->getMessage()),
+                \sprintf('Datastore lookup failed: %s', $e->getMessage()),
                 E_USER_WARNING
             );
         }
@@ -88,7 +88,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
                 (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'upsert'], [$entity]);
             } catch (Exception $e) {
                 trigger_error(
-                    sprintf('Datastore upsert failed: %s', $e->getMessage()),
+                    \sprintf('Datastore upsert failed: %s', $e->getMessage()),
                     E_USER_WARNING
                 );
 
@@ -106,7 +106,7 @@ class DatastoreSessionHandler implements \SessionHandlerInterface
             (new ExponentialBackoff(6, [DatastoreFactory::class, 'shouldRetry']))->execute([$this->datastore, 'delete'], [$key]);
         } catch (Exception $e) {
             trigger_error(
-                sprintf('Datastore delete failed: %s', $e->getMessage()),
+                \sprintf('Datastore delete failed: %s', $e->getMessage()),
                 E_USER_WARNING
             );
 

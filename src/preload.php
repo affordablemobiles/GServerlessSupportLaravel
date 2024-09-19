@@ -3,8 +3,12 @@
 declare(strict_types=1);
 
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
+use A1comms\GaeSupportLaravel\Trace\LowLevelLoader;
+use A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter;
+use A1comms\GaeSupportLaravel\Trace\Sampler\HttpHeaderSampler;
 use Google\Cloud\Storage\StorageClient;
 use OpenCensus\Trace\Exporter\StackdriverExporter;
+use OpenCensus\Trace\Propagator\HttpHeaderPropagator;
 use OpenCensus\Trace\Tracer;
 
 require __DIR__.'/helpers.php';
@@ -46,11 +50,11 @@ if (is_gae() && (PHP_SAPI !== 'cli')) {
     if (!defined('GAE_TRACE_STOP')) {
         $options = [
             'sampler' => (
-                new A1comms\GaeSupportLaravel\Trace\Sampler\HttpHeaderSampler()
+                new HttpHeaderSampler()
             ),
             'propagator' => (
-                new OpenCensus\Trace\Propagator\HttpHeaderPropagator(
-                    new A1comms\GaeSupportLaravel\Trace\Propagator\CloudTraceFormatter()
+                new HttpHeaderPropagator(
+                    new CloudTraceFormatter()
                 )
             ),
         ];
@@ -63,10 +67,10 @@ if (is_gae() && (PHP_SAPI !== 'cli')) {
         }
     }
 
-    $loaderInterface = 'App\\Trace\\LowLevelLoader';
+    $loaderInterface = 'App\Trace\LowLevelLoader';
     if (!class_exists($loaderInterface)) {
         // TODO: Different default arrays for Laravel vs Lumen?
-        $loaderInterface = A1comms\GaeSupportLaravel\Trace\LowLevelLoader::class;
+        $loaderInterface = LowLevelLoader::class;
     }
     $traceProviders = $loaderInterface::getList();
 

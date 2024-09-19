@@ -36,7 +36,7 @@ class JWT
      *
      * @return array returns array containing "sub" and "email" if token is valid
      *
-     * @throws \A1comms\GaeSupportLaravel\Auth\Exception\InvalidTokenException if the token is invalid
+     * @throws InvalidTokenException if the token is invalid
      */
     public static function validate($jwt, $expected_audience, $jwk_url, $sig_alg, $issuers)
     {
@@ -102,7 +102,7 @@ class JWT
      *
      * @param string $jwk_url URL of the JWK public key file
      *
-     * @return \SimpleJWT\Keys\KeySet
+     * @return KeySet
      */
     protected static function get_jwk_set($jwk_url)
     {

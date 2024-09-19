@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace A1comms\GaeSupportLaravel\Auth;
 
+use A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel;
 use A1comms\GaeSupportLaravel\Integration\ErrorReporting\Report as ErrorBootstrap;
 use A1comms\GaeSupportLaravel\Integration\Google\Credentials\GCEDWDCredentials;
 use Google\Client;
@@ -40,7 +41,7 @@ class IdentityGroupUserProvider extends NullUserProvider
      *
      * @param string $identifier
      *
-     * @return null|\A1comms\GaeSupportLaravel\Auth\Contracts\NullUserModel
+     * @return null|NullUserModel
      */
     public function retrieveById($identifier)
     {
@@ -75,7 +76,7 @@ class IdentityGroupUserProvider extends NullUserProvider
             return (new CloudIdentity($client))->groups_memberships->checkTransitiveMembership(
                 'groups/'.$this->group,
                 [
-                    'query' => sprintf("member_key_id == '%s'", $identifier),
+                    'query' => \sprintf("member_key_id == '%s'", $identifier),
                 ],
             )->getHasMembership();
         } catch (\Throwable $ex) {

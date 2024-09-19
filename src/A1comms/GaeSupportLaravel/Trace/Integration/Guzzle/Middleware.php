@@ -22,7 +22,7 @@ class Middleware
      *
      * @param PropagatorInterface $propagator Interface responsible for serializing trace context
      */
-    public function __construct(PropagatorInterface $propagator = null)
+    public function __construct(?PropagatorInterface $propagator = null)
     {
         $this->propagator = $propagator ?: new HttpHeaderPropagator();
     }

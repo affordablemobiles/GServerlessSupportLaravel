@@ -51,7 +51,7 @@ if (is_gae()) {
             // IPv6
             $cf_ip_ranges = require __DIR__.'/cf-ipv6.php';
 
-            foreach ($cf_ip_ranges as $range) {
+            foreach ($cf_ip_ranges as $raw_range) {
                 $range = Factory::parseRangeString($raw_range);
                 if ($range->contains($address)) {
                     if ($is_cf) {

@@ -75,7 +75,7 @@ class IAMSigner implements Signer
 
         $service = new \Google_Service_IAMCredentials($client);
 
-        $keyID = sprintf('projects/-/serviceAccounts/%s', $key->contents());
+        $keyID = \sprintf('projects/-/serviceAccounts/%s', $key->contents());
 
         $requestBody = new \Google_Service_IAMCredentials_SignBlobRequest();
 

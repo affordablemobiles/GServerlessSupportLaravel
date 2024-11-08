@@ -31,7 +31,7 @@ class HttpInstrumentation implements InstrumentationInterface
 
                 /** @psalm-suppress ArgumentTypeCoercion */
                 $builder = $instrumentation->tracer()
-                    ->spanBuilder(sprintf('%s', $request?->method() ?? 'unknown'))
+                    ->spanBuilder(\sprintf('%s', $request?->method() ?? 'unknown'))
                     ->setSpanKind(SpanKind::KIND_SERVER)
                     ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
                     ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)

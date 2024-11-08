@@ -42,7 +42,7 @@ class Report
 
     public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = [], string $level = LogLevel::ERROR): void
     {
-        $message = sprintf('PHP Notice: %s', (string) $ex);
+        $message = \sprintf('PHP Notice: %s', (string) $ex);
         if (self::$psrLogger) {
             $logContext = [
                 'context' => array_merge($context, [
@@ -86,7 +86,7 @@ class Report
         if (!($level & error_reporting())) {
             return true;
         }
-        $message = sprintf(
+        $message = \sprintf(
             '%s: %s in %s on line %d',
             self::getErrorPrefix($level),
             $message,
@@ -139,7 +139,7 @@ class Report
                 case E_PARSE:
                 case E_COMPILE_ERROR:
                 case E_CORE_ERROR:
-                    $message = sprintf(
+                    $message = \sprintf(
                         '%s: %s in %s on line %d',
                         self::getErrorPrefix($err['type']),
                         $err['message'],

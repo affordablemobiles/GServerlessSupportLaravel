@@ -76,7 +76,7 @@ class IdentityGroupUserProvider extends NullUserProvider
             return (new CloudIdentity($client))->groups_memberships->checkTransitiveMembership(
                 'groups/'.$this->group,
                 [
-                    'query' => sprintf("member_key_id == '%s'", $identifier),
+                    'query' => \sprintf("member_key_id == '%s'", $identifier),
                 ],
             )->getHasMembership();
         } catch (\Throwable $ex) {

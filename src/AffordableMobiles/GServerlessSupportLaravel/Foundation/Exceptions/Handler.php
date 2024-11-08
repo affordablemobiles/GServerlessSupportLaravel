@@ -19,6 +19,12 @@ class Handler extends LaravelHandler
      */
     protected function reportThrowable(\Throwable $e): void
     {
+        if (!is_g_serverless()) {
+            parent::reportThrowable($e);
+
+            return;
+        }
+
         $this->reportedExceptionMap[$e] = true;
 
         if (Reflector::isCallable($reportCallable = [$e, 'report'])

@@ -124,7 +124,7 @@ class AuthTokenMiddleware
 
         $audienceSource = static function (UriInterface $request_uri) use ($audienceMap) {
             if (self::isCloudFunction($request_uri)) {
-                return sprintf(
+                return \sprintf(
                     '%s://%s%s',
                     $request_uri->getScheme(),
                     $request_uri->getHost(),

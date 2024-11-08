@@ -64,7 +64,7 @@ class GuzzleInstrumentation implements InstrumentationInterface
                 foreach (array_filter(explode('|', env('TRACE_GUZZLE_HTTP_REQUEST_HEADERS', ''))) as $header) {
                     if ($request->hasHeader($header)) {
                         $spanBuilder->setAttribute(
-                            sprintf('http.request.header.%s', strtolower($header)),
+                            \sprintf('http.request.header.%s', strtolower($header)),
                             $request->getHeader($header)
                         );
                     }
@@ -124,7 +124,7 @@ class GuzzleInstrumentation implements InstrumentationInterface
                         foreach (array_filter(explode('|', env('TRACE_GUZZLE_HTTP_RESPONSE_HEADERS', ''))) as $header) {
                             if ($response->hasHeader($header)) {
                                 // @psalm-suppress ArgumentTypeCoercion
-                                $span->setAttribute(sprintf('http.response.header.%s', strtolower($header)), $response->getHeader($header));
+                                $span->setAttribute(\sprintf('http.response.header.%s', strtolower($header)), $response->getHeader($header));
                             }
                         }
                         if ($response->getStatusCode() >= 400 && $response->getStatusCode() < 600) {

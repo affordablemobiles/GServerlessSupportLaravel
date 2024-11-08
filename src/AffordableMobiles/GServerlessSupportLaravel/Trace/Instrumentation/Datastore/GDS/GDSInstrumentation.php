@@ -23,7 +23,7 @@ class GDSInstrumentation implements InstrumentationInterface
             Gateway::class,
             'execute',
             pre: static function (Gateway $client, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): void {
-                SimpleSpan::pre($instrumentation, sprintf('GDS/execute/%s', $params[0] ?? 'unknown'), []);
+                SimpleSpan::pre($instrumentation, \sprintf('GDS/execute/%s', $params[0] ?? 'unknown'), []);
             },
             post: static function (Gateway $client, array $params, mixed $returnValue, ?\Throwable $exception): void {
                 SimpleSpan::post();
@@ -67,7 +67,7 @@ class GDSInstrumentation implements InstrumentationInterface
             GatewayREST::class,
             'executePostRequest',
             pre: static function (GatewayREST $client, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($instrumentation): void {
-                SimpleSpan::pre($instrumentation, sprintf('GDS/execute/%s', $params[0] ?? 'unknown'), []);
+                SimpleSpan::pre($instrumentation, \sprintf('GDS/execute/%s', $params[0] ?? 'unknown'), []);
             },
             post: static function (GatewayREST $client, array $params, mixed $returnValue, ?\Throwable $exception): void {
                 SimpleSpan::post();

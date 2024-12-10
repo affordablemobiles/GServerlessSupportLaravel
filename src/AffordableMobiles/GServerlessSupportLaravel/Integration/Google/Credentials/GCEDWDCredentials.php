@@ -119,6 +119,7 @@ class GCEDWDCredentials extends GCECredentials
      * If $httpHandler is not specified a the default HttpHandler is used.
      *
      * @param callable $httpHandler callback which delivers psr7 request
+     * @param array<mixed> $headers [optional] Metrics headers to be inserted into the token endpoint request present.
      *
      * @return array<mixed> {
      *                      A set of auth related metadata, based on the token type
@@ -131,12 +132,12 @@ class GCEDWDCredentials extends GCECredentials
      *
      * @throws \Exception
      */
-    public function fetchAuthToken(?callable $httpHandler = null)
+    public function fetchAuthToken(?callable $httpHandler = null, array $headers = [])
     {
         if (empty($this->subject)) {
-            return parent::fetchAuthToken($httpHandler);
+            return parent::fetchAuthToken($httpHandler, $headers);
         }
 
-        return $this->auth->fetchAuthToken($httpHandler);
+        return $this->auth->fetchAuthToken($httpHandler, $headers);
     }
 }

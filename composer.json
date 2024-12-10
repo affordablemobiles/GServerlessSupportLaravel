@@ -16,6 +16,7 @@
         "a1comms/opencensus-exporter-stackdriver": "~0",
         "guzzlehttp/guzzle": "^7.4.1",
         "google/cloud": ">=0.175.0 <1.0.0",
+        "google/auth": ">=1.44.0",
         "kelvinmo/simplejwt": "^0.6.2",
         "illuminate/support": "~9",
         "illuminate/contracts": "~9",

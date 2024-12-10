@@ -131,12 +131,12 @@ class GCEDWDCredentials extends GCECredentials
      *
      * @throws \Exception
      */
-    public function fetchAuthToken(?callable $httpHandler = null)
+    public function fetchAuthToken(?callable $httpHandler = null, array $headers = [])
     {
         if (empty($this->subject)) {
-            return parent::fetchAuthToken($httpHandler);
+            return parent::fetchAuthToken($httpHandler, $headers);
         }
 
-        return $this->auth->fetchAuthToken($httpHandler);
+        return $this->auth->fetchAuthToken($httpHandler, $headers);
     }
 }

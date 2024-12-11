@@ -74,7 +74,7 @@ class FakeCompiler extends BladeCompiler implements CompilerInterface
      *
      * @param string $name
      */
-    public function directive($name, callable $handler): void {}
+    public function directive($name, callable $handler, bool $bind = false): void {}
 
     /**
      * Register an "if" statement directive.

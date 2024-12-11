@@ -118,8 +118,8 @@ class GCEDWDCredentials extends GCECredentials
      * Fetches the auth tokens from the GCE metadata host if it is available.
      * If $httpHandler is not specified a the default HttpHandler is used.
      *
-     * @param callable $httpHandler callback which delivers psr7 request
-     * @param array<mixed> $headers [optional] Metrics headers to be inserted into the token endpoint request present.
+     * @param callable     $httpHandler callback which delivers psr7 request
+     * @param array<mixed> $headers     [optional] Metrics headers to be inserted into the token endpoint request present
      *
      * @return array<mixed> {
      *                      A set of auth related metadata, based on the token type

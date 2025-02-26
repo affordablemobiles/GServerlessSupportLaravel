@@ -18,18 +18,18 @@
     ],
     "require": {
         "php": "^8.3",
-        "affordablemobiles/eloquent-datastore": "~11",
-        "affordablemobiles/eloquent-sqlcommenter": "~11",
+        "affordablemobiles/eloquent-datastore": "~12",
+        "affordablemobiles/eloquent-sqlcommenter": "~12",
         "open-telemetry/sdk": "~1",
         "affordablemobiles/open-telemetry-operations-php": "~1",
-        "guzzlehttp/guzzle": "^7.8.1",
-        "google/cloud": ">=0.239.0 <1.0.0",
-        "google/auth": ">=1.44.0",
-        "kelvinmo/simplejwt": "^0.8.2",
-        "laravel/framework": "~11"
+        "guzzlehttp/guzzle": "^7.8.2",
+        "google/cloud": ">=0.277.0 <1.0.0",
+        "google/auth": ">=1.46.0",
+        "kelvinmo/simplejwt": "^1.0.1",
+        "laravel/framework": "~12"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.6"
+        "friendsofphp/php-cs-fixer": "^3.70"
     },
     "suggest": {
         "a1comms/php-gds": "Provides legacy Datastore support",

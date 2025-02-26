@@ -20,7 +20,7 @@
 </div>
 <br>
 
-Google Serverless runtime support package for **Laravel 11.x**.
+Google Serverless runtime support package for **Laravel 12.x**.
 
 Supporting Cloud Run & App Engine (Standard Environment) with the `php83` runtime.
 
@@ -57,7 +57,7 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
 
 ```js
     "require": {
-        "affordablemobiles/g-serverless-support-laravel": "~11"
+        "affordablemobiles/g-serverless-support-laravel": "~12"
     }
 ```
 
@@ -165,56 +165,14 @@ This does several things, such as:
 * Turns OpenTelemetry tracing on for every request.
 * Turns off sticky database connections per instance.
 
-## Upgrading (from Laravel 9.x LTS)
+## Upgrading (from Laravel 11.x LTS)
 
 **1.** Update the package version in `composer.json`:
 
 ```json
     "require": {
-        "affordablemobiles/g-serverless-support-laravel": "~11"
+        "affordablemobiles/g-serverless-support-laravel": "~12"
     }
 ```
 
-**2.** Follow the Laravel upgrade steps for all versions 9.x ... 11.x
-
-**3.** Update any references in your code to our namespace:
-
-`A1comms\GaeSupportLaravel`
-
-has changed to:
-
-`AffordableMobiles\GServerlessSupportLaravel`
-
-**4.** Ensure `bootstrap/app.php` is extending our `Application` class:
-
-Please see step 3 in the main installation guide as an example.
-
-**5.** Change to the new provider configuration format in `config/app.php`:
-
-Please see step 4 in the main installation guide as an example.
-
-**6.** Update explicit/silent exception reporting:
-
-Anywhere referencing the Error Reporting integration class directly:
-
-`AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting::exceptionHandler($e);`
-
-should be updated to report using Laravel's new method:
-
-`report($e);`
-
-**7.** Revert `config/logging.php` to the Laravel default.
-
-**8.** Update environment variables:
-
-Please see step 5 in the main installation guide & update your environment variables accordingly.
-
-**9.** If you are using `php-gds` for Datastore, consider switching to [eloquent-datastore](https://github.com/affordablemobiles/eloquent-datastore).
-
-Otherwise, you'll need to require it via composer yourself, as it is no longer required by this repository.
-
-**10.** If using the `lcobucci/jwt` compatible DWDTokenSource, it has now been removed.
-
-Migrate to the `google/auth` compatible [GCEDWDCredentials](src/AffordableMobiles/GServerlessSupportLaravel/Integration/Google/Credentials/GCEDWDCredentials.php).
-
-**11.** Update your `app.yaml` file(s) to specify `runtime: php83`.
+**2.** Follow the Laravel upgrade steps for all versions 11.x ... 12.x

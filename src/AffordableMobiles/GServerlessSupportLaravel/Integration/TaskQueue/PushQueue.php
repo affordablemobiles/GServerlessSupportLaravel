@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Integration\TaskQueue;
 
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Datastore\DatastoreFactory;
 use Google\Cloud\Core\ExponentialBackoff;
+use Google\Cloud\Tasks\V2\CreateTaskRequest;
 use Google\Cloud\Tasks\V2\Task;
 
 class PushQueue
@@ -48,8 +49,7 @@ class PushQueue
                 Client::instance()->getClient(),
                 'createTask',
             ], [
-                $this->full_name,
-                $task,
+                CreateTaskRequest::build($this->full_name, $task),
             ]);
 
             $tdetails = PushTask::parseTaskName($tresult);

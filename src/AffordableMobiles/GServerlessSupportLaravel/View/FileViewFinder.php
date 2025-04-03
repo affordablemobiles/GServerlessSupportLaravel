@@ -8,136 +8,110 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
 
 /**
- * Search for views in a static manifest instead of on disk,
- * hopefully resulting in less costly disk I/O.
+ * Finds views using a static manifest containing compiled view mappings.
+ * Skips filesystem lookups at runtime for performance in serverless environments.
  */
 class FileViewFinder extends LaravelFileViewFinder
 {
-    private $manifest = [];
+    /**
+     * The 'views' portion of the manifest: [canonicalName => hashedFilename.php].
+     *
+     * @var array<string, string>
+     */
+    protected array $manifestViews = [];
 
-    private $pathCache = [];
+    /**
+     * The 'map' portion of the manifest: [relativePath => canonicalName].
+     * Used for View::file() lookups.
+     *
+     * @var array<string, string>
+     */
+    protected array $manifestMap = [];
 
+    /**
+     * The path where the manifest file is located.
+     */
+    protected ?string $manifestPath = null;
+
+    /**
+     * Create a new file view loader instance.
+     *
+     * @param array       $paths      Original view paths (not used for runtime lookup)
+     * @param null|array  $extensions View extensions
+     * @param null|string $cachePath  path to the directory containing the manifest
+     *
+     * @throws \RuntimeException if the manifest file is missing or invalid when expected
+     */
     public function __construct(Filesystem $files, array $paths, ?array $extensions = null, ?string $cachePath = null)
     {
-        $this->files = $files;
-        $this->paths = $paths;
-
-        if (isset($extensions)) {
-            $this->extensions = $extensions;
-        }
+        $this->files         = $files;
+        $this->paths         = $paths;
+        $this->extensions    = $extensions ?? ['blade.php', 'php', 'css'];
+        $this->hints         = [];
+        $this->manifestViews = []; // Initialize
+        $this->manifestMap   = [];   // Initialize
 
         if (!empty($cachePath)) {
-            $manifestPath = $cachePath.'/manifest.php';
-            if (is_file($manifestPath)) {
-                $this->manifest = require $manifestPath;
-            }
-        }
-    }
+            $this->manifestPath = rtrim($cachePath, '/\\').'/manifest.php';
 
-    public static function getRelativePath($startPath, $endPath, $dot = true)
-    {
-        // Normalize separators on Windows
-        if ('\\' === \DIRECTORY_SEPARATOR) {
-            $endPath   = str_replace('\\', '/', $endPath);
-            $startPath = str_replace('\\', '/', $startPath);
-        }
-        $stripDriveLetter = static function ($path) {
-            if (\strlen($path) > 2 && ':' === $path[1] && '/' === $path[2] && ctype_alpha($path[0])) {
-                return substr($path, 2);
-            }
+            if ($this->files->exists($this->manifestPath)) {
+                $manifestContent = @require $this->manifestPath;
 
-            return $path;
-        };
-        $endPath   = $stripDriveLetter($endPath);
-        $startPath = $stripDriveLetter($startPath);
-        // Split the paths into arrays
-        $startPathArr       = explode('/', trim($startPath, '/'));
-        $endPathArr         = explode('/', trim($endPath, '/'));
-        $normalizePathArray = static function ($pathSegments, $absolute) {
-            $result = [];
-            foreach ($pathSegments as $segment) {
-                if ('..' === $segment && ($absolute || \count($result))) {
-                    array_pop($result);
-                } elseif ('.' !== $segment) {
-                    $result[] = $segment;
+                // Validate the structure of the loaded manifest
+                if (\is_array($manifestContent) && isset($manifestContent['map'], $manifestContent['views']) && \is_array($manifestContent['map']) && \is_array($manifestContent['views'])) {
+                    $this->manifestMap   = $manifestContent['map'];
+                    $this->manifestViews = $manifestContent['views'];
+                } else {
+                    throw new \RuntimeException("View manifest file is invalid or corrupt (expecting 'map' and 'views' arrays): {$this->manifestPath}");
                 }
+            } else {
+                throw new \RuntimeException("View manifest file not found: {$this->manifestPath}");
             }
-
-            return $result;
-        };
-        $startPathArr = $normalizePathArray($startPathArr, self::isAbsolutePath($startPath));
-        $endPathArr   = $normalizePathArray($endPathArr, self::isAbsolutePath($endPath));
-        // Find for which directory the common path stops
-        $index = 0;
-        while (isset($startPathArr[$index], $endPathArr[$index]) && $startPathArr[$index] === $endPathArr[$index]) {
-            ++$index;
         }
-        // Determine how deep the start path is relative to the common path (ie, "web/bundles" = 2 levels)
-        if (1 === \count($startPathArr) && '' === $startPathArr[0]) {
-            $depth = 0;
-        } else {
-            $depth = \count($startPathArr) - $index;
-        }
-        // Repeated "../" for each level need to reach the common path
-        $traverser        = str_repeat('../', $depth);
-        $endPathRemainder = implode('/', \array_slice($endPathArr, $index));
-        // Construct $endPath from traversing to the common path, then to the remaining $endPath
-        $relativePath = $traverser.('' !== $endPathRemainder ? $endPathRemainder/* .'/' */ : '');
-
-        return '' === $relativePath ? './' : $relativePath;
-    }
-
-    public static function isAbsolutePath($file)
-    {
-        return strspn($file, '/\\', 0, 1)
-            || (
-                \strlen($file) > 3 && ctype_alpha($file[0])
-                                   && ':' === $file[1]
-                                   && strspn($file, '/\\', 2, 1)
-            )
-            || null !== parse_url($file, PHP_URL_SCHEME);
     }
 
     /**
-     * Find the given view in the list of paths.
+     * Find the given view name by checking the 'views' part of the manifest.
+     * Returns a "fake" path ending in .blade.php to satisfy the ViewFactory's
+     * engine resolution logic.
      *
-     * @param string $name
-     * @param array  $paths
+     * @param string $name The canonical view name (e.g., 'posts.index', 'admin::dashboard')
      *
-     * @return string
+     * @return string A fake path combining the name and '.blade.php'.
      *
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException if the view name is not found in the manifest
      */
-    protected function findInPaths($name, $paths)
+    public function find($name): string
     {
-        foreach ((array) $paths as $path) {
-            foreach ($this->getPossibleViewFiles($name) as $file) {
-                /**
-                 * Use relative path translation here,
-                 * as our path on production will probably
-                 * be different to the path in build where
-                 * the templates and manifest were compiled.
-                 */
-                $viewPath = $this->transformViewPath($path).'/'.$file;
-                if (!empty($this->manifest[$viewPath])) {
-                    return $viewPath;
-                }
-            }
+        $name = trim($name);
+        // Use the 'views' part of the manifest for standard lookups
+        if (isset($this->manifestViews[$name])) {
+            // This allows ViewFactory::getEngineFromPath to detect the 'blade' engine
+            return $name.'.blade.php';
         }
 
-        throw new \InvalidArgumentException("View [{$name}] not found.");
+        throw new \InvalidArgumentException("View [{$name}] not found in pre-compiled manifest views.");
     }
 
-    protected function transformViewPath($path)
+    /**
+     * Get the loaded file map data (relativePath => canonicalName).
+     * Useful for injecting into the GServerlessViewFactory.
+     *
+     * @return array<string, string>
+     */
+    public function getMap(): array
     {
-        if (!empty($this->pathCache[$path])) {
-            return $this->pathCache[$path];
-        }
+        return $this->manifestMap;
+    }
 
-        $viewPath = self::getRelativePath(base_path(), rtrim($path, '/'));
-
-        $this->pathCache[$path] = $viewPath;
-
-        return $viewPath;
+    /**
+     * Get the loaded view compilation data (canonicalName => hashedFilename).
+     * Kept for potential direct use, though FakeCompiler uses it now.
+     *
+     * @return array<string, string>
+     */
+    public function getManifestViews(): array
+    {
+        return $this->manifestViews;
     }
 }

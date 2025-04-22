@@ -7,9 +7,9 @@ namespace AffordableMobiles\GServerlessSupportLaravel\View;
 use AffordableMobiles\GServerlessSupportLaravel\Console\GServerlessViewCompileCommand;
 use AffordableMobiles\GServerlessSupportLaravel\View\Compilers\CompileTimeBladeCompilerWrapper;
 use AffordableMobiles\GServerlessSupportLaravel\View\Compilers\FakeCompiler;
+use AffordableMobiles\GServerlessSupportLaravel\View\Engines\CompilerEngine;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use Illuminate\View\Compilers\BladeCompiler as LaravelBladeCompiler;
-use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
 
@@ -51,14 +51,12 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function registerGServerlessViewFinder(): void
     {
-        $this->app->singleton('view.finder', static function ($app) {
-            return new FileViewFinder(
-                $app['files'],
-                $app['config']['view.paths'], // Keep using config for default paths
-                null,
-                $app['config']['view.compiled'] // Keep using config for cache path
-            );
-        });
+        $this->app->singleton('view.finder', static fn ($app) => new FileViewFinder(
+            $app['files'],
+            $app['config']['view.paths'], // Keep using config for default paths
+            null,
+            $app['config']['view.compiled'] // Keep using config for cache path
+        ));
     }
 
     /**
@@ -172,13 +170,11 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             );
         });
 
-        $this->app->singleton(GServerlessViewCompileCommand::class, static function ($app) {
-            return new GServerlessViewCompileCommand(
-                $app['files'],
-                $app[CompileTimeBladeCompilerWrapper::class],
-                $app[ViewFactoryContract::class] // Inject factory contract
-            );
-        });
+        $this->app->singleton(GServerlessViewCompileCommand::class, static fn ($app) => new GServerlessViewCompileCommand(
+            $app['files'],
+            $app[CompileTimeBladeCompilerWrapper::class],
+            $app[ViewFactoryContract::class] // Inject factory contract
+        ));
 
         $this->commands([GServerlessViewCompileCommand::class]);
     }
@@ -189,12 +185,10 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     protected function registerBladeCompilerIfNotRegistered(): void
     {
         if (!$this->app->bound('blade.compiler')) {
-            $this->app->singleton('blade.compiler', static function ($app) {
-                return new LaravelBladeCompiler(
-                    $app['files'],
-                    $app['config']['view.compiled']
-                );
-            });
+            $this->app->singleton('blade.compiler', static fn ($app) => new LaravelBladeCompiler(
+                $app['files'],
+                $app['config']['view.compiled']
+            ));
         }
     }
 }

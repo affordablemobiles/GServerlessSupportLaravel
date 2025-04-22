@@ -115,11 +115,9 @@ class GuzzleRetryMiddleware
      */
     protected function onFulfilled(RequestInterface $request, array $options): callable
     {
-        return function (ResponseInterface $response) use ($request, $options) {
-            return $this->shouldRetryHttpResponse($options, $request, $response)
+        return fn (ResponseInterface $response) => $this->shouldRetryHttpResponse($options, $request, $response)
                 ? $this->doRetry($request, $options, $response)
                 : $response;
-        };
     }
 
     /**

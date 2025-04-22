@@ -8,10 +8,17 @@ use AffordableMobiles\GServerlessSupportLaravel\Console\GServerlessViewCompileCo
 use AffordableMobiles\GServerlessSupportLaravel\View\Compilers\CompileTimeBladeCompilerWrapper;
 use AffordableMobiles\GServerlessSupportLaravel\View\Compilers\FakeCompiler;
 use AffordableMobiles\GServerlessSupportLaravel\View\Engines\CompilerEngine;
+use AffordableMobiles\GServerlessSupportLaravel\View\Exceptions\BladeMapper;
+use AffordableMobiles\GServerlessSupportLaravel\View\Exceptions\Ignition\ViewExceptionMapper;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use Illuminate\Foundation\Exceptions\Renderer\Mappers\BladeMapper as LaravelBladeMapper;
 use Illuminate\View\Compilers\BladeCompiler as LaravelBladeCompiler;
 use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\ViewException;
 use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
+use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
 /**
  * Provides view services, conditionally replacing components for serverless environments.
@@ -19,18 +26,49 @@ use Illuminate\View\ViewServiceProvider as LaravelViewServiceProvider;
 class ViewServiceProvider extends LaravelViewServiceProvider
 {
     /**
+     * Define the unique, persistent key for the GServerless view finder.
+     *
+     * Use public const so it can be accessed from outside this class.
+     */
+    public const GSERVERLESS_VIEW_FINDER_KEY = 'gserverless.view.finder.persistent';
+
+    /**
+     * Are we running in production?
+     */
+    protected bool $isProduction = false;
+
+    /**
+     * Are we running on serverless?
+     */
+    protected bool $isServerless = false;
+
+    /**
+     * Is the pre-compiled engine running?
+     */
+    protected bool $isRunning = false;
+
+    public function __construct(Application $app)
+    {
+        parent::__construct($app);
+
+        $this->isServerless = \function_exists('is_g_serverless') && is_g_serverless();
+        $this->isProduction = $this->app->environment('production');
+
+        $this->isRunning = $this->isServerless && $this->isProduction;
+    }
+
+    /**
      * Register services.
      */
     public function register(): void
     {
-        $isServerless = \function_exists('is_g_serverless') && is_g_serverless();
-        $isProduction = $this->app->environment('production');
+        $this->app->singleton(LaravelBladeMapper::class, static fn ($app) => new BladeMapper($app));
 
-        if ($isServerless && $isProduction) {
+        if ($this->isRunning) {
             $this->registerGServerlessViewFinder();
             $this->registerGServerlessEngineResolver();
             $this->registerGServerlessViewFactory(); // Register our custom factory
-        } elseif ($isServerless && !$isProduction) {
+        } elseif ($this->isServerless && !$this->isRunning) {
             $writablePath = \function_exists('g_serverless_storage_path') ? realpath(g_serverless_storage_path('framework/views')) : null;
             if ($writablePath && is_dir($writablePath) && is_writable($writablePath)) {
                 $this->app['config']->set('view.compiled', $writablePath);
@@ -46,17 +84,39 @@ class ViewServiceProvider extends LaravelViewServiceProvider
         }
     }
 
+    public function boot(): void
+    {
+        if ($this->isRunning) {
+            $this->registerIgnitionViewExceptionMapper();
+        }
+    }
+
     /**
-     * Register the GServerless view finder implementation (Runtime).
+     * Register the GServerless view finder implementation (Runtime)
+     * and ensure a persistent way to access it.
      */
     public function registerGServerlessViewFinder(): void
     {
-        $this->app->singleton('view.finder', static fn ($app) => new FileViewFinder(
-            $app['files'],
-            $app['config']['view.paths'], // Keep using config for default paths
-            null,
-            $app['config']['view.compiled'] // Keep using config for cache path
-        ));
+        // 1. Use the constant for the unique key registration
+        $this->app->singleton(self::GSERVERLESS_VIEW_FINDER_KEY, static function ($app) {
+            // --- This is your specific configuration ---
+            return new FileViewFinder(
+                $app['files'],
+                $app['config']['view.paths'],
+                null, // Extensions
+                $app['config']['view.compiled']
+            );
+            // If using YourImplementationClass:
+            // return new YourImplementationClass(...);
+            // --- End of your specific configuration ---
+        });
+
+        // 2. Register the standard 'view.finder' key to initially resolve
+        //    using the constant to refer to the unique key.
+        $this->app->singleton('view.finder', static function ($app) {
+            // Delegate to the singleton instance registered under the unique key
+            return $app->make(self::GSERVERLESS_VIEW_FINDER_KEY);
+        });
     }
 
     /**
@@ -106,10 +166,9 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function provides(): array
     {
-        $isProductionServerless = \function_exists('is_g_serverless') && is_g_serverless() && $this->app->environment('production');
         $provides               = parent::provides();
 
-        if ($isProductionServerless) {
+        if ($this->isRunning) {
             $provides = array_merge($provides, [
                 'view.finder', 'view.engine.resolver', 'gserverless.blade.compiler.fake', 'view',
             ]);
@@ -189,6 +248,19 @@ class ViewServiceProvider extends LaravelViewServiceProvider
                 $app['files'],
                 $app['config']['view.compiled']
             ));
+        }
+    }
+
+    protected function registerIgnitionViewExceptionMapper(): void
+    {
+        if (class_exists(IgnitionServiceProvider::class) && $this->app->providerIsLoaded(IgnitionServiceProvider::class)) {
+            $handler = $this->app->make(ExceptionHandler::class);
+
+            if (!method_exists($handler, 'map')) {
+                return;
+            }
+
+            $handler->map(fn (ViewException $viewException) => $this->app->make(ViewExceptionMapper::class)->map($viewException));
         }
     }
 }

@@ -4,40 +4,36 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\View\Engines;
 
+use Illuminate\Support\Str;
+use Illuminate\View\Compilers\CompilerInterface;
 use Illuminate\View\Engines\CompilerEngine as LaravelCompilerEngine;
 
 class CompilerEngine extends LaravelCompilerEngine
 {
     /**
-     * Get the evaluated contents of the view.
-     *
-     * @param string $path
-     *
-     * @return string
+     * Create a new compiler engine instance.
      */
-    public function get($path, array $data = [])
+    public function __construct(CompilerInterface $compiler) // Ensure constructor matches parent
     {
-        $this->lastCompiled[] = $path;
-
-        $compiled = $this->compiler->getCompiledPath($path);
-
-        // Once we have the path to the compiled file, we will evaluate the paths with
-        // typical PHP just like any other templates. We also keep a stack of views
-        // which have been rendered for right exception messages to be generated.
-        $results = $this->evaluatePath($compiled, $data);
-
-        array_pop($this->lastCompiled);
-
-        return $results;
+        parent::__construct($compiler);
     }
 
     /**
      * Get the exception message for an exception.
-     *
-     * @return string
+     * Overrides the parent method to display the canonical view name.
      */
-    protected function getMessage(\Throwable $e)
+    protected function getMessage(\Throwable $e): string
     {
-        return $e->getMessage().' (View: '.last($this->lastCompiled).')';
+        // Get the last view path pushed onto the stack (our "fake" path)
+        $viewPath = last($this->lastCompiled) ?: 'Unknown';
+
+        // Extract the canonical name by removing the .blade.php suffix
+        $canonicalName = $viewPath;
+        if (Str::endsWith($viewPath, '.blade.php')) {
+            $canonicalName = Str::beforeLast($viewPath, '.blade.php');
+        }
+
+        // Construct the message using the canonical name
+        return $e->getMessage().' (View: '.$canonicalName.')';
     }
 }

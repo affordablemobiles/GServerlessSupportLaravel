@@ -72,25 +72,29 @@ class FileViewFinder extends LaravelFileViewFinder
 
     /**
      * Find the given view name by checking the 'views' part of the manifest.
+     * Normalizes the input name (converts '/' to '.') before lookup.
      * Returns a "fake" path ending in .blade.php to satisfy the ViewFactory's
      * engine resolution logic.
      *
-     * @param string $name The canonical view name (e.g., 'posts.index', 'admin::dashboard')
+     * @param string $name The view name, potentially using '/' or '.' as separator.
      *
-     * @return string A fake path combining the name and '.blade.php'.
+     * @return string A fake path combining the normalized name and '.blade.php'.
      *
-     * @throws \InvalidArgumentException if the view name is not found in the manifest
+     * @throws \InvalidArgumentException if the view name is not found in the manifest after normalization
      */
     public function find($name): string
     {
-        $name = trim($name);
-        // Use the 'views' part of the manifest for standard lookups
-        if (isset($this->manifestViews[$name])) {
+        $normalizedName = str_replace('/', '.', trim($name));
+
+        // Use the normalized name for the lookup in the 'views' part of the manifest
+        if (isset($this->manifestViews[$normalizedName])) {
+            // Return the normalized name + .blade.php
             // This allows ViewFactory::getEngineFromPath to detect the 'blade' engine
-            return $name.'.blade.php';
+            return $normalizedName.'.blade.php';
         }
 
-        throw new \InvalidArgumentException("View [{$name}] not found in pre-compiled manifest views.");
+        // Throw exception if the normalized name wasn't found
+        throw new InvalidArgumentException("View [{$normalizedName}] (normalized from [{$name}]) not found in pre-compiled manifest views.");
     }
 
     /**

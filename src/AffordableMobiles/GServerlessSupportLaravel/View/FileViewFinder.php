@@ -98,6 +98,18 @@ class FileViewFinder extends LaravelFileViewFinder
     }
 
     /**
+     * Returns the canonical view name from a compiled path.
+     *
+     * @param string $compiledPath
+     *
+     * @return null|string the canonical view name if found
+     */
+    public function reverseFind($compiledPath): ?string
+    {
+        return array_flip($this->manifestViews)[$compiledPath] ?? null;
+    }
+
+    /**
      * Get the loaded file map data (relativePath => canonicalName).
      * Useful for injecting into the GServerlessViewFactory.
      *

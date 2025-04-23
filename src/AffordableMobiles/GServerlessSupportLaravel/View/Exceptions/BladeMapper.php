@@ -38,6 +38,10 @@ class BladeMapper extends LaravelBladeMapper
         $this->realFinder    = $app['view.finder'];
         $this->factory       = resolve(Factory::class);
         $this->bladeCompiler = resolve(BladeCompiler::class);
+
+        foreach ($this->finder->getHints() as $namespace => $hints) {
+            $this->realFinder->replaceNamespace($namespace, $hints);
+        }
     }
 
     /**

@@ -332,6 +332,8 @@ class GServerlessViewCompileCommand extends Command
 
             // Skip if already processed (e.g., via explicit map or overlapping path)
             if (isset($this->processedPaths[$absolutePath])) {
+                $this->line("   - Already compiled [{$canonicalName}], skipping... ({$count}/{$total})");
+
                 continue;
             }
 

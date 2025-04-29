@@ -94,7 +94,7 @@ class FileViewFinder extends LaravelFileViewFinder
         }
 
         // Throw exception if the normalized name wasn't found
-        throw new InvalidArgumentException("View [{$normalizedName}] (normalized from [{$name}]) not found in pre-compiled manifest views.");
+        throw new \InvalidArgumentException("View [{$normalizedName}] (normalized from [{$name}]) not found in pre-compiled manifest views.");
     }
 
     /**

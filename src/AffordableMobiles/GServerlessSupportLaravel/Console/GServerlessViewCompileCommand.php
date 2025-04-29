@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Exceptions\RegisterErrorViewPaths;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Finder\SplFileInfo;
@@ -73,7 +74,8 @@ class GServerlessViewCompileCommand extends Command
         $this->files           = $files;
         $this->compilerWrapper = $compilerWrapper;
         $this->viewFactory     = $viewFactory;
-        // Removed config assignment
+
+        (new RegisterErrorViewPaths())();
     }
 
     /**

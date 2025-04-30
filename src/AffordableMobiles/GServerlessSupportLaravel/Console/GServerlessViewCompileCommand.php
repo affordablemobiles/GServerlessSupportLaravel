@@ -332,16 +332,17 @@ class GServerlessViewCompileCommand extends Command
                 continue;
             }
 
-            // Skip if already processed (e.g., via explicit map or overlapping path)
-            if (isset($this->processedPaths[$absolutePath])) {
-                $this->line("   - Already compiled [{$canonicalName}], skipping... ({$count}/{$total})");
+            $canonicalName = $this->generateCanonicalName($realBasePath, $absolutePath, $namespace);
+            if (!$canonicalName) {
+                $this->warn("   - Could not determine canonical name for [{$absolutePath}] relative to base [{$realBasePath}].");
 
                 continue;
             }
 
-            $canonicalName = $this->generateCanonicalName($realBasePath, $absolutePath, $namespace);
-            if (!$canonicalName) {
-                $this->warn("   - Could not determine canonical name for [{$absolutePath}] relative to base [{$realBasePath}].");
+            // Skip if already processed (e.g., via explicit map or overlapping path)
+            if (isset($this->processedPaths[$absolutePath])) {
+                $this->line("   - Already compiled [{$canonicalName}], skipping... ({$count}/{$total})");
+                $this->manifestData['views'][$canonicalName] = $this->processedPaths[$absolutePath];
 
                 continue;
             }
@@ -351,7 +352,7 @@ class GServerlessViewCompileCommand extends Command
                 if (!empty($hashedFilename)) {
                     // Only add to 'views' part, 'map' is only for explicitly mapped View::file() targets
                     $this->manifestData['views'][$canonicalName] = $hashedFilename;
-                    $this->processedPaths[$absolutePath]         = true;
+                    $this->processedPaths[$absolutePath]         = $hashedFilename;
                     $this->line("   - Compiled [{$canonicalName}] ({$count}/{$total})");
                 } else {
                     $this->warn("   - Compilation returned empty (but no error) for [{$canonicalName}] ({$count}/{$total})");

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\View\Compilers;
 
+use AffordableMobiles\GServerlessSupportLaravel\View\Exceptions\RuntimeCompilationNotSupportedException;
 use Illuminate\Support\Str;
 use Illuminate\View\Compilers\CompilerInterface;
 
@@ -14,6 +15,27 @@ use Illuminate\View\Compilers\CompilerInterface;
  */
 class FakeCompiler implements CompilerInterface
 {
+    /**
+     * The default echo format.
+     *
+     * @var string
+     */
+    public const DEFAULT_ECHO_FORMAT = 'e(%s)';
+
+    /**
+     * The "regular" / legacy echo string format.
+     *
+     * @var string
+     */
+    protected $echoFormat = self::DEFAULT_ECHO_FORMAT;
+
+    /**
+     * The stack of last echo formats.
+     *
+     * @var array
+     */
+    protected $lastEchoFormat = [];
+
     /**
      * The 'views' portion of the manifest: [canonicalName => hashedFilename.php].
      *
@@ -85,15 +107,74 @@ class FakeCompiler implements CompilerInterface
     }
 
     /**
-     * Compile the view. Throws an exception as runtime compilation is disabled.
+     * Execute the given callback using a custom echo format.
      *
-     * @param string $name the view name
+     * @param string $format
      *
-     * @throws \RuntimeException always
+     * @return string
      */
-    public function compile($name): void
+    public function usingEchoFormat($format, callable $callback)
     {
-        throw new \RuntimeException('Runtime Blade compilation is disabled in this environment.');
+        // Push the current echo format to the stack and set the new one.
+        $this->lastEchoFormat[] = $this->echoFormat;
+        $this->setEchoFormat($format);
+
+        try {
+            // Execute the callback which will render the view.
+            $output = \call_user_func($callback);
+        } finally {
+            // Restore the original echo format from the stack.
+            $this->setEchoFormat(array_pop($this->lastEchoFormat));
+        }
+
+        return $output;
+    }
+
+    /**
+     * Set the echo format to be used by the compiler.
+     *
+     * @param string $format
+     */
+    public function setEchoFormat($format): void
+    {
+        $this->echoFormat = $format;
+    }
+
+    /**
+     * Get the current echo format.
+     *
+     * @return string
+     */
+    public function getEchoFormat()
+    {
+        return $this->echoFormat;
+    }
+
+    /**
+     * Get the default echo format.
+     *
+     * @return string
+     */
+    public function getDefaultEchoFormat()
+    {
+        return self::DEFAULT_ECHO_FORMAT;
+    }
+
+    /**
+     * Compile the view at the given path.
+     * This should never be called at runtime in a pre-compiled environment.
+     *
+     * @param null|string $path
+     *
+     * @throws RuntimeCompilationNotSupportedException
+     */
+    public function compile($path = null): void
+    {
+        // If this method is called, it means a .blade.php file was found on disk
+        // that was not in our manifest, triggering an attempt at runtime compilation.
+        throw new RuntimeCompilationNotSupportedException(
+            'Runtime Blade compilation is disabled in this environment.'
+        );
     }
 
     /**

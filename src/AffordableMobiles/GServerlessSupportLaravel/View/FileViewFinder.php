@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\View;
 
+use AffordableMobiles\GServerlessSupportLaravel\View\Exceptions\RuntimeCompilationNotSupportedException;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 use Illuminate\View\FileViewFinder as LaravelFileViewFinder;
 
 /**
@@ -22,79 +24,97 @@ class FileViewFinder extends LaravelFileViewFinder
 
     /**
      * The 'map' portion of the manifest: [relativePath => canonicalName].
-     * Used for View::file() lookups.
      *
      * @var array<string, string>
      */
     protected array $manifestMap = [];
 
     /**
-     * The path where the manifest file is located.
+     * A map of dynamic runtime namespaces to their compile-time counterparts.
      */
-    protected ?string $manifestPath = null;
+    protected array $dynamicNamespaceMap = [];
 
     /**
      * Create a new file view loader instance.
      *
-     * @param array       $paths      Original view paths (not used for runtime lookup)
+     * @param array       $paths      Original view paths
      * @param null|array  $extensions View extensions
      * @param null|string $cachePath  path to the directory containing the manifest
-     *
-     * @throws \RuntimeException if the manifest file is missing or invalid when expected
      */
     public function __construct(Filesystem $files, array $paths, ?array $extensions = null, ?string $cachePath = null)
     {
-        $this->files         = $files;
-        $this->paths         = $paths;
-        $this->extensions    = $extensions ?? ['blade.php', 'php', 'css'];
-        $this->hints         = [];
-        $this->manifestViews = []; // Initialize
-        $this->manifestMap   = [];   // Initialize
+        // We must call parent constructor to properly initialize the default finder.
+        parent::__construct($files, $paths, $extensions);
 
         if (!empty($cachePath)) {
-            $this->manifestPath = rtrim($cachePath, '/\\').'/manifest.php';
+            $manifestPath = rtrim($cachePath, '/\\').'/manifest.php';
 
-            if ($this->files->exists($this->manifestPath)) {
-                $manifestContent = @require $this->manifestPath;
+            if ($this->files->exists($manifestPath)) {
+                $manifestContent = @require $manifestPath;
 
-                // Validate the structure of the loaded manifest
-                if (\is_array($manifestContent) && isset($manifestContent['map'], $manifestContent['views']) && \is_array($manifestContent['map']) && \is_array($manifestContent['views'])) {
-                    $this->manifestMap   = $manifestContent['map'];
-                    $this->manifestViews = $manifestContent['views'];
-                } else {
-                    throw new \RuntimeException("View manifest file is invalid or corrupt (expecting 'map' and 'views' arrays): {$this->manifestPath}");
+                if (!\is_array($manifestContent)) {
+                    throw new \RuntimeException("View manifest file is invalid or corrupt: {$manifestPath}");
                 }
-            } else {
-                throw new \RuntimeException("View manifest file not found: {$this->manifestPath}");
+                $this->manifestMap         = $manifestContent['map']                ?? [];
+                $this->manifestViews       = $manifestContent['views']              ?? [];
+                $this->dynamicNamespaceMap = $manifestContent['dynamic_namespaces'] ?? [];
             }
         }
     }
 
     /**
-     * Find the given view name by checking the 'views' part of the manifest.
-     * Normalizes the input name (converts '/' to '.') before lookup.
-     * Returns a "fake" path ending in .blade.php to satisfy the ViewFactory's
-     * engine resolution logic.
+     * Find the given view name.
+     * Checks the pre-compiled Blade manifest first, then falls back to the parent
+     * filesystem finder for non-Blade views.
      *
-     * @param string $name The view name, potentially using '/' or '.' as separator.
+     * @param string $name the view name
      *
-     * @return string A fake path combining the normalized name and '.blade.php'.
+     * @return string the path to the view
      *
-     * @throws \InvalidArgumentException if the view name is not found in the manifest after normalization
+     * @throws \InvalidArgumentException if the view is not found in the manifest or on disk
      */
     public function find($name): string
     {
-        $normalizedName = str_replace('/', '.', trim($name));
+        $lookupName = $name;
 
-        // Use the normalized name for the lookup in the 'views' part of the manifest
+        // Attempt to resolve dynamic Blade namespaces first.
+        if (str_contains($name, '::')) {
+            [$namespace, $view] = $this->parseNamespaceSegments($name);
+
+            if (isset($this->dynamicNamespaceMap[$namespace])) {
+                $currentAbsolutePaths = $this->hints[$namespace] ?? [];
+                $basePath             = app()->basePath().'/';
+                $currentRelativePaths = array_map(static fn ($path) => Str::after($path, $basePath), $currentAbsolutePaths);
+
+                foreach ($this->dynamicNamespaceMap[$namespace] as $compileTimeNamespace => $compileTimeRelativePaths) {
+                    if ($currentRelativePaths === $compileTimeRelativePaths) {
+                        $lookupName = $compileTimeNamespace.'::'.$view;
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        $normalizedName = str_replace('/', '.', $lookupName);
+
+        // If the view is in our Blade manifest, return the "fake" path.
         if (isset($this->manifestViews[$normalizedName])) {
-            // Return the normalized name + .blade.php
-            // This allows ViewFactory::getEngineFromPath to detect the 'blade' engine
             return $normalizedName.'.blade.php';
         }
 
-        // Throw exception if the normalized name wasn't found
-        throw new \InvalidArgumentException("View [{$normalizedName}] (normalized from [{$name}]) not found in pre-compiled manifest views.");
+        // If not in the manifest, it's either a non-Blade view or a Blade view
+        // that was missed during compilation. Delegate to the parent finder.
+        try {
+            return parent::find($name);
+        } catch (RuntimeCompilationNotSupportedException $e) {
+            // This custom exception means a Blade file was found on disk but was not in our manifest.
+            // This is the most specific and helpful error.
+            throw new \InvalidArgumentException("View [{$name}] (resolved to [{$normalizedName}]) not found in pre-compiled manifest.", 0, $e);
+        } catch (\InvalidArgumentException $e) {
+            // The parent finder throws this when no view file (.php, .css, etc.) is found on disk.
+            throw new \InvalidArgumentException("View [{$name}] (resolved to [{$normalizedName}]) could not be found in the pre-compiled manifest or on disk.", 0, $e);
+        }
     }
 
     /**
@@ -111,7 +131,6 @@ class FileViewFinder extends LaravelFileViewFinder
 
     /**
      * Get the loaded file map data (relativePath => canonicalName).
-     * Useful for injecting into the GServerlessViewFactory.
      *
      * @return array<string, string>
      */
@@ -122,7 +141,6 @@ class FileViewFinder extends LaravelFileViewFinder
 
     /**
      * Get the loaded view compilation data (canonicalName => hashedFilename).
-     * Kept for potential direct use, though FakeCompiler uses it now.
      *
      * @return array<string, string>
      */

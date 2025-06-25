@@ -10,6 +10,8 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Exceptions\RegisterErrorViewPaths;
+use Illuminate\Mail\MailServiceProvider;
+use Illuminate\Mail\Markdown;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Finder\SplFileInfo;
@@ -54,9 +56,9 @@ class GServerlessViewCompileCommand extends Command
     /**
      * Data structure to be written to manifest.php.
      *
-     * @var array{map: array<string, string>, views: array<string, string>}
+     * @var array{map: array<string, string>, views: array<string, string>, dynamic_namespaces: array}
      */
-    protected $manifestData = ['map' => [], 'views' => []];
+    protected $manifestData = ['map' => [], 'views' => [], 'dynamic_namespaces' => []];
 
     /** @var array<string, bool> */
     protected $processedPaths = [];
@@ -68,7 +70,6 @@ class GServerlessViewCompileCommand extends Command
         Filesystem $files,
         CompileTimeBladeCompilerWrapper $compilerWrapper,
         ViewFactory $viewFactory
-        // Removed ConfigRepository
     ) {
         parent::__construct();
         $this->files           = $files;
@@ -102,19 +103,37 @@ class GServerlessViewCompileCommand extends Command
             $this->info('Created view storage directory.');
         }
 
-        // 2. Initialize and process mappings
-        $this->manifestData   = ['map' => [], 'views' => []];
+        // 2. Initialize manifests and process dynamic namespaces
+        $this->manifestData   = ['map' => [], 'views' => [], 'dynamic_namespaces' => []];
         $this->processedPaths = [];
-        $fileMap              = $this->buildFileMapFromOptions();
+
+        // Special handling for dynamic Markdown Mail namespaces
+        if ($this->laravel->providerIsLoaded(MailServiceProvider::class)) {
+            $this->info('MailServiceProvider detected, preparing mail markdown components for compilation...');
+            $markdown     = $this->laravel->make(Markdown::class);
+            $basePath     = $this->laravel->basePath().'/';
+            $makeRelative = static fn (array $paths) => array_map(static fn ($path) => Str::after($path, $basePath), $paths);
+
+            $htmlPaths = $markdown->htmlComponentPaths();
+            $textPaths = $markdown->textComponentPaths();
+
+            // Add the dynamic map to the manifest data
+            $this->manifestData['dynamic_namespaces']['mail'] = [
+                'gserverless-mail-html' => $makeRelative($htmlPaths),
+                'gserverless-mail-text' => $makeRelative($textPaths),
+            ];
+
+            // Register these paths as new namespaces so the regular compilation process finds them
+            $this->viewFactory->getFinder()->addNamespace('gserverless-mail-html', $htmlPaths);
+            $this->viewFactory->getFinder()->addNamespace('gserverless-mail-text', $textPaths);
+
+            $this->info('Dynamic mail namespaces registered for compilation.');
+        }
 
         // 3. Compile views
-        // Compile explicitly mapped files/dirs first (from CLI options + default health check)
+        $fileMap = $this->buildFileMapFromOptions();
         $this->compileMappedViews($fileMap);
-
-        // Compile standard namespaced views (avoiding already processed paths)
         $this->compileNamespaceViews();
-
-        // Compile standard default views (avoiding already processed paths)
         $this->compileDefaultViews();
 
         // 4. Write manifest
@@ -172,8 +191,6 @@ class GServerlessViewCompileCommand extends Command
             $map[str_replace('\\', '/', $relativePath)] = $canonicalName;
         }
 
-        // Process --map-dir options (will be handled in compileMappedViews)
-        // We just return the file map here. Directories are handled separately.
         return $map;
     }
 
@@ -222,6 +239,12 @@ class GServerlessViewCompileCommand extends Command
 
         if (!$this->files->exists($absolutePath)) {
             $this->warn(" > Mapped view file not found: {$absolutePath} (from relative: {$relativePath}). Skipping.");
+
+            return;
+        }
+
+        if (!Str::endsWith($absolutePath, '.blade.php')) {
+            $this->warn(" > Mapped file is not a Blade view, skipping: {$relativePath}");
 
             return;
         }
@@ -376,8 +399,12 @@ class GServerlessViewCompileCommand extends Command
      *
      * @return null|string the canonical name, or null on error
      */
-    protected function generateCanonicalName(string $realBasePath, string $absolutePath, ?string $namespace): ?string
+    protected function generateCanonicalName(string $realBasePath, ?string $absolutePath, ?string $namespace): ?string
     {
+        if (!$absolutePath) {
+            return null;
+        }
+
         $realBasePath = rtrim($realBasePath, \DIRECTORY_SEPARATOR).\DIRECTORY_SEPARATOR;
         if (!Str::startsWith($absolutePath, $realBasePath)) {
             return null;

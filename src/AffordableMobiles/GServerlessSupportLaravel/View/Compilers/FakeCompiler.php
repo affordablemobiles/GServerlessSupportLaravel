@@ -184,4 +184,15 @@ class FakeCompiler implements CompilerInterface
     {
         return ['blade.php'];
     }
+
+    /**
+     * Register a path for anonymous blade components.
+     * This is a no-op at runtime as components are pre-compiled.
+     */
+    public function anonymousComponentPath(string $path, ?string $prefix = null): void
+    {
+        // We don't need to do anything here at runtime because the view manifest
+        // has already mapped all the components during the pre-compilation step.
+        // This method just needs to exist to satisfy Livewire's service provider.
+    }
 }

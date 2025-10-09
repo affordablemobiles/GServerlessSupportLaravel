@@ -158,6 +158,8 @@ class ViewServiceProvider extends LaravelViewServiceProvider
             throw new \RuntimeException('GServerless FileViewFinder not correctly registered or failed to load manifest.');
         });
 
+        $this->app->singleton('blade.compiler', static fn ($app) => $app['gserverless.blade.compiler.fake']);
+
         $resolver->register('blade', fn () => new CompilerEngine($this->app['gserverless.blade.compiler.fake']));
     }
 

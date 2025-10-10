@@ -66,6 +66,7 @@ class ViewServiceProvider extends LaravelViewServiceProvider
 
         if ($this->isRunning) {
             $this->registerGServerlessViewFinder();
+            $this->registerGServerlessBladeCompiler();
             $this->registerGServerlessEngineResolver();
             $this->registerGServerlessViewFactory(); // Register our custom factory
         } elseif ($this->isServerless && !$this->isRunning) {
@@ -138,11 +139,9 @@ class ViewServiceProvider extends LaravelViewServiceProvider
     }
 
     /**
-     * Register the GServerless Blade engine implementation (Runtime).
-     *
-     * @param mixed $resolver
+     * Register the Blade compiler implementation.
      */
-    public function registerGServerlessBladeEngine($resolver): void
+    public function registerGServerlessBladeCompiler(): void
     {
         $this->app->singleton('gserverless.blade.compiler.fake', static function ($app) {
             $finder           = $app['view.finder'];
@@ -159,7 +158,15 @@ class ViewServiceProvider extends LaravelViewServiceProvider
         });
 
         $this->app->singleton('blade.compiler', static fn ($app) => $app['gserverless.blade.compiler.fake']);
+    }
 
+    /**
+     * Register the GServerless Blade engine implementation (Runtime).
+     *
+     * @param mixed $resolver
+     */
+    public function registerGServerlessBladeEngine($resolver): void
+    {
         $resolver->register('blade', fn () => new CompilerEngine($this->app['gserverless.blade.compiler.fake']));
     }
 

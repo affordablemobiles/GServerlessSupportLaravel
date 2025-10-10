@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\View\Compilers;
 
 use AffordableMobiles\GServerlessSupportLaravel\View\Exceptions\RuntimeCompilationNotSupportedException;
 use Illuminate\Support\Str;
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\Compilers\CompilerInterface;
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\View\Compilers\CompilerInterface;
  * It relies on a pre-generated manifest (views part) and the runtime cache path
  * to find already compiled views. Used in production serverless environments.
  */
-class FakeCompiler implements CompilerInterface
+class FakeCompiler extends BladeCompiler implements CompilerInterface
 {
     /**
      * The default echo format.
@@ -178,21 +179,24 @@ class FakeCompiler implements CompilerInterface
     }
 
     /**
+     * Compile the given Blade template contents.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    public function compileString($value)
+    {
+        throw new RuntimeCompilationNotSupportedException(
+            'Runtime Blade compilation is disabled in this environment.'
+        );
+    }
+
+    /**
      * Get the Blade extensions.
      */
     public function getExtensions(): array
     {
         return ['blade.php'];
-    }
-
-    /**
-     * Register a path for anonymous blade components.
-     * This is a no-op at runtime as components are pre-compiled.
-     */
-    public function anonymousComponentPath(string $path, ?string $prefix = null): void
-    {
-        // We don't need to do anything here at runtime because the view manifest
-        // has already mapped all the components during the pre-compilation step.
-        // This method just needs to exist to satisfy Livewire's service provider.
     }
 }

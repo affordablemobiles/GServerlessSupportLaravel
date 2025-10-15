@@ -10,12 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AddPreloadHeaders
 {
-    protected PreloadService $preloadService;
-
-    public function __construct(PreloadService $preloadService)
-    {
-        $this->preloadService = $preloadService;
-    }
+    public function __construct(protected PreloadService $preloadService) {}
 
     /**
      * Handle an incoming request.

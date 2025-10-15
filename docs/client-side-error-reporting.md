@@ -9,7 +9,7 @@ It automatically captures and transforms stack traces into a V8-compatible forma
 ## Features
 
 * **Seamless Integration with Google Cloud**: Client-side errors are reported directly to Google Cloud Error Reporting, appearing alongside your server-side exceptions.
-* **Correlated Logging**: Errors are logged against the `traceId` of the initial page load request. This allows you to easily find all client-side errors generated from a specific server request in the Cloud Logging console.
+* **Correlated Logging**: Errors are logged against the `traceId` of the initial page load request. This allows you to easily find all client-side errors generated from a specific server request in the Log Viewer.
 * **User Tracking**: When configured, a user identifier is sent with each error report, allowing you to see how many users are affected by a specific issue directly within the Error Reporting UI.
 
 ## Installation & Setup
@@ -33,7 +33,7 @@ First, publish the package's dedicated configuration file:
 php artisan vendor:publish --tag="js-error-reporter-config"
 ```
 
-This will create a new configuration file at config/js-error-reporter.php.
+This will create a new configuration file at `config/js-error-reporter.php`.
 
 Open this file to configure the reporter.
 

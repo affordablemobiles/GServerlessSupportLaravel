@@ -5,7 +5,8 @@
         "build": "vite build"
     },
     "dependencies": {
-        "stacktrace-js": "^2.0.2"
+        "stacktrace-js": "^2.0.2",
+        "stacktrace-gps": "stacktracejs/stacktrace-gps#master"
     },
     "devDependencies": {
         "laravel-vite-plugin": "^2",

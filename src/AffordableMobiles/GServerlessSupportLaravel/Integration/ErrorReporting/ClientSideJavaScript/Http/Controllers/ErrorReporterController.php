@@ -52,7 +52,7 @@ class ErrorReporterController implements HasMiddleware
                 'serviceContext.resourceType'        => 'prohibited',
                 'traceId'                            => 'required|string|size:32',
                 'stack_trace_frames'                 => 'required|array',
-                'stack_trace_frames.*.function_name' => 'nullable|string',
+                'stack_trace_frames.*.function_name' => ['nullable', 'string', 'regex:/^[a-zA-Z0-9_$.<>]+$/'],
                 'stack_trace_frames.*.file_name'     => 'nullable|string',
                 'stack_trace_frames.*.line_number'   => 'nullable|integer',
                 'stack_trace_frames.*.column_number' => 'nullable|integer',
@@ -85,6 +85,7 @@ class ErrorReporterController implements HasMiddleware
                 'context'        => [
                     'httpRequest' => [
                         'method'             => 'CLIENT_SIDE_ERROR',
+                        'responseStatusCode' => 418,
                         'url'                => $validated['context']['httpRequest']['url']       ?? 'unknown',
                         'userAgent'          => $validated['context']['httpRequest']['userAgent'] ?? 'unknown',
                         'referrer'           => $request->header('referer'),
@@ -159,12 +160,16 @@ class ErrorReporterController implements HasMiddleware
         $formattedLines = [$message];
 
         foreach ($stackFrames as $frame) {
-            $functionName = $frame['function_name'] ?? 'anonymous';
-            $fileName     = $frame['file_name']     ?? 'unknown.js';
+            $functionName = $frame['function_name'] ?? null;
+            $fileName     = $frame['file_name']     ?? 'unknown';
             $lineNumber   = $frame['line_number']   ?? 0;
             $columnNumber = $frame['column_number'] ?? 0;
 
-            $formattedLines[] = "    at {$functionName} ({$fileName}:{$lineNumber}:{$columnNumber})";
+            if ($functionName) {
+                $formattedLines[] = "    at {$functionName} ({$fileName}:{$lineNumber}:{$columnNumber})";
+            } else {
+                $formattedLines[] = "    at {$fileName}:{$lineNumber}:{$columnNumber}";
+            }
         }
 
         return implode("\n", $formattedLines);

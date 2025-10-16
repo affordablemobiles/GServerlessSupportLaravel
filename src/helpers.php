@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\ClientSideJavaScript\Services\PreloadService;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Propagator\CloudTraceFormatter;
 use Google\Cloud\Core\Compute\Metadata;
 use OpenTelemetry\API\Trace\SpanContext;
@@ -178,6 +179,16 @@ if (!function_exists('diefast')) {
         });
 
         exit($data);
+    }
+}
+
+if (!function_exists('error_reporting_queue_preload_header')) {
+    /**
+     * Queues a resource to be preloaded via the Link HTTP header.
+     */
+    function error_reporting_queue_preload_header(string $url, string $as): void
+    {
+        app(PreloadService::class)->add($url, $as);
     }
 }
 

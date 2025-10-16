@@ -1,0 +1,14 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "dependencies": {
+        "stacktrace-js": "^2.0.2"
+    },
+    "devDependencies": {
+        "laravel-vite-plugin": "^2",
+        "vite": "^7"
+    }
+}

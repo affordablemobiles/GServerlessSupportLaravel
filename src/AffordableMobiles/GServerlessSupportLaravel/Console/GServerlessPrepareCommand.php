@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Console;
 
 use AffordableMobiles\GServerlessSupportLaravel\Foundation\ProviderRepository;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\ErrorReporting\ClientSideJavaScript\ClientSideJavaScriptErrorReportingServiceProvider;
 use AffordableMobiles\GServerlessSupportLaravel\View\ViewServiceProvider;
 use Illuminate\Console\Command;
 
@@ -51,6 +52,8 @@ class GServerlessPrepareCommand extends Command
 
         $this->call('config:clear');
 
+        $this->runPublishJsAssets();
+
         $this->runViewCompiler();
 
         $this->runRefreshManifest();
@@ -66,6 +69,15 @@ class GServerlessPrepareCommand extends Command
             $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...');
             $this->call('g-serverless:viewcompile');
             $this->info($this->logPrefix.'Pre-Compiled View Provider active, compiling views...done');
+        }
+    }
+
+    public function runPublishJsAssets(): void
+    {
+        if (\in_array(ClientSideJavaScriptErrorReportingServiceProvider::class, config('app.providers'), true)) {
+            $this->info($this->logPrefix.'Client-side error reporting enabled, publishing assets...');
+            $this->call('g-serverless:publish-assets');
+            $this->info($this->logPrefix.'Client-side error reporting enabled, publishing assets...done');
         }
     }
 

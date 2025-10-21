@@ -72,15 +72,17 @@ const errorReporter = {
             },
             traceId: this.config.traceId,
             stack_trace_frames: stackFrames.map(sf => ({
-                function_name: isValidFunctionName(sf.functionName) ? sf.functionName : null,
-                file_name: sf.fileName,
-                line_number: sf.lineNumber,
-                column_number: sf.columnNumber,
+                function_name:  isValidFunctionName(sf.functionName) ? sf.functionName : null,
+                file_name:      sf.fileName,
+                line_number:    sf.lineNumber,
+                column_number:  sf.columnNumber,
             })),
             context: {
                 ...this.config.context,
-                url: window.location.href,
-                userAgent: navigator.userAgent,
+                "httpRequest": {
+                    "url":          window.location.href,
+                    "userAgent":    navigator.userAgent,
+                },
             },
         };
     },

@@ -57,6 +57,9 @@ class ErrorReporterController implements HasMiddleware
                 'stack_trace_frames.*.line_number'   => 'nullable|integer',
                 'stack_trace_frames.*.column_number' => 'nullable|integer',
                 'context'                            => 'nullable|array',
+                'context.httpRequest'                => 'nullable|array',
+                'context.httpRequest.url'            => 'nullable|string',
+                'context.httpRequest.userAgent'      => 'nullable|string',
             ]);
 
             $traceId = $validated['traceId'];

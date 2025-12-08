@@ -36,15 +36,7 @@ class GServerlessSupportServiceProvider extends ServiceProvider
             'gserverlesssupport'
         );
 
-        // Register the custom cache store configuration dynamically.
-        //  We use the constant from InstanceLocal so developers can find the path easily,
-        //  and check if it exists first to be polite to other configs.
-        if (!$this->app['config']->has('cache.stores.instance-scoped')) {
-            $this->app['config']->set('cache.stores.instance-scoped', [
-                'driver' => 'file',
-                'path'   => InstanceLocal::CACHE_PATH,
-            ]);
-        }
+        $this->registerInstanceScopedCache();
     }
 
     /**
@@ -96,6 +88,27 @@ class GServerlessSupportServiceProvider extends ServiceProvider
     public function provides()
     {
         return ['g-serverless-support'];
+    }
+
+    /**
+     * Registers the instance-scoped cache store configuration.
+     */
+    protected function registerInstanceScopedCache(): void
+    {
+        $config = $this->app->make('config');
+
+        $defaults = [
+            'driver' => 'file',
+            'path'   => InstanceLocal::CACHE_PATH,
+        ];
+
+        $config->set(
+            'cache.stores.instance-scoped',
+            array_merge(
+                $defaults,
+                $config->get('cache.stores.instance-scoped', []),
+            ),
+        );
     }
 
     /**

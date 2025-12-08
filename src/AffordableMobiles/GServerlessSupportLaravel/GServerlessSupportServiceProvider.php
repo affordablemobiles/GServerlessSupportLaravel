@@ -35,6 +35,16 @@ class GServerlessSupportServiceProvider extends ServiceProvider
             __DIR__.'/../../config/gserverlesssupport.php',
             'gserverlesssupport'
         );
+
+        // Register the custom cache store configuration dynamically.
+        //  We use the constant from InstanceLocal so developers can find the path easily,
+        //  and check if it exists first to be polite to other configs.
+        if (!$this->app['config']->has('cache.stores.instance-scoped')) {
+            $this->app['config']->set('cache.stores.instance-scoped', [
+                'driver' => 'file',
+                'path'   => InstanceLocal::CACHE_PATH,
+            ]);
+        }
     }
 
     /**
@@ -42,13 +52,6 @@ class GServerlessSupportServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register the custom cache store configuration dynamically.
-        //  We use the constant from InstanceLocal so developers can find the path easily.
-        $this->app['config']->set('cache.stores.instance-scoped', [
-            'driver' => 'file',
-            'path'   => InstanceLocal::CACHE_PATH,
-        ]);
-
         // Publish our config file when the user runs "artisan vendor:publish".
         $this->publishes([
             __DIR__.'/../../config/gserverlesssupport.php' => config_path('gserverlesssupport.php'),

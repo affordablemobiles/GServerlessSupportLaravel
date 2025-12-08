@@ -6,15 +6,25 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Cache;
 
 use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Support\Facades\Cache;
 
+/**
+ * @deprecated This class is maintained for backwards compatibility.
+ * Please use Cache::store('instance-scoped') instead.
+ */
 class InstanceLocal extends CacheManager
 {
-    private static $instance;
+    /**
+     * The file path for the instance-local cache.
+     * Kept here for visibility and easy developer discovery.
+     */
+    public const CACHE_PATH = '/tmp/cache/GServerlessSupportLaravel';
 
-    private $driver;
+    private static $instance;
 
     /**
      * Dynamically call the default driver instance (statically).
+     * This supports calls like InstanceLocal::get(...).
      *
      * @param string $method
      * @param array  $parameters
@@ -23,13 +33,13 @@ class InstanceLocal extends CacheManager
      */
     public static function __callStatic($method, $parameters)
     {
+        // This will call ->store() on the instance, which hits our override above
         return self::getInstance()->store()->{$method}(...$parameters);
     }
 
     /**
      * Get a singleton instance of this class.
-     *
-     * @return Repository
+     * We keep this to support calls like InstanceLocal::getInstance()->get(...).
      */
     public static function getInstance()
     {
@@ -41,7 +51,10 @@ class InstanceLocal extends CacheManager
     }
 
     /**
-     * Get a cache store instance by name.
+     * Override the store method.
+     * * Regardless of what store name is requested (or if null is passed),
+     * we intercept the call and return the repository for our specific
+     * 'instance-scoped' store configuration.
      *
      * @param null|string $name
      *
@@ -49,20 +62,6 @@ class InstanceLocal extends CacheManager
      */
     public function store($name = null)
     {
-        return $this->getDriver();
-    }
-
-    /**
-     * Get the driver instance.
-     *
-     * @return Repository
-     */
-    private function getDriver()
-    {
-        if (!$this->driver) {
-            $this->driver = $this->createFileDriver(['path' => '/tmp/cache/GServerlessSupportLaravel']);
-        }
-
-        return $this->driver;
+        return Cache::store('instance-scoped');
     }
 }

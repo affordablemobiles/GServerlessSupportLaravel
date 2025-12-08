@@ -6,10 +6,10 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Type\JWT;
-use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 use Google\Cloud\Core\ExponentialBackoff;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 
 class OIDC
 {
@@ -103,7 +103,7 @@ class OIDC
      */
     protected static function get_jwk_url()
     {
-        return InstanceLocalCache::remember('jwk_url__'.self::OPENID_CONFIGURATION_URI, 86400, static function () {
+        return Cache::store('instance-scoped')->remember('jwk_url__'.self::OPENID_CONFIGURATION_URI, 86400, static function () {
             $httpclient = new Client();
 
             $content = [

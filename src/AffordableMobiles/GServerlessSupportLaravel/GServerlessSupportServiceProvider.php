@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel;
 
+use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal;
 use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GServerlessFilesystemAdapter;
 use AffordableMobiles\GServerlessSupportLaravel\Session\DatastoreSessionHandler;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -41,6 +42,13 @@ class GServerlessSupportServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register the custom cache store configuration dynamically.
+        //  We use the constant from InstanceLocal so developers can find the path easily.
+        $this->app['config']->set('cache.stores.instance-scoped', [
+            'driver' => 'file',
+            'path'   => InstanceLocal::CACHE_PATH,
+        ]);
+
         // Publish our config file when the user runs "artisan vendor:publish".
         $this->publishes([
             __DIR__.'/../../config/gserverlesssupport.php' => config_path('gserverlesssupport.php'),

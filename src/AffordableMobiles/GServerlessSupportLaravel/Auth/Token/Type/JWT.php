@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Type;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\InvalidTokenException;
-use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\Tools as GuzzleTools;
 use Google\Cloud\Core\ExponentialBackoff;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 use SimpleJWT\InvalidTokenException as JWTInvalidTokenException;
 use SimpleJWT\JWT as JWTValidator;
 use SimpleJWT\Keys\KeySet;
@@ -123,7 +123,7 @@ class JWT
     protected static function get_jwk_set_raw($jwk_url)
     {
         // get the public key JWK Set object (RFC7517)
-        return InstanceLocalCache::remember('jwk_set__'.$jwk_url, 86400, static function () use ($jwk_url) {
+        return Cache::store('instance-scoped')->remember('jwk_set__'.$jwk_url, 86400, static function () use ($jwk_url) {
             $httpclient = new Client();
 
             $content = [

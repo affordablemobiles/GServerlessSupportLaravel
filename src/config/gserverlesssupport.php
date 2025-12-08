@@ -23,4 +23,19 @@ return [
             'logout_redirect'     => '/',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Instance-Local Cache Path
+    |--------------------------------------------------------------------------
+    |
+    | Defines the storage path for the 'instance-scoped' cache store.
+    |
+    | This store provides a local, per-instance cache (living in /tmp) that
+    | is NOT shared between serverless instances. It is used internally
+    | by this package (for DB sockets, OIDC keys) and is available for
+    | your application via: Cache::store('instance-scoped')->get(...);
+    |
+    */
+    'system_cache_path' => env('G_SERVERLESS_SYSTEM_CACHE_PATH', '/tmp/cache/GServerlessSupportLaravel'),
 ];

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel;
 
-use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal;
 use AffordableMobiles\GServerlessSupportLaravel\Filesystem\GServerlessAdapter as GServerlessFilesystemAdapter;
 use AffordableMobiles\GServerlessSupportLaravel\Session\DatastoreSessionHandler;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -97,17 +96,21 @@ class GServerlessSupportServiceProvider extends ServiceProvider
     {
         $config = $this->app->make('config');
 
+        $cachePath = $config->get(
+            'gserverlesssupport.system_cache_path',
+            '/tmp/cache/GServerlessSupportLaravel' // Fallback
+        );
+
         $defaults = [
             'driver' => 'file',
-            'path'   => InstanceLocal::CACHE_PATH,
+            'path'   => $cachePath,
         ];
+
+        $userConfig = $config->get('cache.stores.instance-scoped', []);
 
         $config->set(
             'cache.stores.instance-scoped',
-            array_merge(
-                $defaults,
-                $config->get('cache.stores.instance-scoped', []),
-            ),
+            array_merge($defaults, $userConfig)
         );
     }
 

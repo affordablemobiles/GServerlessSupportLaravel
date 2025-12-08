@@ -9,17 +9,13 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * @deprecated use Cache::store('instance-scoped') instead
+ * @deprecated Use the 'instance-scoped' cache store instead.
+ * Example: Cache::store('instance-scoped')->get('key');
  *
  * @mixin \Illuminate\Contracts\Cache\Repository
  */
 class InstanceLocal extends CacheManager
 {
-    /**
-     * The file path for the instance-local cache.
-     */
-    public const CACHE_PATH = '/tmp/cache/GServerlessSupportLaravel';
-
     private static $instance;
 
     /**

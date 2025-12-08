@@ -9,37 +9,36 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * @deprecated This class is maintained for backwards compatibility.
- * Please use Cache::store('instance-scoped') instead.
+ * @deprecated use Cache::store('instance-scoped') instead
+ *
+ * @mixin \Illuminate\Contracts\Cache\Repository
  */
 class InstanceLocal extends CacheManager
 {
     /**
      * The file path for the instance-local cache.
-     * Kept here for visibility and easy developer discovery.
      */
     public const CACHE_PATH = '/tmp/cache/GServerlessSupportLaravel';
 
     private static $instance;
 
     /**
-     * Dynamically call the default driver instance (statically).
-     * This supports calls like InstanceLocal::get(...).
+     * Handle static calls like InstanceLocal::get().
+     * Optimized to skip local instantiation.
      *
-     * @param string $method
-     * @param array  $parameters
-     *
-     * @return mixed
+     * @param mixed $method
+     * @param mixed $parameters
      */
     public static function __callStatic($method, $parameters)
     {
-        // This will call ->store() on the instance, which hits our override above
-        return self::getInstance()->store()->{$method}(...$parameters);
+        return Cache::store('instance-scoped')->{$method}(...$parameters);
     }
 
     /**
      * Get a singleton instance of this class.
-     * We keep this to support calls like InstanceLocal::getInstance()->get(...).
+     * Keeps backward compatibility for code using InstanceLocal::getInstance()->get().
+     *
+     * @return static
      */
     public static function getInstance()
     {
@@ -51,10 +50,8 @@ class InstanceLocal extends CacheManager
     }
 
     /**
-     * Override the store method.
-     * * Regardless of what store name is requested (or if null is passed),
-     * we intercept the call and return the repository for our specific
-     * 'instance-scoped' store configuration.
+     * Override the store method to redirect instance calls.
+     * This handles: $instance = new InstanceLocal(...); $instance->get(...);.
      *
      * @param null|string $name
      *

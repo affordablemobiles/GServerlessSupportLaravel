@@ -6,30 +6,35 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Cache;
 
 use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Support\Facades\Cache;
 
+/**
+ * @deprecated Use the 'instance-scoped' cache store instead.
+ * Example: Cache::store('instance-scoped')->get('key');
+ *
+ * @mixin \Illuminate\Contracts\Cache\Repository
+ */
 class InstanceLocal extends CacheManager
 {
     private static $instance;
 
-    private $driver;
-
     /**
-     * Dynamically call the default driver instance (statically).
+     * Handle static calls like InstanceLocal::get().
+     * Optimized to skip local instantiation.
      *
-     * @param string $method
-     * @param array  $parameters
-     *
-     * @return mixed
+     * @param mixed $method
+     * @param mixed $parameters
      */
     public static function __callStatic($method, $parameters)
     {
-        return self::getInstance()->store()->{$method}(...$parameters);
+        return Cache::store('instance-scoped')->{$method}(...$parameters);
     }
 
     /**
      * Get a singleton instance of this class.
+     * Keeps backward compatibility for code using InstanceLocal::getInstance()->get().
      *
-     * @return Repository
+     * @return static
      */
     public static function getInstance()
     {
@@ -41,7 +46,8 @@ class InstanceLocal extends CacheManager
     }
 
     /**
-     * Get a cache store instance by name.
+     * Override the store method to redirect instance calls.
+     * This handles: $instance = new InstanceLocal(...); $instance->get(...);.
      *
      * @param null|string $name
      *
@@ -49,20 +55,6 @@ class InstanceLocal extends CacheManager
      */
     public function store($name = null)
     {
-        return $this->getDriver();
-    }
-
-    /**
-     * Get the driver instance.
-     *
-     * @return Repository
-     */
-    private function getDriver()
-    {
-        if (!$this->driver) {
-            $this->driver = $this->createFileDriver(['path' => '/tmp/cache/GServerlessSupportLaravel']);
-        }
-
-        return $this->driver;
+        return Cache::store('instance-scoped');
     }
 }

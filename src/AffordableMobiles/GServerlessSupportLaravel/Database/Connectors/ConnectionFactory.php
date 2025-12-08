@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Database\Connectors;
 
-use AffordableMobiles\GServerlessSupportLaravel\Cache\InstanceLocal as InstanceLocalCache;
 use AffordableMobiles\sqlcommenter\Connectors\ConnectionFactory as BaseConnectionFactory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 
 class ConnectionFactory extends BaseConnectionFactory
 {
@@ -66,7 +66,7 @@ class ConnectionFactory extends BaseConnectionFactory
             $cacheKey = 'GServerlessSupportLaravel-Database-ConnectionFactory-'.$config['name'];
             $sockets  = Arr::shuffle($this->parseSockets($config));
 
-            $current = is_g_serverless_development() ? null : InstanceLocalCache::get($cacheKey);
+            $current = is_g_serverless_development() ? null : Cache::store('instance-scoped')->get($cacheKey);
             if (!empty($current)) {
                 $sockets = array_filter($sockets, static fn ($socket) => $socket !== $current);
                 array_unshift($sockets, $current);
@@ -81,7 +81,7 @@ class ConnectionFactory extends BaseConnectionFactory
                     $runtimeConfig = $this->resolveRuntimeConfig($config);
                     $connection    = $this->createConnector($runtimeConfig)->connect($runtimeConfig);
 
-                    InstanceLocalCache::forever($cacheKey, $socket);
+                    Cache::store('instance-scoped')->forever($cacheKey, $socket);
 
                     return $connection;
                 } catch (\PDOException $e) {

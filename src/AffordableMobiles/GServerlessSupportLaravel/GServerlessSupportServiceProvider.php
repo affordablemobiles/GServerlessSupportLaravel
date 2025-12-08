@@ -34,6 +34,8 @@ class GServerlessSupportServiceProvider extends ServiceProvider
             __DIR__.'/../../config/gserverlesssupport.php',
             'gserverlesssupport'
         );
+
+        $this->registerInstanceScopedCache();
     }
 
     /**
@@ -85,6 +87,31 @@ class GServerlessSupportServiceProvider extends ServiceProvider
     public function provides()
     {
         return ['g-serverless-support'];
+    }
+
+    /**
+     * Registers the instance-scoped cache store configuration.
+     */
+    protected function registerInstanceScopedCache(): void
+    {
+        $config = $this->app->make('config');
+
+        $cachePath = $config->get(
+            'gserverlesssupport.system_cache_path',
+            '/tmp/cache/GServerlessSupportLaravel' // Fallback
+        );
+
+        $defaults = [
+            'driver' => 'file',
+            'path'   => $cachePath,
+        ];
+
+        $userConfig = $config->get('cache.stores.instance-scoped', []);
+
+        $config->set(
+            'cache.stores.instance-scoped',
+            array_merge($defaults, $userConfig)
+        );
     }
 
     /**

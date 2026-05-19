@@ -62,9 +62,8 @@ class ViewServiceProvider extends LaravelViewServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(LaravelBladeMapper::class, static fn ($app) => new BladeMapper($app));
-
         if ($this->isRunning) {
+            $this->app->singleton(LaravelBladeMapper::class, static fn ($app) => new BladeMapper($app));
             $this->registerGServerlessViewFinder();
             $this->registerGServerlessBladeCompiler();
             $this->registerGServerlessEngineResolver();

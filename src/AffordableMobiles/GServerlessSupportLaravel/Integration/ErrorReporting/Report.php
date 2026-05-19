@@ -42,7 +42,21 @@ class Report
 
     public static function exceptionHandler(\Throwable $ex, int $status_code = 500, array $context = [], string $level = LogLevel::ERROR): void
     {
+        static $isLogging = false;
+
         $message = \sprintf('PHP Notice: %s', (string) $ex);
+
+        if ($isLogging) {
+            g_serverless_basic_log(self::DEFAULT_LOGNAME, 'ERROR', 'GCP Error Reporter: recursion detected during exceptionHandler', [
+                'exception' => $ex->getMessage(),
+                'file'      => $ex->getFile(),
+                'line'      => $ex->getLine(),
+                'trace'     => $ex->getTraceAsString(),
+            ]);
+
+            return;
+        }
+
         if (self::$psrLogger) {
             $logContext = [
                 'context' => array_merge($context, [
@@ -69,9 +83,26 @@ class Report
                 ],
             ];
 
-            method_exists(self::$psrLogger, $level)
-                ? self::$psrLogger->{$level}($message, $logContext)
-                : self::$psrLogger->log($level, $message, $logContext);
+            $isLogging = true;
+
+            try {
+                method_exists(self::$psrLogger, $level)
+                    ? self::$psrLogger->{$level}($message, $logContext)
+                    : self::$psrLogger->log($level, $message, $logContext);
+            } catch (\Throwable $e) {
+                g_serverless_basic_log(self::DEFAULT_LOGNAME, 'ERROR', 'GCP Error Reporter: failed to log exception via PsrLogger', [
+                    'reporter_exception' => $e->getMessage(),
+                    'reporter_file'      => $e->getFile(),
+                    'reporter_line'      => $e->getLine(),
+                    'reporter_trace'     => $e->getTraceAsString(),
+                    'original_exception' => $ex->getMessage(),
+                    'original_file'      => $ex->getFile(),
+                    'original_line'      => $ex->getLine(),
+                    'original_trace'     => $ex->getTraceAsString(),
+                ]);
+            } finally {
+                $isLogging = false;
+            }
         }
     }
 
@@ -83,6 +114,8 @@ class Report
      */
     public static function errorHandler(int $level, string $message, string $file, int $line): bool
     {
+        static $isLogging = false;
+
         if (!($level & error_reporting())) {
             return true;
         }
@@ -93,6 +126,17 @@ class Report
             $file,
             $line
         );
+
+        if ($isLogging) {
+            g_serverless_basic_log(self::DEFAULT_LOGNAME, 'ERROR', 'GCP Error Reporter: recursion detected during errorHandler', [
+                'error'   => $message,
+                'file'    => $file,
+                'line'    => $line,
+            ]);
+
+            return true;
+        }
+
         if (!self::$psrLogger) {
             return false;
         }
@@ -118,11 +162,28 @@ class Report
                 'version' => g_version(),
             ],
         ];
-        self::$psrLogger->log(
-            self::getErrorLevelString($level),
-            $message,
-            $context
-        );
+
+        $isLogging = true;
+
+        try {
+            self::$psrLogger->log(
+                self::getErrorLevelString($level),
+                $message,
+                $context
+            );
+        } catch (\Throwable $e) {
+            g_serverless_basic_log(self::DEFAULT_LOGNAME, 'ERROR', 'GCP Error Reporter: failed to log error via PsrLogger', [
+                'reporter_exception' => $e->getMessage(),
+                'reporter_file'      => $e->getFile(),
+                'reporter_line'      => $e->getLine(),
+                'reporter_trace'     => $e->getTraceAsString(),
+                'original_error'     => $message,
+                'original_file'      => $file,
+                'original_line'      => $line,
+            ]);
+        } finally {
+            $isLogging = false;
+        }
 
         return true;
     }

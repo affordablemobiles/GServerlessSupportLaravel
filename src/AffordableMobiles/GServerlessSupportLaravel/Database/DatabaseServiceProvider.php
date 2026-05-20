@@ -7,6 +7,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Database;
 use AffordableMobiles\GServerlessSupportLaravel\Database\Auth\IAMAuthentication;
 use AffordableMobiles\GServerlessSupportLaravel\Database\Connectors\ConnectionFactory;
 use Illuminate\Support\ServiceProvider;
+use MongoDB\Laravel\Connection;
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -27,5 +28,18 @@ class DatabaseServiceProvider extends ServiceProvider
 
         // This authentication handler enables IAM authentication on GCP.
         $this->app->singleton(IAMAuthentication::class, static fn () => new IAMAuthentication());
+
+        // If mongodb/laravel-mongodb is installed, register our custom MongoDB
+        // connection class that supports Closure-based credentials for IAM
+        // authentication with Firestore in MongoDB compatibility mode.
+        if (class_exists(Connection::class)) {
+            $this->app->resolving('db', static function ($db): void {
+                $db->extend('mongodb', static function ($config, $name) {
+                    $config['name'] = $name;
+
+                    return new MongoDB\Connection($config);
+                });
+            });
+        }
     }
 }

@@ -8,6 +8,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Datastore\
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Guzzle\GuzzleInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelBootInstrumentation;
 use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\Laravel\LaravelInstrumentation;
+use AffordableMobiles\GServerlessSupportLaravel\Trace\Instrumentation\MongoDB\MongoDBInstrumentation;
 
 /**
  * Class to return the trace instrumentation to load.
@@ -27,6 +28,8 @@ class InstrumentationLoader implements InstrumentationLoaderInterface
             GuzzleInstrumentation::class,
 
             EloquentDatastoreInstrumentation::class,
+
+            MongoDBInstrumentation::class,
         ];
     }
 }

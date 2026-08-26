@@ -21,6 +21,10 @@ class Tools
 
     protected static function getRegexp(string $timeout): string
     {
-        return '/(Operation|Connection) (timed out|timeout) after '.$timeout.'[0-9]{3} (ms|milliseconds)/';
+        return '/'.implode('|', [
+            '(Operation|Connection|Resolving) (timed out|timeout) after '.$timeout.'[0-9]{3} (ms|milliseconds)',
+            'Proxy CONNECT aborted due to timeout',
+            'SSL connection timeout',
+        ]).'/';
     }
 }

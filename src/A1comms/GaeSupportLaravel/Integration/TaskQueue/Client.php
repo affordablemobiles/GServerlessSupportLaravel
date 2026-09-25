@@ -49,35 +49,64 @@ class Client
 
     private function fetchLocation()
     {
-        $metadata = new Metadata();
-        $zone     = explode(
-            '/',
-            $metadata->get('instance/zone')
+        $region = value(
+            config('gaesupport.cloud-tasks.region', config('gserverlesssupport.cloud-tasks.region')),
         );
-        $zone = array_pop($zone);
 
-        // if the pattern is similar to europe-west1-a (i.e., GAE Flexible Environment)
-        if (Str::is('*-*-*', $zone)) {
-            return Str::beforeLast($zone, '-');
+        if (!empty($region)) {
+            return $region;
         }
 
-        if (!empty(config('gaesupport.cloud-tasks.region'))) {
-            return config('gaesupport.cloud-tasks.region');
+        try {
+            $metadata = new Metadata();
+
+            try {
+                $region = explode(
+                    '/',
+                    $metadata->get('instance/region')
+                );
+                $region = array_pop($region);
+
+                if (!empty($region)) {
+                    return $region;
+                }
+            } catch (\Exception $e) {
+                // Ignore and fall back to instance/zone
+            }
+
+            $zone = explode(
+                '/',
+                $metadata->get('instance/zone')
+            );
+            $zone = array_pop($zone);
+
+            // if the pattern is similar to europe-west1-a (i.e., GAE Flexible Environment)
+            if (Str::is('*-*-*', $zone)) {
+                return Str::beforeLast($zone, '-');
+            }
+
+            switch ($zone) {
+                case 'eu1':
+                case 'eu2':
+                case 'eu3':
+                case 'eu4':
+                case 'eu5':
+                case 'eu6':
+                    return 'europe-west1';
+
+                case 'us6':
+                case 'us14':
+                    return 'us-central1';
+
+                default:
+                    throw new \Exception('Unknown App Engine Region Code: '.$zone);
+            }
+        } catch (\Exception $e) {
+            if (Str::startsWith($e->getMessage(), 'Unknown App Engine Region Code')) {
+                throw $e;
+            }
         }
 
-        switch ($zone) {
-            case 'eu2':
-            case 'eu4':
-            case 'eu5':
-            case 'eu6':
-                return 'europe-west1';
-
-            case 'us6':
-            case 'us14':
-                return 'us-central1';
-
-            default:
-                throw new \Exception('Unknown App Engine Region Code: '.$zone);
-        }
+        throw new \Exception('Cloud Tasks Region Must Be Specified');
     }
 }

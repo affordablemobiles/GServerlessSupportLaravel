@@ -22,7 +22,7 @@ return [
     'dev-prefix' => 'dev-',
 
     'cloud-tasks' => [
-        'region' => env('GCT_REGION'),
+        'region' => env('CLOUD_TASKS_REGION', env('GCT_REGION')),
     ],
 
     // Authentication Settings

@@ -37,6 +37,8 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
 * **Identity Aware Proxy (IAP)** integration
     * **Inbound authentication** via Laravel's Guards (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md)).
     * **Outbound authentication** via Guzzle middleware (optional, see [docs/guzzle.md](docs/guzzle.md#authtokenmiddleware)).
+* **Laravel HTTP Client integration**
+    * Unified connection retries, Google authentication, and automated Error Reporting telemetry via `HttpClientServiceProvider` (optional, see [docs/http-client.md](docs/http-client.md)).
 * **Cloud SQL** integration
     * **IAM Authentication** (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#iam-authentication)).
     * Automatic failover between read replicas (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#multiple-read-replicas)).

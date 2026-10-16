@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OAuth2;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OIDC;
+use AffordableMobiles\GServerlessSupportLaravel\Support\UriMatcher;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -123,6 +124,17 @@ class AuthTokenMiddleware
         }
 
         $audienceSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            $matched = UriMatcher::match($audienceMap, $request_uri);
+
+            if (\is_array($matched)) {
+                $matchedAudience = $matched['audience'] ?? $matched['target_audience'] ?? null;
+                if (null !== $matchedAudience) {
+                    return $matchedAudience;
+                }
+            } elseif (\is_string($matched) && '' !== $matched) {
+                return $matched;
+            }
+
             if (self::isCloudFunction($request_uri)) {
                 return \sprintf(
                     '%s://%s%s',
@@ -132,21 +144,38 @@ class AuthTokenMiddleware
                 );
             }
 
-            return $audienceMap[$request_uri->getHost()];
+            return null;
         };
 
         $tokenTypeSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            $matched = UriMatcher::match($audienceMap, $request_uri);
+
+            if (\is_array($matched)) {
+                if (isset($matched['token_type'])) {
+                    return $matched['token_type'];
+                }
+
+                $matchedAudience = $matched['audience'] ?? $matched['target_audience'] ?? null;
+                if ('oauth2' === $matchedAudience) {
+                    return 'oauth2';
+                }
+
+                return null !== $matchedAudience ? 'oidc' : false;
+            }
+
+            if ('oauth2' === $matched) {
+                return 'oauth2';
+            }
+
+            if (\is_string($matched) && '' !== $matched) {
+                return 'oidc';
+            }
+
             if (self::isCloudFunction($request_uri)) {
                 return 'oidc';
             }
 
-            $audience = $audienceMap[$request_uri->getHost()] ?? false;
-
-            if ('oauth2' === $audience) {
-                return 'oauth2';
-            }
-
-            return false !== $audience ? 'oidc' : false;
+            return false;
         };
 
         return new static($audienceSource, $tokenTypeSource);

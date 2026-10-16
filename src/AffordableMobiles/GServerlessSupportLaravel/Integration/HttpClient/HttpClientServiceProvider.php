@@ -89,13 +89,22 @@ class HttpClientServiceProvider extends ServiceProvider
             return $this->withOptions($options);
         });
 
-        // 7. Register Http::soap() macro for native Http-backed SoapClient
-        Http::macro('soap', static fn (?string $wsdl = null, array $options = []): SoapClient => new SoapClient($wsdl, $options));
+        // 7. Register Http::soap() and PendingRequest::soap() macros for native Http-backed SoapClient
+        PendingRequest::macro('soap', function (?string $wsdl = null, array $options = []): SoapClient {
+            // @var PendingRequest $this
+            return new SoapClient($wsdl, $options, $this);
+        });
+
+        Http::macro('soap', function (?string $wsdl = null, array $options = []): SoapClient {
+            // @var \Illuminate\Http\Client\Factory $this
+            return $this->createPendingRequest()->soap($wsdl, $options);
+        });
 
         // 8. Register Http::ping() macro for simple egress / healthcheck probes
-        Http::macro('ping', static function (string $url, int $timeout = 2): bool {
+        Http::macro('ping', function (string $url, int $timeout = 2): bool {
+            // @var \Illuminate\Http\Client\Factory $this
             try {
-                return Http::withoutRedirecting()
+                return $this->withoutRedirecting()
                     ->timeout($timeout)
                     ->connectTimeout($timeout)
                     ->get($url)

@@ -305,14 +305,17 @@ class OutboundAuth
 
     public static function wsse(
         string $username,
-        string $secret,
+        ?string $secret = null,
         string $headerName = 'X-WSSE',
         bool $binaryDigest = false,
         int $nonceLength = 32,
+        ?string $password = null,
     ): WsseAuthenticator {
+        $secretValue = $secret ?? $password ?? '';
+
         return new WsseAuthenticator(
             username: $username,
-            secret: $secret,
+            secret: $secretValue,
             headerName: $headerName,
             binaryDigest: $binaryDigest,
             nonceLength: $nonceLength,

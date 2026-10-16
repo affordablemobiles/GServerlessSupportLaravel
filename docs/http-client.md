@@ -430,19 +430,32 @@ $response = $client->GetAddressDetails(['postcode' => 'DE1 1AA']);
 
 ### With Mutual TLS (mTLS)
 
-Pass certificate and key strings directly from Secret Manager:
+When accessing endpoints or downloading remote WSDLs protected by mutual TLS, chain the client certificate directly on `Http` before `.soap()` or pass it in `$options`:
 
 ```php
-$client = Http::soap($wsdlUrl, ['soap_version' => SOAP_1_2])
-    ->withClientCert(
+// Option A: Chain on Http first so remote WSDL downloads automatically inherit mTLS
+$client = Http::withClientCert(
         cert: config('services.partner.cert_pem'),
         key: config('services.partner.key_pem'),
         certPassword: config('services.partner.cert_pass'),
         inMemory: true, // Uses CURLOPT_SSLCERT_BLOB (no disk I/O)
     )
-    ->withTimeout(30);
+    ->timeout(30)
+    ->soap($wsdlUrl, ['soap_version' => SOAP_1_2]);
 
 $result = $client->SubmitApplication($payload);
+
+// Option B: Pass directly in SoapClient options
+$client = Http::soap($wsdlUrl, [
+    'soap_version' => SOAP_1_2,
+    'client_cert'  => [
+        'cert'         => config('services.partner.cert_pem'),
+        'key'          => config('services.partner.key_pem'),
+        'certPassword' => config('services.partner.cert_pass'),
+        'inMemory'     => true,
+    ],
+    'timeout'      => 30,
+]);
 ```
 
 ### With WS-Security (WSSE) or Basic Auth
@@ -450,19 +463,19 @@ $result = $client->SubmitApplication($payload);
 ```php
 use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 
-// OASIS WS-Security UsernameToken
-$client = Http::soap($wsdlUrl)
-    ->withOutboundAuth(OutboundAuth::wsse(
+// OASIS WS-Security UsernameToken (accepts secret: or password:)
+$client = Http::withOutboundAuth(OutboundAuth::wsse(
         username: config('services.partner.user'),
-        password: config('services.partner.pass'),
-    ));
+        secret: config('services.partner.pass'),
+    ))
+    ->soap($wsdlUrl);
 
 // Basic HTTP Auth
-$client = Http::soap($wsdlUrl)
-    ->withOutboundAuth(OutboundAuth::basic(
+$client = Http::withOutboundAuth(OutboundAuth::basic(
         username: config('services.partner.user'),
         password: config('services.partner.pass'),
-    ));
+    ))
+    ->soap($wsdlUrl);
 ```
 
 ### Custom Headers & Timeouts

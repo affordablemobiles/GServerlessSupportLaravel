@@ -147,13 +147,13 @@ class OutboundHttpTelemetryListener
             return false;
         }
 
-        // SOAP 1.1 Client fault: <faultcode>...Client... or FailedAuthentication
-        if (1 === preg_match('/<faultcode>[^<]*(Client|Sender|FailedAuthentication)[^<]*<\/faultcode>/i', $body)) {
+        // SOAP 1.1 Client fault: <faultcode> or <soap:faultcode ...>
+        if (1 === preg_match('/<([a-zA-Z0-9_-]+:)?faultcode\b[^>]*>[^<]*(Client|Sender|FailedAuthentication|Validation|Invalid)[^<]*<\/([a-zA-Z0-9_-]+:)?faultcode>/i', $body)) {
             return true;
         }
 
-        // SOAP 1.2 Sender fault: <Value>...Sender...
-        if (1 === preg_match('/<([a-z0-9_-]+:)?Value>[^<]*Sender[^<]*<\/([a-z0-9_-]+:)?Value>/i', $body)) {
+        // SOAP 1.2 Sender fault: <Value> or <env:Value ...>
+        if (1 === preg_match('/<([a-zA-Z0-9_-]+:)?Value\b[^>]*>[^<]*(Sender|Client)[^<]*<\/([a-zA-Z0-9_-]+:)?Value>/i', $body)) {
             return true;
         }
 

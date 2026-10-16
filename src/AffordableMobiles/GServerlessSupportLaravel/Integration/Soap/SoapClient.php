@@ -10,6 +10,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Integration\Soap\Exceptions\Soap
 use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use GuzzleHttp\Psr7\Message;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
@@ -40,19 +41,28 @@ class SoapClient extends \SoapClient
     protected null|float|int $timeout        = null;
     protected null|float|int $connectTimeout = null;
 
+    protected ?PendingRequest $pendingRequest = null;
+
     /**
-     * @param null|string         $wsdl    WSDL file path, remote URL, or null for WSDL-less mode
-     * @param array<string,mixed> $options SoapClient options
+     * @param null|string         $wsdl           WSDL file path, remote URL, or null for WSDL-less mode
+     * @param array<string,mixed> $options        SoapClient options (can include 'outbound_auth', 'client_cert', 'http_options', etc.)
+     * @param null|PendingRequest $pendingRequest Optional pre-configured Laravel HTTP PendingRequest
      */
-    public function __construct(?string $wsdl, array $options = [])
+    public function __construct(?string $wsdl, array $options = [], ?PendingRequest $pendingRequest = null)
     {
+        $this->pendingRequest = $pendingRequest ?? ($options['pending_request'] ?? null);
+        unset($options['pending_request']);
+
+        // Extract custom configuration options before parent constructor
+        $this->extractCustomOptions($options);
+
         $options['trace']      ??= true;
         $options['exceptions'] ??= true;
 
         // Configure serverless WSDL caching in tmpfs by default
         $this->configureWsdlCache($options);
 
-        // Intercept remote WSDL URLs and fetch via HTTP client
+        // Intercept remote WSDL URLs and fetch via HTTP client (inheriting auth, mTLS, timeouts, and options)
         if (null !== $wsdl && (str_starts_with($wsdl, 'http://') || str_starts_with($wsdl, 'https://'))) {
             $wsdl = $this->resolveRemoteWsdl($wsdl, $options);
         }
@@ -63,50 +73,26 @@ class SoapClient extends \SoapClient
     /**
      * Intercept and execute the SOAP HTTP request via Laravel's Http client.
      *
-     * @param string $request  SOAP XML request envelope
-     * @param string $location Destination endpoint URL
-     * @param string $action   SOAPAction URI
-     * @param int    $version  SOAP version (SOAP_1_1 or SOAP_1_2)
-     * @param bool   $oneWay   Whether to ignore the response (one-way operation)
+     * @param string   $request  SOAP XML request envelope
+     * @param string   $location Destination endpoint URL
+     * @param string   $action   SOAPAction URI
+     * @param int      $version  SOAP version (SOAP_1_1 or SOAP_1_2)
+     * @param bool|int $oneWay   Whether to ignore the response (one-way operation)
      */
     public function __doRequest(
         string $request,
         string $location,
         string $action,
         int $version,
-        bool $oneWay = false,
+        bool|int $oneWay = false,
     ): ?string {
         $contentType = $this->resolveContentType($action, $version);
         $headers     = $this->resolveHeaders($action, $version, $contentType);
 
-        $pendingRequest = Http::withHeaders($headers)
+        $pendingRequest = $this->buildPendingRequest()
+            ->withHeaders($headers)
             ->withBody($request, $contentType)
-            ->withOptions(array_merge([
-                'version' => 1.1,
-            ], $this->httpOptions))
         ;
-
-        if (null !== $this->timeout) {
-            $pendingRequest->timeout($this->timeout);
-        }
-
-        if (null !== $this->connectTimeout) {
-            $pendingRequest->connectTimeout($this->connectTimeout);
-        }
-
-        if (null !== $this->outboundAuth) {
-            $pendingRequest->withOutboundAuth($this->outboundAuth);
-        }
-
-        if (null !== $this->clientCert) {
-            $pendingRequest->withClientCert(
-                cert: $this->clientCert['cert'],
-                key: $this->clientCert['key'],
-                certPassword: $this->clientCert['certPassword'],
-                keyPassword: $this->clientCert['keyPassword'],
-                inMemory: $this->clientCert['inMemory'],
-            );
-        }
 
         $this->lastRequestBody = $request;
 
@@ -268,6 +254,95 @@ class SoapClient extends \SoapClient
     }
 
     /**
+     * Build the Laravel HTTP PendingRequest applying auth, cert, timeouts, and options.
+     */
+    protected function buildPendingRequest(): PendingRequest
+    {
+        $pending = null !== $this->pendingRequest
+            ? clone $this->pendingRequest
+            : Http::withOptions([
+                'version' => 1.1,
+            ]);
+
+        if (!empty($this->httpOptions)) {
+            $pending->withOptions($this->httpOptions);
+        }
+
+        if (null !== $this->timeout) {
+            $pending->timeout($this->timeout);
+        }
+
+        if (null !== $this->connectTimeout) {
+            $pending->connectTimeout($this->connectTimeout);
+        }
+
+        if (null !== $this->outboundAuth) {
+            $pending->withOutboundAuth($this->outboundAuth);
+        }
+
+        if (null !== $this->clientCert) {
+            $pending->withClientCert(
+                cert: $this->clientCert['cert']                 ?? $this->clientCert[0] ?? '',
+                key: $this->clientCert['key']                   ?? $this->clientCert['ssl_key'] ?? $this->clientCert[1] ?? null,
+                certPassword: $this->clientCert['certPassword'] ?? $this->clientCert['cert_password'] ?? null,
+                keyPassword: $this->clientCert['keyPassword']   ?? $this->clientCert['key_password'] ?? null,
+                inMemory: (bool) ($this->clientCert['inMemory'] ?? $this->clientCert['in_memory'] ?? true),
+            );
+        }
+
+        if (!empty($this->customHeaders)) {
+            $pending->withHeaders($this->customHeaders);
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Extract custom options before invoking the parent constructor.
+     *
+     * @param array<string,mixed> $options
+     */
+    protected function extractCustomOptions(array &$options): void
+    {
+        if (isset($options['outbound_auth'])) {
+            $this->withOutboundAuth($options['outbound_auth']);
+            unset($options['outbound_auth']);
+        }
+
+        if (isset($options['client_cert'])) {
+            if (\is_array($options['client_cert'])) {
+                $this->clientCert = $options['client_cert'];
+            }
+            unset($options['client_cert']);
+        } elseif (isset($options['mtls'])) {
+            if (\is_array($options['mtls'])) {
+                $this->clientCert = $options['mtls'];
+            }
+            unset($options['mtls']);
+        }
+
+        if (isset($options['http_options'])) {
+            $this->withHttpOptions((array) $options['http_options']);
+            unset($options['http_options']);
+        }
+
+        if (isset($options['headers'])) {
+            $this->withHeaders((array) $options['headers']);
+            unset($options['headers']);
+        }
+
+        if (isset($options['timeout'])) {
+            $this->timeout = $options['timeout'];
+            unset($options['timeout']);
+        }
+
+        if (isset($options['connect_timeout'])) {
+            $this->connectTimeout = $options['connect_timeout'];
+            unset($options['connect_timeout']);
+        }
+    }
+
+    /**
      * Resolve the Content-Type header string based on SOAP version.
      */
     protected function resolveContentType(string $action, int $version): string
@@ -345,9 +420,7 @@ class SoapClient extends \SoapClient
         $cachedFile = $dir.'/wsdl_'.$hash.'.wsdl';
 
         if (!file_exists($cachedFile)) {
-            $request = Http::withOptions([
-                'version' => 1.1,
-            ]);
+            $request = $this->buildPendingRequest();
 
             if (isset($options['proxy'])) {
                 $request->withOptions(['proxy' => $options['proxy']]);
@@ -368,13 +441,70 @@ class SoapClient extends \SoapClient
                 throw new \SoapFault('WSDL', \sprintf('Failed to load WSDL from [%s]: HTTP %d', $wsdlUrl, $response->status()));
             }
 
+            $body = $response->body();
+
+            // Rewrite relative schemaLocation and location attributes in <import> and <include>
+            $body = (string) preg_replace_callback(
+                '/(<(?:[a-zA-Z0-9_-]+:)?(?:import|include)\b[^>]*\b(?:schemaLocation|location)=["\'])([^"\']+)(["\'])/i',
+                function (array $matches) use ($wsdlUrl): string {
+                    $resolved = $this->resolveRelativeUrl($wsdlUrl, $matches[2]);
+
+                    return $matches[1].$resolved.$matches[3];
+                },
+                $body
+            );
+
             $temp = $cachedFile.'.'.bin2hex(random_bytes(8)).'.tmp';
-            file_put_contents($temp, $response->body());
+            file_put_contents($temp, $body);
             @chmod($temp, 0o600);
             @rename($temp, $cachedFile);
         }
 
         return $cachedFile;
+    }
+
+    /**
+     * Resolve a relative schemaLocation or import URL against the base WSDL URL.
+     */
+    protected function resolveRelativeUrl(string $baseUrl, string $relative): string
+    {
+        if (str_starts_with($relative, 'http://') || str_starts_with($relative, 'https://')) {
+            return $relative;
+        }
+
+        $parts  = parse_url($baseUrl);
+        $scheme = $parts['scheme'] ?? 'https';
+        $host   = $parts['host']   ?? '';
+        $port   = isset($parts['port']) ? ':'.$parts['port'] : '';
+        $path   = $parts['path']   ?? '/';
+
+        if (str_starts_with($relative, '//')) {
+            return $scheme.':'.$relative;
+        }
+
+        if (str_starts_with($relative, '/')) {
+            return \sprintf('%s://%s%s%s', $scheme, $host, $port, $relative);
+        }
+
+        $dir = \dirname($path);
+        if ('.' === $dir || '/' === $dir) {
+            $dir = '';
+        }
+
+        $combinedPath = ('' !== $dir ? $dir.'/' : '/').$relative;
+        $segments     = [];
+        foreach (explode('/', $combinedPath) as $seg) {
+            if ('' === $seg || '.' === $seg) {
+                continue;
+            }
+            if ('..' === $seg) {
+                array_pop($segments);
+            } else {
+                $segments[] = $seg;
+            }
+        }
+
+        return \sprintf('%s://%s%s/%s', $scheme, $host, $port, implode('/', $segments));
     }
 
     /**

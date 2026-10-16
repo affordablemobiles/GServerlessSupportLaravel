@@ -346,12 +346,14 @@ class OutboundAuth
         null|array|string $key = null,
         ?string $certPassword = null,
         ?string $keyPassword = null,
+        bool $inMemory = true,
     ): MtlsAuthenticator {
         return new MtlsAuthenticator(
             cert: $cert,
             key: $key,
             certPassword: $certPassword,
             keyPassword: $keyPassword,
+            inMemory: $inMemory,
         );
     }
 
@@ -506,6 +508,7 @@ class OutboundAuth
                 key: $config['key']                    ?? $config['ssl_key'] ?? $config['private_key'] ?? null,
                 certPassword: $config['cert_password'] ?? $config['passphrase'] ?? null,
                 keyPassword: $config['key_password']   ?? null,
+                inMemory: (bool) ($config['in_memory'] ?? true),
             ),
             'chain' => self::chain(
                 array_filter(array_map(self::fromConfig(...), (array) ($config['authenticators'] ?? $config['drivers'] ?? [])))

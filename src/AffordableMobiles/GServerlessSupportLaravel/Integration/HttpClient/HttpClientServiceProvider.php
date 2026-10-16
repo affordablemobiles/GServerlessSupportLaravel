@@ -56,17 +56,18 @@ class HttpClientServiceProvider extends ServiceProvider
         });
 
         // 5. Register withClientCert macro for mTLS on PendingRequest and Http facade
-        PendingRequest::macro('withClientCert', function (array|string $cert, null|array|string $key = null, ?string $certPassword = null, ?string $keyPassword = null) {
+        PendingRequest::macro('withClientCert', function (array|string $cert, null|array|string $key = null, ?string $certPassword = null, ?string $keyPassword = null, bool $inMemory = true) {
             /** @var PendingRequest $this */
             $options = [];
 
-            if (!empty($cert)) {
-                $options['cert'] = CertificateMaterializer::materialize($cert, $certPassword);
-            }
-
-            if (!empty($key)) {
-                $options['ssl_key'] = CertificateMaterializer::materialize($key, $keyPassword);
-            }
+            CertificateMaterializer::bindToRequestOptions(
+                $options,
+                $cert,
+                $key,
+                $certPassword,
+                $keyPassword,
+                $inMemory,
+            );
 
             return $this->withOptions($options);
         });

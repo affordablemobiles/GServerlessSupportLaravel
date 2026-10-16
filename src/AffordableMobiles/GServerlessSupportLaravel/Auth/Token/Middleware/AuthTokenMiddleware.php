@@ -275,18 +275,15 @@ class AuthTokenMiddleware
 
         $mtls = $config['mtls'] ?? $config;
 
-        if (!isset($options['cert']) && !empty($mtls['cert'])) {
-            $options['cert'] = CertificateMaterializer::materialize(
+        if (!empty($mtls['cert'])) {
+            $inMemory = (bool) ($mtls['in_memory'] ?? true);
+            CertificateMaterializer::bindToRequestOptions(
+                $options,
                 $mtls['cert'],
-                $mtls['cert_password'] ?? $mtls['passphrase'] ?? null
-            );
-        }
-
-        if (!isset($options['ssl_key']) && (!empty($mtls['key']) || !empty($mtls['ssl_key']))) {
-            $key                = $mtls['key'] ?? $mtls['ssl_key'];
-            $options['ssl_key'] = CertificateMaterializer::materialize(
-                $key,
-                $mtls['key_password'] ?? null
+                $mtls['key']           ?? $mtls['ssl_key'] ?? null,
+                $mtls['cert_password'] ?? $mtls['passphrase'] ?? null,
+                $mtls['key_password']  ?? null,
+                $inMemory,
             );
         }
     }

@@ -103,6 +103,18 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
             $clientConfig['verify'] = $runtimeOptions['verify'];
         }
 
+        if (isset($runtimeOptions['cert']) && !isset($clientConfig['cert'])) {
+            $clientConfig['cert'] = $runtimeOptions['cert'];
+        }
+
+        if (isset($runtimeOptions['ssl_key']) && !isset($clientConfig['ssl_key'])) {
+            $clientConfig['ssl_key'] = $runtimeOptions['ssl_key'];
+        }
+
+        if (isset($runtimeOptions['curl']) && \is_array($runtimeOptions['curl'])) {
+            $clientConfig['curl'] = array_replace($clientConfig['curl'] ?? [], $runtimeOptions['curl']);
+        }
+
         $client = new GuzzleClient($clientConfig);
 
         try {

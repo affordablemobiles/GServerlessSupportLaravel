@@ -302,16 +302,27 @@ Computes a cryptographic signature over the outgoing request body (and an option
 
 ### 12. Client Certificates (mTLS) & Composable Auth
 
-For endpoints requiring mutual TLS (mTLS), `MtlsAuthenticator` integrates with `CertificateMaterializer` to handle PEM strings stored in environment variables, automatically normalizing newlines and safely caching content-addressed certificates on tmpfs with `0600` permissions:
+`MtlsAuthenticator` and `CertificateMaterializer` provide two-tier client certificate support for serverless runtimes:
+
+#### Tier 1: In-Memory cURL Blobs (Preferred & Default)
+In PHP 8.1+ with cURL 7.71.0+, cURL supports `CURLOPT_SSLCERT_BLOB` and `CURLOPT_SSLKEY_BLOB`. When secrets from Secret Manager are loaded as PEM strings in environment variables:
+- `MtlsAuthenticator` injects the raw PEM strings directly into cURL in-memory.
+- **Zero disk writes and zero temporary files**: Private keys never touch tmpfs or disk.
 
 ```php
 'gateway.example.com' => [
     'driver'        => 'mtls',
-    'cert'          => env('CLIENT_CERT_PEM'), // Raw PEM string or file path!
+    'cert'          => env('CLIENT_CERT_PEM'), // Raw PEM string in environment!
     'key'           => env('CLIENT_KEY_PEM'),  // Optional if cert bundle contains private key
     'cert_password' => env('CLIENT_CERT_PASSWORD'),
 ],
 ```
+
+#### Tier 2: Content-Addressed Disk Materialization (Fallback & External Clients)
+If an existing file path is supplied (e.g. `resource_path('certs/client.pem')`), or if an external client (such as PHP's native `SoapClient` or a non-cURL stream handler) requires a physical file on disk:
+- `CertificateMaterializer::materializePem()` normalizes escaped newlines and writes the certificate atomically to `/tmp/cache/GServerlessSupportLaravel/certs/cert_<sha256>.pem` with `chmod 0600`.
+- Because the file is content-addressed by its SHA-256 hash, thousands of requests across a serverless instance reuse the exact same file on disk, eliminating the `/tmp` file leaks caused by `tempnam()`.
+- To force file materialization, pass `'in_memory' => false`.
 
 For APIs that require **both** transport-level mTLS and application-layer auth (e.g. OAuth 2.0 or Basic Auth):
 

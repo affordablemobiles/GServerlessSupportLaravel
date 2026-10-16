@@ -9,8 +9,14 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\TokenCache;
 class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
 {
     /**
-     * @param callable|string $refreshToken     Refresh token string or callable resolving it
-     * @param null|callable   $onTokenRefreshed Callback triggered when token is refreshed, useful for rotated refresh tokens
+     * @param mixed                $refreshToken         Refresh token string, invokable class string, or callable
+     * @param null|string          $scope                Optional scope
+     * @param string               $authMethod           Authentication method: 'client_secret_basic' or 'client_secret_post'
+     * @param mixed                $onTokenRefreshed     Callback, invokable class string, or [Class, method]
+     * @param array<string,mixed>  $extraTokenParams     Additional parameters for token request
+     * @param array<string,string> $extraResourceHeaders Additional headers for resource request
+     * @param array<string,mixed>  $tokenClientOptions   Custom Guzzle options for token endpoint (proxy, verify, etc.)
+     * @param string               $tokenResponseKey     JSON key or dot-notation path to extract token from (default 'access_token')
      */
     public function __construct(
         string $tokenUrl,
@@ -22,6 +28,8 @@ class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
         protected readonly mixed $onTokenRefreshed = null,
         protected readonly array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $fallbackTtl = self::DEFAULT_FALLBACK_TTL,
@@ -32,6 +40,8 @@ class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
             headerName: $headerName,
             tokenType: $tokenType,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             fallbackTtl: $fallbackTtl,
             bufferSeconds: $bufferSeconds,
         );
@@ -39,7 +49,8 @@ class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
 
     protected function getCacheKey(): string
     {
-        $token = \is_callable($this->refreshToken) ? 'dynamic' : hash('sha256', (string) $this->refreshToken);
+        $isDynamic = null !== $this->resolveCallable($this->refreshToken);
+        $token     = $isDynamic ? 'dynamic' : hash('sha256', (string) $this->refreshToken);
 
         return TokenCache::key([
             'driver'             => 'refresh_token',
@@ -50,10 +61,11 @@ class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
         ]);
     }
 
-    protected function fetchToken(): array
+    protected function fetchToken(array $options = []): array
     {
-        $refreshTokenValue = \is_callable($this->refreshToken)
-            ? (string) ($this->refreshToken)()
+        $refreshTokenCallable = $this->resolveCallable($this->refreshToken);
+        $refreshTokenValue    = null !== $refreshTokenCallable
+            ? (string) ($refreshTokenCallable)()
             : (string) $this->refreshToken;
 
         $params = array_merge([
@@ -65,27 +77,57 @@ class OAuth2RefreshTokenAuthenticator extends AbstractOAuth2Authenticator
             $params['scope'] = $this->scope;
         }
 
-        $options = [];
+        $requestOptions = [];
 
         if ('client_secret_basic' === $this->authMethod) {
-            $options['auth']        = [$this->clientId, $this->clientSecret];
-            $options['form_params'] = $params;
+            $requestOptions['auth']        = [$this->clientId, $this->clientSecret];
+            $requestOptions['form_params'] = $params;
         } else {
-            $params['client_id']     = $this->clientId;
-            $params['client_secret'] = $this->clientSecret;
-            $options['form_params']  = $params;
+            $params['client_id']           = $this->clientId;
+            $params['client_secret']       = $this->clientSecret;
+            $requestOptions['form_params'] = $params;
         }
 
-        $data = $this->executeTokenRequest($options);
+        $data = $this->executeTokenRequest($requestOptions, $options);
 
-        if (null !== $this->onTokenRefreshed && \is_callable($this->onTokenRefreshed)) {
-            ($this->onTokenRefreshed)($data);
+        $onRefreshed = $this->resolveCallable($this->onTokenRefreshed);
+        if (null !== $onRefreshed) {
+            ($onRefreshed)($data);
         }
+
+        $token = data_get($data, $this->tokenResponseKey);
 
         return [
-            'token'      => (string) $data['access_token'],
+            'token'      => (string) $token,
             'expires_in' => (int) ($data['expires_in'] ?? $this->fallbackTtl),
             'raw'        => $data,
         ];
+    }
+
+    /**
+     * Resolve a callable or invokable class string.
+     */
+    protected function resolveCallable(mixed $target): ?callable
+    {
+        if (null === $target) {
+            return null;
+        }
+
+        if (\is_callable($target)) {
+            return $target;
+        }
+
+        if (\is_string($target) && class_exists($target)) {
+            try {
+                $instance = app($target);
+                if (\is_callable($instance)) {
+                    return $instance;
+                }
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        return null;
     }
 }

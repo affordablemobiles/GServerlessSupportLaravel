@@ -103,9 +103,11 @@ This pattern creates three major blindspots for Site Reliability Engineering (SR
 
 1. **Transport / Network Failures (`ConnectionException`)**:
    DNS lookup failures, cURL error 28 connect timeouts, and Cloud NAT port exhaustion report the raw `Illuminate\Http\Client\ConnectionException`. Error Reporting clusters these by cURL error code, providing SRE with a clear platform-wide picture of egress network health.
-2. **Remote Server Errors (`UpstreamServerException`)**:
+2. **Transient Retries are Non-Disruptive**:
+   When `GuzzleRetryMiddleware` retries a connection timeout, it logs an informative `Log::info` entry during the delay. If the retry succeeds on attempt 2, 3, or 4, **zero exceptions are reported to Error Reporting**. SRE is only alerted if all attempts are completely exhausted.
+3. **Remote Server Errors (`UpstreamServerException`)**:
    Upstream 500, 502, 503, and 504 errors report `UpstreamServerException`.
-3. **Critical Authorization & Quota Errors (`UpstreamClientException`)**:
+4. **Critical Authorization & Quota Errors (`UpstreamClientException`)**:
    By default, `401 Unauthorized`, `403 Forbidden`, and `429 Too Many Requests` are reported. Normal expected business responses (such as `404 Not Found` or `422 Unprocessable Entity`) are ignored unless explicitly configured for a specific host.
 
 ---
@@ -118,21 +120,26 @@ Google Cloud Error Reporting clusters errors using:
 - **The Top Application Stack Frame**
 - **The First Line of the Exception Message**
 
-If an exception message includes dynamic timestamps, UUIDs, or raw response bodies on its first line, Error Reporting treats every occurrence as a unique group, creating thousands of un-aggregated alerts.
+If an exception message includes dynamic identifiers (such as `/customers/12345/orders/ORD-98234-XYZ`) on its first line, Error Reporting creates a distinct error group for every single customer or order reference, causing alert explosion.
 
-`UpstreamHttpException` solves this by automatically structuring its message into two distinct sections:
+`UpstreamHttpException` eliminates this cardinality risk by cleanly structuring its message:
 
 ```
-[api.example.com] POST /v1/transactions -> 503 Service Unavailable
+[api.example.com] POST -> 503 Service Unavailable
+URL: https://api.example.com/customers/12345/orders/ORD-98234-XYZ/status
 Response summary:
 {"error": "database_overloaded", "retry_after": 30}
 ```
 
-- **Line 1 (Deterministic Group Signature)**:
-  `[<host>] <METHOD> <path> -> <status> <reason>`
-  This guarantees that all 503 responses for that endpoint collapse into **one unified incident in Error Reporting**.
-- **Line 2+ (Diagnostic Response Summary)**:
-  Using `GuzzleHttp\Psr7\Message::bodySummary($response, 250)`, the exception safely captures a truncated body summary up to 250 characters. The stream is automatically rewound so calling application code can still read the response body. This diagnostic context appears in Error Reporting's details drawer for immediate root-cause analysis without log archaeology.
+- **Line 1 (Zero-Cardinality Signature)**:
+  `[<host>] <METHOD> -> <status> <reason>`
+  This guarantees that all 503 responses for that host and HTTP verb collapse into **one unified incident in Error Reporting**, grouped alongside the application caller's stack frame.
+- **Line 2 (Diagnostic URL)**:
+  Contains the full, exact request URL including path and query string.
+- **Line 3+ (Diagnostic Response Summary)**:
+  Using `GuzzleHttp\Psr7\Message::bodySummary($response, 250)`, the exception safely captures a truncated body summary up to 250 characters. The stream is automatically rewound so calling application code can still read the response body.
+- **Structured Context Array**:
+  `UpstreamHttpException` implements `context()`, providing structured keys (`http_host`, `http_method`, `http_url`, `http_path`, `http_status`) that Monolog and Google Cloud Logging ingest into filterable JSON payloads under `jsonPayload.context`.
 
 ---
 
@@ -145,7 +152,6 @@ try {
     $response = $this->http->post($endpoint, $data);
 } catch (ConnectionException $e) {
     // Upstream transport error was already reported by the listener.
-    // Wrap and throw a sanitized domain exception for the API consumer:
     throw new ServiceUnavailableException('The service is temporarily unavailable.', previous: $e);
 }
 
@@ -162,8 +168,8 @@ To prevent double-reporting the outer domain wrapper, configure your application
     // 1. In-session deduplication: drops duplicate reports of the exact same exception instance
     $exceptions->dontReportDuplicates();
 
-    // 2. Prevent domain wrapper double-reporting: if a domain exception wraps a
-    // raw HttpClientException that was already reported, do not report the wrapper
+    // 2. Prevent domain wrapper double-reporting: if a domain exception wraps an
+    // already-reported HttpClientException, don't report the outer wrapper
     $exceptions->dontReportWhen(static function (\Throwable $e): bool {
         return $e->getPrevious() instanceof \Illuminate\Http\Client\HttpClientException;
     });
@@ -172,94 +178,166 @@ To prevent double-reporting the outer domain wrapper, configure your application
 
 ---
 
-## Outbound Authentication
+## The 4-Tier Configuration Architecture
 
-### Declarative Pattern Matching with UriMatcher
+To handle everything from simple Google IAP services to complex multi-tenant, multi-brand integrations where credentials change dynamically per incoming request, `GServerlessSupportLaravel` supports **four configuration tiers**:
 
-`AuthTokenMiddleware` matches outbound requests against your audience configuration using `UriMatcher`. Rules are scored by specificity so the most specific pattern always wins:
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ Tier 1: Global Declarative Map (config/auth.php or config/gserverlesssupport.php)│
+│ Best for: 1:1 host maps, Google IAP OIDC, Google APIs, single-tenant ERPs       │
+└────────────────────────────────────────┬────────────────────────────────────────┘
+                                         │
+┌────────────────────────────────────────┴────────────────────────────────────────┐
+│ Tier 2: Request-Scoped Runtime Registry (OutboundAuth::registerForRequest)       │
+│ Best for: Multi-brand / multi-theme routes (ConfigController / Route Middleware)│
+└────────────────────────────────────────┬────────────────────────────────────────┘
+                                         │
+┌────────────────────────────────────────┴────────────────────────────────────────┐
+│ Tier 3: Scoped Http Client Macros (Http::macro / feature ServiceProvider)       │
+│ Best for: Domain service classes with co-located service credentials            │
+└────────────────────────────────────────┬────────────────────────────────────────┘
+                                         │
+┌────────────────────────────────────────┴────────────────────────────────────────┐
+│ Tier 4: Per-Request DTOs (Http::withOutboundAuth(OutboundAuth::...))             │
+│ Best for: Inline ad-hoc calls, dynamic per-order credentials, testOrder toggles │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
 
-1. **Exact Host + Exact Path**: `api.example.com/v1/checkout` (Highest precedence)
-2. **Exact Host + Wildcard Path**: `api.example.com/v1/*`
-3. **Exact Host Catch-All**: `api.example.com` or `api.example.com/*`
-4. **Wildcard Host + Path**: `*.internal.net/v1/*`
-5. **Wildcard Host Catch-All**: `*.internal.net`
-6. **Global Fallback**: `*` (Lowest precedence)
+---
 
-Example configuration in `config/auth.php` (under `middleware.audience`):
+### Tier 1: Global Declarative Host Map
+
+Define static host mappings in `config/auth.php` (under `middleware.audience`):
 
 ```php
 'audience' => [
     // Exact hostname mapping (Google OIDC)
-    'orders.example.com'          => '123456789-abcdef.apps.googleusercontent.com',
+    'orders.example.com'        => '123456789-abcdef.apps.googleusercontent.com',
 
     // OAuth2 Bearer token (Google APIs / Cloud Storage)
-    'storage.googleapis.com'      => 'oauth2',
+    'storage.googleapis.com'    => 'oauth2',
 
     // Path-specific audience mapping on the same host
-    'service.internal.net/v1/*'   => 'v1-audience.apps.googleusercontent.com',
-    'service.internal.net/v2/*'   => 'v2-audience.apps.googleusercontent.com',
-    'service.internal.net'        => 'default-audience.apps.googleusercontent.com',
+    'service.internal.net/v1/*' => 'v1-audience.apps.googleusercontent.com',
+    'service.internal.net/v2/*' => 'v2-audience.apps.googleusercontent.com',
+    'service.internal.net'      => 'default-audience.apps.googleusercontent.com',
 
     // Wildcard host mapping
-    '*.cloudfunctions.net'        => 'cloudfunctions-audience.apps.googleusercontent.com',
-    '*.internal.net'              => 'internal-audience.apps.googleusercontent.com',
-
-    // Nested path map syntax
-    'gateway.example.com' => [
-        '/admin/*' => 'admin-audience.apps.googleusercontent.com',
-        '*'        => 'public-audience.apps.googleusercontent.com',
-    ],
+    '*.cloudfunctions.net'      => 'cloudfunctions-audience.apps.googleusercontent.com',
+    '*.internal.net'            => 'internal-audience.apps.googleusercontent.com',
 ],
 ```
 
 ---
 
-### Supported Authentication Strategies
+### Tier 2: Request-Scoped Runtime Registration (Route Middleware / Controller Hook)
 
-Outbound authentication is organized into reusable strategies:
+In multi-tenant or multi-brand services, an incoming request carries contextual parameters (e.g. `brand=buymobiles` vs `brand=affordable`, or `testOrder=true` vs `live`). A static global hostname map cannot know which credentials to use for `api.partner.com`.
 
-| Strategy | Standard | Description |
-| :--- | :--- | :--- |
-| **Google OIDC** | OpenID Connect | Fetches ID tokens from Google metadata server or IAM service account. |
-| **Google OAuth2** | OAuth 2.0 | Fetches access tokens via Google metadata server or Domain-Wide Delegation (`GCEDWDCredentials`). |
-| **OAuth2 Client Credentials** | RFC 6749 §4.4 | Supports `client_secret_basic` (HTTP Basic Auth), `client_secret_post` (form body), and custom JSON auth endpoints. |
-| **OAuth2 JWT Bearer** | RFC 7523 | Generates and signs client assertions using Google IAM (`signBlob` / `signJwt`), Cloud KMS asymmetric keys, or PEM keys. |
-| **OAuth2 Password** | RFC 6749 §4.3 | Resource Owner Password Credentials with credential-isolated caching. |
-| **OAuth1 TBA** | RFC 5849 | Token-Based Authentication with HMAC-SHA256 request signing and query normalization. |
+Use `OutboundAuth::registerForRequest()` inside a **Route Group Middleware** or a **Base Controller**:
+
+```php
+namespace App\Http\Middleware;
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Closure;
+use Illuminate\Http\Request;
+
+class BindConnectorAuthMiddleware
+{
+    public function handle(Request $request, Closure $next, string $connectorName)
+    {
+        // 1. Resolve credentials dynamically based on incoming brand / theme / test flags
+        $themeCode = $request->input('themeCode', 'default');
+        $config    = config("{$themeCode}-{$connectorName}.connectors.{$connectorName}");
+
+        // 2. Register the connector's outbound auth for this request lifecycle
+        if (!empty($config['auth'])) {
+            OutboundAuth::registerForRequest('api.partner.com/*', $config['auth']);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+Apply the middleware to your route group in `routes/api.php`:
+
+```php
+Route::prefix('/partner/v1')
+    ->middleware('connector.auth:partner')
+    ->group(function () {
+        Route::post('/orders', [PartnerOrderController::class, 'store']);
+    });
+```
+
+Downstream service classes and models simply call `Http::post('https://api.partner.com/orders', ...)` with **zero auth boilerplate in the model** and **zero configuration pollution in `config/auth.php`**. `HttpClientServiceProvider` automatically purges the request-scoped registry when the request terminates.
 
 ---
 
-### Token Caching & Lifecycle
+### Tier 3: Scoped Laravel Http Client Macros
 
-Outbound tokens are cached in the serverless instance-scoped cache store (`/tmp/cache/GServerlessSupportLaravel`):
+For dedicated domain clients co-located in service providers, register named `Http` macros:
 
-1. **Collision-Free SHA-256 Keys**:
-   Cache keys are generated from a SHA-256 hash of `[driver, tokenUrl, clientId, scopes, subject]`. This prevents token collision across multiple tenants, credentials, or themes calling the same provider endpoint.
-2. **Dynamic TTL with Safety Buffer**:
-   Tokens are cached for `max(30, $expiresIn - 120)` seconds. The 120-second buffer guarantees that tokens never expire mid-flight during slow outbound requests.
-3. **Automatic 401 Re-Auth Retry**:
-   If an external provider revokes a token early and returns `401 Unauthorized`, the middleware automatically evicts the cached token from the instance-scoped store once and replays the request with a freshly negotiated token.
+```php
+namespace App\Providers;
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\ServiceProvider;
+
+class PartnerIntegrationServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        Http::macro('partnerClient', function () {
+            return Http::withOutboundAuth(OutboundAuth::clientCredentials(
+                tokenUrl: config('services.partner.token_url'),
+                clientId: config('services.partner.client_id'),
+                clientSecret: config('services.partner.client_secret'),
+            ))->baseUrl(config('services.partner.base_url'));
+        });
+    }
+}
+```
+
+Usage anywhere in your application:
+
+```php
+$response = Http::partnerClient()->post('/v1/shipments', $shipmentData);
+```
 
 ---
 
-### RFC 5849 OAuth 1.0a Token-Based Authentication (TBA)
+### Tier 4: Per-Request DTOs & Options
 
-For providers requiring Token-Based Authentication (such as ERP systems and RESTlets):
+For ad-hoc calls, dynamic per-order credentials, or one-off scripts, pass an authenticator directly via `Http::withOutboundAuth()`:
 
-#### Standards Compliance (RFC 5849)
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Illuminate\Support\Facades\Http;
 
-In RFC 5849 §3.4.1.3 (Parameter Normalization) and §3.5.1 (Authorization Header):
+$response = Http::withOutboundAuth(OutboundAuth::password(
+    tokenUrl: 'https://auth.example.com/oauth/token',
+    clientId: $apiKey,
+    clientSecret: $apiSecret,
+    username: $username,
+    password: $password,
+))->post('https://api.example.com/v1/invitations', $payload);
+```
 
-1. **Signature Base String**:
-   All request parameters must be collected, sorted, and included in the HMAC-SHA256 signature calculation. This includes:
-   - Request HTTP method (`GET`, `POST`, `PUT`, `DELETE`).
-   - Normalized URI scheme, host, and path (`https://api.example.com/restlet`).
-   - **All query string parameters** (e.g. `?script=123&deploy=1&custom_param=foo`).
-   - All `oauth_*` parameters (except `oauth_signature`).
-2. **Authorization Header**:
-   **Only** parameters beginning with `oauth_` and the `realm` parameter are placed into the `Authorization: OAuth ...` header. **Query parameters must remain in the URL query string and must NOT be duplicated in the header.**
+Or when using raw Guzzle:
 
-The built-in OAuth 1.0a driver adheres strictly to RFC 5849. It automatically parses query strings from the PSR-7 request, incorporates them into the HMAC signature, and generates standard `Authorization: OAuth realm="...", oauth_consumer_key="...", ...` headers.
+```php
+$response = $guzzle->post('https://api.example.com/v1/invitations', [
+    'outbound_auth' => OutboundAuth::password(...),
+    'json'          => $payload,
+]);
+```
+
+> 💡 **Why `outbound_auth`?**
+> When passing custom auth configurations to Guzzle, use `'outbound_auth'` rather than `'auth'`. Guzzle's native `Client::applyOptions()` intercepts array configs in `$options['auth']` before middleware runs, treating them as Basic Auth. Using `'outbound_auth'` (or `Http::withOutboundAuth()`) ensures custom authenticators pass cleanly to `AuthTokenMiddleware`.
 
 ---
 

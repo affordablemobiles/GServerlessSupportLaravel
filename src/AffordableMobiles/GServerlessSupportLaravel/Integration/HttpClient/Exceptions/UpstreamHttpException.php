@@ -53,31 +53,48 @@ abstract class UpstreamHttpException extends HttpClientException
     }
 
     /**
+     * Get structured context for Monolog / Google Cloud Logging.
+     *
+     * @return array<string,mixed>
+     */
+    public function context(): array
+    {
+        return [
+            'http_host'   => $this->getHost(),
+            'http_method' => $this->request->method(),
+            'http_url'    => $this->request->url(),
+            'http_path'   => parse_url($this->request->url(), PHP_URL_PATH) ?? '/',
+            'http_status' => $this->getStatus(),
+        ];
+    }
+
+    /**
      * Build the structured multi-line exception message.
      *
-     * Line 1: Stable signature for Google Cloud Error Reporting grouping.
-     * Line 2+: Truncated response body summary for diagnostic root-cause analysis.
+     * Line 1: Zero-cardinality signature for Google Cloud Error Reporting grouping: [<host>] <METHOD> -> <status> <reason>.
+     * Line 2: Full request URL for diagnostic inspection.
+     * Line 3+: Truncated response body summary for root-cause analysis.
      */
     protected function prepareMessage(Request $request, Response $response, ?int $truncateAt): string
     {
         $status = $response->status();
         $url    = $request->url();
         $host   = parse_url($url, PHP_URL_HOST) ?? 'unknown-host';
-        $path   = parse_url($url, PHP_URL_PATH) ?? '/';
         $method = $request->method();
         $reason = $response->reason();
 
-        $firstLine = \sprintf('[%s] %s %s -> %d %s', $host, $method, $path, $status, $reason);
+        $firstLine = \sprintf('[%s] %s -> %d %s', $host, $method, $status, $reason);
+        $urlLine   = \sprintf('URL: %s', $url);
 
         if (null === $truncateAt || $truncateAt <= 0) {
-            return $firstLine;
+            return \sprintf("%s\n%s", $firstLine, $urlLine);
         }
 
         $psrResponse = $response->toPsrResponse();
         $bodySummary = Message::bodySummary($psrResponse, $truncateAt);
 
         return null !== $bodySummary
-            ? \sprintf("%s\nResponse summary:\n%s", $firstLine, $bodySummary)
-            : $firstLine;
+            ? \sprintf("%s\n%s\nResponse summary:\n%s", $firstLine, $urlLine, $bodySummary)
+            : \sprintf("%s\n%s", $firstLine, $urlLine);
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\HttpClient;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\GuzzleRetryMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\HttpClient\Listeners\OutboundHttpTelemetryListener;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,7 +38,7 @@ class HttpClientServiceProvider extends ServiceProvider
             Http::globalMiddleware(GuzzleRetryMiddleware::factory());
         }
 
-        // 2. Global Google Auth token injection for microservice calls
+        // 2. Global Auth token injection for outbound microservice and 3rd party calls
         if ($config->get('gserverlesssupport.http-client.auth.enabled', true)) {
             Http::globalMiddleware(static fn (callable $handler): callable => AuthTokenMiddleware::factory()($handler));
         }
@@ -45,5 +47,16 @@ class HttpClientServiceProvider extends ServiceProvider
         if ($config->get('gserverlesssupport.http-client.telemetry.enabled', true)) {
             $events->subscribe(OutboundHttpTelemetryListener::class);
         }
+
+        // 4. Register withOutboundAuth macro on PendingRequest and Http facade
+        PendingRequest::macro('withOutboundAuth', function (mixed $auth) {
+            // @var PendingRequest $this
+            return $this->withOptions(['outbound_auth' => $auth]);
+        });
+
+        // 5. Reset request-scoped runtime auth registry at the end of request lifecycle
+        $this->app->terminating(static function (): void {
+            OutboundAuth::clearRequestMap();
+        });
     }
 }

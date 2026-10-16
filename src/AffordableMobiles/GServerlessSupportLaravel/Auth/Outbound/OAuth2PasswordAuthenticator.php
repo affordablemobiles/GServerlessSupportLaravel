@@ -18,6 +18,8 @@ class OAuth2PasswordAuthenticator extends AbstractOAuth2Authenticator
         protected readonly string $authMethod = 'client_secret_basic',
         protected readonly array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $fallbackTtl = self::DEFAULT_FALLBACK_TTL,
@@ -28,6 +30,8 @@ class OAuth2PasswordAuthenticator extends AbstractOAuth2Authenticator
             headerName: $headerName,
             tokenType: $tokenType,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             fallbackTtl: $fallbackTtl,
             bufferSeconds: $bufferSeconds,
         );
@@ -44,7 +48,7 @@ class OAuth2PasswordAuthenticator extends AbstractOAuth2Authenticator
         ]);
     }
 
-    protected function fetchToken(): array
+    protected function fetchToken(array $options = []): array
     {
         $params = array_merge([
             'grant_type' => 'password',
@@ -56,21 +60,23 @@ class OAuth2PasswordAuthenticator extends AbstractOAuth2Authenticator
             $params['scope'] = $this->scope;
         }
 
-        $options = [];
+        $requestOptions = [];
 
         if ('client_secret_basic' === $this->authMethod) {
-            $options['auth']        = [$this->clientId, $this->clientSecret];
-            $options['form_params'] = $params;
+            $requestOptions['auth']        = [$this->clientId, $this->clientSecret];
+            $requestOptions['form_params'] = $params;
         } else {
-            $params['client_id']     = $this->clientId;
-            $params['client_secret'] = $this->clientSecret;
-            $options['form_params']  = $params;
+            $params['client_id']           = $this->clientId;
+            $params['client_secret']       = $this->clientSecret;
+            $requestOptions['form_params'] = $params;
         }
 
-        $data = $this->executeTokenRequest($options);
+        $data = $this->executeTokenRequest($requestOptions, $options);
+
+        $token = data_get($data, $this->tokenResponseKey);
 
         return [
-            'token'      => (string) $data['access_token'],
+            'token'      => (string) $token,
             'expires_in' => (int) ($data['expires_in'] ?? $this->fallbackTtl),
             'raw'        => $data,
         ];

@@ -302,36 +302,88 @@ If an external provider revokes an access token before its scheduled expiration 
 
 ---
 
-## Per-Request Overrides with OutboundAuth
+---
 
-For multi-brand or dynamic integrations where credentials change per-request for the same host, pass an `OutboundAuth` instance via Guzzle's `auth` option:
+## Configuration Architecture: The 4 Tiers
+
+To accommodate everything from standard internal services to complex multi-tenant connectors, `GServerlessSupportLaravel` supports **four configuration tiers**:
+
+### Tier 1: Global Declarative Host Map
+Configured in `config/auth.php` (under `middleware.audience`). Best for static 1:1 host maps, Google IAP OIDC audiences, and single-tenant providers.
+
+> ⚠️ **Config Caching Note (`php artisan config:cache` / `gserverless:prepare`)**:
+> Configuration files must not contain raw `Closure`s. When specifying callbacks like `on_token_refreshed` or dynamic `refresh_token`, use an **invokable class string** (e.g. `App\Auth\TokenRefreshedHandler::class`), which the container resolves automatically via `app($class)`.
+
+### Tier 2: Request-Scoped Runtime Registration (Route Middleware / Controller Hook)
+When an application routes requests based on incoming parameters (such as `themeCode`, `brand`, or `testOrder`), credentials vary dynamically per request. A static hostname map in `config/auth.php` cannot distinguish between multiple brands calling the same partner hostname.
+
+Use `OutboundAuth::registerForRequest()` in a Route Middleware or Base Controller:
+
+```php
+namespace App\Http\Middleware;
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Closure;
+use Illuminate\Http\Request;
+
+class BindConnectorAuthMiddleware
+{
+    public function handle(Request $request, Closure $next, string $connectorName)
+    {
+        $themeCode = $request->input('themeCode', 'default');
+        $connector = config("{$themeCode}-{$connectorName}.connectors.{$connectorName}");
+
+        if (!empty($connector['auth'])) {
+            OutboundAuth::registerForRequest('api.partner.com/*', $connector['auth']);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+Downstream models and services simply execute `Http::post('https://api.partner.com/...', ...)` without any auth boilerplate. The request-scoped registry is automatically cleared when the request finishes.
+
+### Tier 3: Scoped Http Client Macros
+Co-located inside a feature Service Provider:
+
+```php
+Http::macro('partnerClient', function () {
+    return Http::withOutboundAuth(config('services.partner.auth'))
+        ->baseUrl(config('services.partner.base_url'));
+});
+
+// Usage:
+$response = Http::partnerClient()->post('/v1/orders', $data);
+```
+
+### Tier 4: Per-Request Options & DTOs
+For ad-hoc calls or dynamic per-order credentials, pass an authenticator directly using `Http::withOutboundAuth()`:
 
 ```php
 use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use Illuminate\Support\Facades\Http;
 
-$response = Http::withOptions([
-    'auth' => OutboundAuth::password(
-        tokenUrl: 'https://auth.example.com/oauth/token',
-        clientId: $brandConfig['client_id'],
-        clientSecret: $brandConfig['client_secret'],
-        username: $brandConfig['username'],
-        password: $brandConfig['password'],
-    ),
-])->post('https://api.example.com/v1/resource', $payload);
+$response = Http::withOutboundAuth(OutboundAuth::password(
+    tokenUrl: 'https://auth.example.com/oauth/token',
+    clientId: $brandConfig['client_id'],
+    clientSecret: $brandConfig['client_secret'],
+    username: $brandConfig['username'],
+    password: $brandConfig['password'],
+))->post('https://api.example.com/v1/resource', $payload);
 ```
 
-Or for client credentials:
+Or when using raw Guzzle:
 
 ```php
-$response = Http::withOptions([
-    'auth' => OutboundAuth::clientCredentials(
-        tokenUrl: 'https://auth.example.com/oauth2/token',
-        clientId: $partnerId,
-        clientSecret: $partnerSecret,
-    ),
-])->get('https://api.example.com/v1/orders');
+$response = $guzzle->post('https://api.example.com/v1/resource', [
+    'outbound_auth' => OutboundAuth::password(...),
+    'json'          => $payload,
+]);
 ```
+
+> 💡 **Why `outbound_auth`?**
+> When passing custom auth configurations to Guzzle, use `'outbound_auth'` rather than `'auth'`. Guzzle's native `Client::applyOptions()` intercepts array configs in `$options['auth']` before middleware runs, treating them as Basic Auth. Using `'outbound_auth'` (or `Http::withOutboundAuth()`) ensures custom authenticators pass cleanly to `AuthTokenMiddleware`.
 
 ---
 

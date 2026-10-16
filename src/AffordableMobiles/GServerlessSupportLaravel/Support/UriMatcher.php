@@ -154,7 +154,7 @@ class UriMatcher
      */
     private static function isPathMap(array $arr): bool
     {
-        if (empty($arr) || isset($arr['audience']) || isset($arr['report_5xx'])) {
+        if (empty($arr) || isset($arr['audience']) || isset($arr['report_5xx']) || isset($arr['driver']) || isset($arr['type'])) {
             return false;
         }
 

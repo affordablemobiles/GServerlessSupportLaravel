@@ -10,6 +10,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\TokenExchangeExce
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\TokenCache;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Psr7\Message;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -23,12 +24,16 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
      * @param string               $headerName           Header to inject token into (default 'Authorization')
      * @param string               $tokenType            Token prefix (default 'Bearer')
      * @param array<string,string> $extraResourceHeaders Extra headers to inject on authenticated resource requests
+     * @param array<string,mixed>  $tokenClientOptions   Options for internal token endpoint Guzzle client (proxy, verify, headers)
+     * @param string               $tokenResponseKey     JSON key or dot-notation path to extract token from response
      */
     public function __construct(
         protected readonly string $tokenUrl,
         protected readonly string $headerName = 'Authorization',
         protected readonly string $tokenType = 'Bearer',
         protected readonly array $extraResourceHeaders = [],
+        protected readonly array $tokenClientOptions = [],
+        protected readonly string $tokenResponseKey = 'access_token',
         protected readonly int $fallbackTtl = self::DEFAULT_FALLBACK_TTL,
         protected readonly int $bufferSeconds = self::DEFAULT_BUFFER_SECONDS,
     ) {}
@@ -37,7 +42,7 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
     {
         $token = TokenCache::remember(
             $this->getCacheKey(),
-            fn (): array => $this->fetchToken(),
+            fn (): array => $this->fetchToken($options),
             $this->fallbackTtl,
             $this->bufferSeconds,
         );
@@ -68,32 +73,47 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
     /**
      * Fetch access token from remote token endpoint.
      *
+     * @param array<string,mixed> $options
+     *
      * @return array{token: string, expires_in: int, raw?: array<string,mixed>}
      */
-    abstract protected function fetchToken(): array;
+    abstract protected function fetchToken(array $options = []): array;
 
     /**
      * Execute HTTP token request with clean Guzzle client and standard error handling.
      *
      * @param array<string,mixed> $requestOptions
+     * @param array<string,mixed> $runtimeOptions
      *
      * @return array<string,mixed>
      */
-    protected function executeTokenRequest(array $requestOptions): array
+    protected function executeTokenRequest(array $requestOptions, array $runtimeOptions = []): array
     {
-        $client = new GuzzleClient([
+        $clientConfig = array_merge([
             'timeout'         => 10,
             'connect_timeout' => 5,
             'http_errors'     => true,
-        ]);
+        ], $this->tokenClientOptions);
+
+        if (isset($runtimeOptions['proxy']) && !isset($clientConfig['proxy'])) {
+            $clientConfig['proxy'] = $runtimeOptions['proxy'];
+        }
+
+        if (isset($runtimeOptions['verify']) && !isset($clientConfig['verify'])) {
+            $clientConfig['verify'] = $runtimeOptions['verify'];
+        }
+
+        $client = new GuzzleClient($clientConfig);
 
         try {
             $response = $client->post($this->tokenUrl, $requestOptions);
         } catch (BadResponseException $e) {
             $this->handleTokenErrorResponse($e->getResponse());
         } catch (\Throwable $e) {
+            $host = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+
             throw new TokenExchangeException(
-                message: \sprintf('Failed to communicate with token endpoint [%s]: %s', $this->tokenUrl, $e->getMessage()),
+                message: \sprintf("[%s] POST -> Connection Error\nURL: %s\nResponse summary:\n%s", $host, $this->tokenUrl, $e->getMessage()),
                 code: (int) $e->getCode(),
                 previous: $e,
                 tokenEndpoint: $this->tokenUrl,
@@ -103,9 +123,13 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
 
-        if (!\is_array($data) || empty($data['access_token'])) {
+        $token = \is_array($data) ? data_get($data, $this->tokenResponseKey) : null;
+
+        if (empty($token) || !\is_string($token)) {
+            $host = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+
             throw new TokenExchangeException(
-                message: \sprintf('Token endpoint [%s] returned invalid payload: missing access_token', $this->tokenUrl),
+                message: \sprintf("[%s] POST -> 200 OK\nURL: %s\nResponse summary:\nMissing token response key [%s]", $host, $this->tokenUrl, $this->tokenResponseKey),
                 tokenEndpoint: $this->tokenUrl,
                 response: $response,
             );
@@ -119,20 +143,23 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
      */
     protected function handleTokenErrorResponse(?ResponseInterface $response): never
     {
-        $status = $response?->getStatusCode() ?? 0;
+        $host   = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+        $status = $response?->getStatusCode()              ?? 0;
+        $reason = $response?->getReasonPhrase()            ?? 'Error';
         $body   = $response ? (string) $response->getBody() : '';
         $data   = json_decode($body, true);
 
         $error       = \is_array($data) ? ($data['error'] ?? '') : '';
         $description = \is_array($data) ? ($data['error_description'] ?? '') : '';
 
-        $message = \sprintf(
-            'Token endpoint [%s] failed with HTTP %d%s%s',
-            $this->tokenUrl,
-            $status,
-            '' !== $error ? ': '.$error : '',
-            '' !== $description ? ' ('.$description.')' : '',
-        );
+        $firstLine = \sprintf('[%s] POST -> %d %s', $host, $status, $reason);
+        $urlLine   = \sprintf('URL: %s', $this->tokenUrl);
+
+        $summary = '' !== $description
+            ? $description
+            : ('' !== $error ? $error : ($response ? (Message::bodySummary($response, 250) ?? 'No response body') : 'No response body'));
+
+        $message = \sprintf("%s\n%s\nResponse summary:\n%s", $firstLine, $urlLine, $summary);
 
         if (401 === $status || 'invalid_client' === $error) {
             throw new InvalidClientCredentialsException(

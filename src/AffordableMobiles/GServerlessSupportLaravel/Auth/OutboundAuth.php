@@ -17,9 +17,47 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2RefreshToken
 
 class OutboundAuth
 {
+    /**
+     * Request-scoped runtime authentication map for dynamic connector / route-group registration.
+     *
+     * @var array<string,mixed>
+     */
+    protected static array $requestMap = [];
+
+    /**
+     * Register an outbound authentication configuration scoped to the current request lifecycle.
+     *
+     * Useful in Route Middleware or Base Controllers (e.g. ConfigController) when credentials
+     * depend dynamically on inbound request parameters (themeCode, brand, test/live mode).
+     *
+     * @param string $pattern URI pattern (e.g. 'api.example.com/*' or 'api.example.com/v1/*')
+     */
+    public static function registerForRequest(string $pattern, mixed $config): void
+    {
+        self::$requestMap[$pattern] = $config;
+    }
+
+    /**
+     * Retrieve the active request-scoped authentication map.
+     *
+     * @return array<string,mixed>
+     */
+    public static function getRequestMap(): array
+    {
+        return self::$requestMap;
+    }
+
+    /**
+     * Clear all request-scoped authentication mappings (called at end of request lifecycle).
+     */
+    public static function clearRequestMap(): void
+    {
+        self::$requestMap = [];
+    }
+
     public static function oidc(mixed $audience): GoogleOidcAuthenticator
     {
-        return new GoogleOidcAuthenticator($audience);
+        return new GoogleOidcAuthenticator(self::resolveCallableOrValue($audience));
     }
 
     public static function googleOAuth2(): GoogleOAuth2Authenticator
@@ -36,6 +74,8 @@ class OutboundAuth
         string $authMethod = 'client_secret_basic',
         array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $fallbackTtl = 3600,
@@ -50,6 +90,8 @@ class OutboundAuth
             authMethod: $authMethod,
             extraTokenParams: $extraTokenParams,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             headerName: $headerName,
             tokenType: $tokenType,
             fallbackTtl: $fallbackTtl,
@@ -67,6 +109,8 @@ class OutboundAuth
         string $authMethod = 'client_secret_basic',
         array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $fallbackTtl = 3600,
@@ -82,6 +126,8 @@ class OutboundAuth
             authMethod: $authMethod,
             extraTokenParams: $extraTokenParams,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             headerName: $headerName,
             tokenType: $tokenType,
             fallbackTtl: $fallbackTtl,
@@ -99,6 +145,8 @@ class OutboundAuth
         mixed $onTokenRefreshed = null,
         array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $fallbackTtl = 3600,
@@ -114,6 +162,8 @@ class OutboundAuth
             onTokenRefreshed: $onTokenRefreshed,
             extraTokenParams: $extraTokenParams,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             headerName: $headerName,
             tokenType: $tokenType,
             fallbackTtl: $fallbackTtl,
@@ -128,8 +178,11 @@ class OutboundAuth
         string $grantType = 'client_credentials',
         null|array|string $basicAuth = null,
         ?string $scope = null,
+        bool $includeJti = true,
         array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         int $jwtTtl = 300,
@@ -143,8 +196,11 @@ class OutboundAuth
             grantType: $grantType,
             basicAuth: $basicAuth,
             scope: $scope,
+            includeJti: $includeJti,
             extraTokenParams: $extraTokenParams,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             headerName: $headerName,
             tokenType: $tokenType,
             jwtTtl: $jwtTtl,
@@ -185,6 +241,16 @@ class OutboundAuth
         );
     }
 
+    public static function basic(string $username, string $password): ApiKeyAuthenticator
+    {
+        return new ApiKeyAuthenticator(
+            key: base64_encode($username.':'.$password),
+            name: 'Authorization',
+            in: 'header',
+            prefix: 'Basic',
+        );
+    }
+
     /**
      * Resolve authenticator from configuration array or string.
      *
@@ -215,7 +281,7 @@ class OutboundAuth
         $driver = $config['driver'] ?? $config['type'] ?? null;
 
         return match ($driver) {
-            'google_oidc', 'oidc' => self::oidc($config['audience'] ?? $config['target_audience'] ?? ''),
+            'google_oidc', 'oidc' => self::oidc(self::resolveCallableOrValue($config['audience'] ?? $config['target_audience'] ?? '')),
             'google_oauth2', 'oauth2' => self::googleOAuth2(),
             'oauth2_client_credentials', 'client_credentials' => self::clientCredentials(
                 tokenUrl: (string) ($config['token_url'] ?? $config['url'] ?? ''),
@@ -226,6 +292,8 @@ class OutboundAuth
                 authMethod: (string) ($config['auth_method'] ?? 'client_secret_basic'),
                 extraTokenParams: (array) ($config['extra_token_params'] ?? $config['token_params'] ?? []),
                 extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
+                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
+                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
                 headerName: (string) ($config['header_name'] ?? 'Authorization'),
                 tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
@@ -239,6 +307,8 @@ class OutboundAuth
                 authMethod: (string) ($config['auth_method'] ?? 'client_secret_basic'),
                 extraTokenParams: (array) ($config['extra_token_params'] ?? []),
                 extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
+                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
+                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
                 headerName: (string) ($config['header_name'] ?? 'Authorization'),
                 tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
@@ -252,6 +322,8 @@ class OutboundAuth
                 onTokenRefreshed: $config['on_token_refreshed'] ?? null,
                 extraTokenParams: (array) ($config['extra_token_params'] ?? []),
                 extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? []),
+                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
+                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
                 headerName: (string) ($config['header_name'] ?? 'Authorization'),
                 tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
@@ -262,8 +334,11 @@ class OutboundAuth
                 grantType: (string) ($config['grant_type'] ?? 'client_credentials'),
                 basicAuth: $config['basic_auth'] ?? null,
                 scope: isset($config['scope']) ? (string) $config['scope'] : null,
+                includeJti: (bool) ($config['include_jti'] ?? true),
                 extraTokenParams: (array) ($config['extra_token_params'] ?? []),
                 extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
+                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
+                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
                 headerName: (string) ($config['header_name'] ?? 'Authorization'),
                 tokenType: (string) ($config['token_type'] ?? 'Bearer'),
                 jwtTtl: (int) ($config['jwt_ttl'] ?? 300),
@@ -282,7 +357,30 @@ class OutboundAuth
                 in: (string) ($config['in'] ?? 'header'),
                 prefix: isset($config['prefix']) ? (string) $config['prefix'] : null,
             ),
+            'basic', 'http_basic' => self::basic(
+                username: (string) ($config['username'] ?? $config['user'] ?? ''),
+                password: (string) ($config['password'] ?? $config['pass'] ?? ''),
+            ),
             default => throw new ConfigurationException(\sprintf('Unknown outbound auth driver [%s]', (string) $driver)),
         };
+    }
+
+    /**
+     * Resolve a callable, invokable class string, or raw value.
+     */
+    protected static function resolveCallableOrValue(mixed $value): mixed
+    {
+        if (\is_string($value) && class_exists($value)) {
+            try {
+                $instance = app($value);
+                if (\is_callable($instance)) {
+                    return $instance;
+                }
+            } catch (\Throwable) {
+                return $value;
+            }
+        }
+
+        return $value;
     }
 }

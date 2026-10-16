@@ -102,10 +102,12 @@ class AuthTokenMiddleware
     public static function factory(array $audienceMap = []): self
     {
         if (empty($audienceMap)) {
-            $audienceMap = config(
-                config('gserverlesssupport.auth.middleware.audience_map_location', 'auth.middleware.audience'),
-                [],
-            );
+            try {
+                $location    = config('gserverlesssupport.auth.middleware.audience_map_location', 'auth.middleware.audience');
+                $audienceMap = (array) config($location, []);
+            } catch (\Throwable) {
+                $audienceMap = [];
+            }
         }
 
         $audienceSource = static function (UriInterface $request_uri) use ($audienceMap) {
@@ -173,7 +175,7 @@ class AuthTokenMiddleware
      */
     protected function resolveAuthenticator(RequestInterface $request, array $options): ?RequestAuthenticatorInterface
     {
-        $auth = $options['auth'] ?? 'google_dynamic';
+        $auth = $options['outbound_auth'] ?? $options['auth'] ?? 'google_dynamic';
 
         // 1. Explicit RequestAuthenticatorInterface passed in options
         if ($auth instanceof RequestAuthenticatorInterface) {
@@ -196,8 +198,18 @@ class AuthTokenMiddleware
             return new GoogleOAuth2Authenticator();
         }
 
-        // 4. Default dynamic resolution via audience map & UriMatcher
+        // 4. Default dynamic resolution via request map, audience map & UriMatcher
         if ('google_dynamic' === $auth) {
+            // Check request-scoped runtime map first (e.g. registered by Route Middleware or ConfigController)
+            $requestMap = OutboundAuth::getRequestMap();
+            if (!empty($requestMap)) {
+                $matched = UriMatcher::match($requestMap, $request->getUri());
+                if (null !== $matched) {
+                    return OutboundAuth::fromConfig($matched);
+                }
+            }
+
+            // Fallback to configured global audience / outbound auth map
             $matched = UriMatcher::match($this->audienceMap, $request->getUri());
 
             if (null !== $matched) {

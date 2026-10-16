@@ -24,8 +24,11 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
      * @param string                         $grantType            Grant type ('client_credentials' or 'urn:ietf:params:oauth:grant-type:jwt-bearer')
      * @param null|array|string              $basicAuth            Optional Basic Auth credentials [user, pass] or string for token endpoint
      * @param null|string                    $scope                Optional scope
+     * @param bool                           $includeJti           Whether to automatically generate and include jti claim
      * @param array<string,mixed>            $extraTokenParams     Additional token request parameters
      * @param array<string,string>           $extraResourceHeaders Additional headers for resource request
+     * @param array<string,mixed>            $tokenClientOptions   Custom Guzzle options for token endpoint (proxy, verify, etc.)
+     * @param string                         $tokenResponseKey     JSON key to extract token from (default 'access_token')
      */
     public function __construct(
         string $tokenUrl,
@@ -34,8 +37,11 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
         protected readonly string $grantType = 'client_credentials',
         protected readonly null|array|string $basicAuth = null,
         protected readonly ?string $scope = null,
+        protected readonly bool $includeJti = true,
         protected readonly array $extraTokenParams = [],
         array $extraResourceHeaders = [],
+        array $tokenClientOptions = [],
+        string $tokenResponseKey = 'access_token',
         string $headerName = 'Authorization',
         string $tokenType = 'Bearer',
         protected readonly int $jwtTtl = self::DEFAULT_JWT_TTL,
@@ -47,6 +53,8 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
             headerName: $headerName,
             tokenType: $tokenType,
             extraResourceHeaders: $extraResourceHeaders,
+            tokenClientOptions: $tokenClientOptions,
+            tokenResponseKey: $tokenResponseKey,
             fallbackTtl: $fallbackTtl,
             bufferSeconds: $bufferSeconds,
         );
@@ -66,7 +74,7 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
         ]);
     }
 
-    protected function fetchToken(): array
+    protected function fetchToken(array $options = []): array
     {
         $assertion = $this->generateJwtAssertion();
 
@@ -85,18 +93,20 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
             $formParams['scope'] = $this->scope;
         }
 
-        $options = [
+        $requestOptions = [
             'form_params' => $formParams,
         ];
 
         if (null !== $this->basicAuth) {
-            $options['auth'] = \is_array($this->basicAuth) ? $this->basicAuth : explode(':', (string) $this->basicAuth, 2);
+            $requestOptions['auth'] = \is_array($this->basicAuth) ? $this->basicAuth : explode(':', (string) $this->basicAuth, 2);
         }
 
-        $data = $this->executeTokenRequest($options);
+        $data = $this->executeTokenRequest($requestOptions, $options);
+
+        $token = data_get($data, $this->tokenResponseKey);
 
         return [
-            'token'      => (string) $data['access_token'],
+            'token'      => (string) $token,
             'expires_in' => (int) ($data['expires_in'] ?? $this->fallbackTtl),
             'raw'        => $data,
         ];
@@ -116,15 +126,20 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
             $header['kid'] = $this->signer->getKid();
         }
 
-        $now     = time();
-        $payload = array_merge([
+        $now           = time();
+        $defaultClaims = [
             'iss' => $this->claims['iss'] ?? '',
             'sub' => $this->claims['sub'] ?? $this->claims['iss'] ?? '',
             'aud' => $this->claims['aud'] ?? $this->tokenUrl,
             'iat' => $now,
             'exp' => $now + $this->jwtTtl,
-            'jti' => bin2hex(random_bytes(16)),
-        ], $this->claims);
+        ];
+
+        if ($this->includeJti && !isset($this->claims['jti'])) {
+            $defaultClaims['jti'] = bin2hex(random_bytes(16));
+        }
+
+        $payload = array_merge($defaultClaims, $this->claims);
 
         $signingInput = self::base64UrlEncode((string) json_encode($header, JSON_UNESCAPED_SLASHES))
             .'.'

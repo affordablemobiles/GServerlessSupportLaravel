@@ -389,3 +389,101 @@ In `config/gserverlesssupport.php`:
     ],
 ],
 ```
+
+---
+
+## SOAP Client Support
+
+The package provides a native, `Http`-backed SOAP client (`AffordableMobiles\GServerlessSupportLaravel\Integration\Soap\SoapClient`) extending PHP's core `\SoapClient`.
+
+It routes all SOAP requests through Laravel's HTTP client pipeline, providing:
+- **Serverless WSDL Caching**: Automatically sets `soap.wsdl_cache_dir` in tmpfs (`/tmp/cache/.../wsdl`) with `WSDL_CACHE_BOTH`.
+- **Remote WSDL Fetching**: Remote WSDLs are downloaded through Laravel's HTTP client, inheriting configured proxies, retries, and SSL verification.
+- **W3C SOAP 1.1 & SOAP 1.2 Compliance**: Correctly sets `Content-Type` and `SOAPAction` headers for SOAP 1.1 (`text/xml; charset=utf-8`) and SOAP 1.2 (`application/soap+xml; charset=utf-8; action="..."`).
+- **Telemetry & Error Reporting**: Network timeouts and 5xx transport crashes are reported to Error Reporting. Business/validation `<soap:Fault>` envelopes (client/sender faults) are parsed into standard `\SoapFault` instances and filtered out of 5xx telemetry alerts.
+- **In-Memory mTLS & Outbound Auth**: Seamless integration with `withClientCert()` (using in-memory cURL blobs) and `withOutboundAuth()`.
+- **Full Trace & Wire Inspection**: Supports `$client->__getLastRequest()`, `$client->__getLastResponse()`, `$client->__getLastRequestHeaders()`, and `$client->__getLastResponseHeaders()`.
+
+### Basic Usage
+
+Use the `Http::soap()` macro or instantiate `SoapClient` directly:
+
+```php
+use Illuminate\Support\Facades\Http;
+
+$client = Http::soap('https://ws.example.com/service.wsdl', [
+    'soap_version' => SOAP_1_1,
+    'compression'  => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP,
+]);
+
+$response = $client->GetAddressDetails(['postcode' => 'DE1 1AA']);
+```
+
+### With Mutual TLS (mTLS)
+
+Pass certificate and key strings directly from Secret Manager:
+
+```php
+$client = Http::soap($wsdlUrl, ['soap_version' => SOAP_1_2])
+    ->withClientCert(
+        cert: config('services.partner.cert_pem'),
+        key: config('services.partner.key_pem'),
+        certPassword: config('services.partner.cert_pass'),
+        inMemory: true, // Uses CURLOPT_SSLCERT_BLOB (no disk I/O)
+    )
+    ->withTimeout(30);
+
+$result = $client->SubmitApplication($payload);
+```
+
+### With WS-Security (WSSE) or Basic Auth
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+
+// OASIS WS-Security UsernameToken
+$client = Http::soap($wsdlUrl)
+    ->withOutboundAuth(OutboundAuth::wsse(
+        username: config('services.partner.user'),
+        password: config('services.partner.pass'),
+    ));
+
+// Basic HTTP Auth
+$client = Http::soap($wsdlUrl)
+    ->withOutboundAuth(OutboundAuth::basic(
+        username: config('services.partner.user'),
+        password: config('services.partner.pass'),
+    ));
+```
+
+### Custom Headers & Timeouts
+
+```php
+$client = Http::soap($wsdlPath)
+    ->withHeaders([
+        'X-Partner-ID' => 'ACME-CORP',
+    ])
+    ->withTimeout(45)
+    ->withConnectTimeout(10);
+```
+
+### Transport Exceptions vs SOAP Faults
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Integration\Soap\Exceptions\SoapTransportException;
+
+try {
+    $response = $client->PerformOperation($request);
+} catch (SoapTransportException $e) {
+    // Upstream network failure, DNS error, or non-SOAP HTTP 502/503/504 gateway crash
+    Log::error('SOAP transport failed: ' . $e->getMessage());
+    $rawResponse = $client->__getLastResponse();
+} catch (\SoapFault $e) {
+    // Application-level SOAP Fault returned by remote endpoint (e.g., validation or auth failure)
+    Log::warning('SOAP fault returned: ' . $e->getMessage(), [
+        'faultcode' => $e->faultcode,
+        'faultstring' => $e->faultstring,
+        'detail' => $e->detail,
+    ]);
+}
+```

@@ -8,6 +8,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\GuzzleRetryMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\HttpClient\Listeners\OutboundHttpTelemetryListener;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\Soap\SoapClient;
 use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\PendingRequest;
@@ -72,7 +73,10 @@ class HttpClientServiceProvider extends ServiceProvider
             return $this->withOptions($options);
         });
 
-        // 6. Reset request-scoped runtime auth registry at the end of request lifecycle
+        // 6. Register Http::soap() macro for native Http-backed SoapClient
+        Http::macro('soap', static fn (?string $wsdl = null, array $options = []): SoapClient => new SoapClient($wsdl, $options));
+
+        // 7. Reset request-scoped runtime auth registry at the end of request lifecycle
         $this->app->terminating(static function (): void {
             OutboundAuth::clearRequestMap();
         });

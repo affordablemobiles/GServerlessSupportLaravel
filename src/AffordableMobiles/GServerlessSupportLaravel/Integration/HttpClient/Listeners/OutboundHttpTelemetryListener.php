@@ -96,6 +96,12 @@ class OutboundHttpTelemetryListener
 
         // 5xx Server Errors
         if ($response->serverError()) {
+            // Per W3C SOAP specs, SOAP servers return HTTP 500 when returning a <soap:Fault>.
+            // If the fault is a client/sender validation fault, do not report it as an upstream 5xx outage.
+            if ($this->isSoapClientFault($response)) {
+                return false;
+            }
+
             return (bool) ($hostConfig['report_5xx'] ?? $this->config->get('gserverlesssupport.http-client.telemetry.report_5xx', true));
         }
 
@@ -129,5 +135,28 @@ class OutboundHttpTelemetryListener
         $matched = UriMatcher::matchHostAndPath($hosts, $host, $path);
 
         return \is_array($matched) ? $matched : [];
+    }
+
+    /**
+     * Check if an HTTP 500 response contains a client/sender-side SOAP Fault XML.
+     */
+    protected function isSoapClientFault(Response $response): bool
+    {
+        $body = $response->body();
+        if ('' === $body) {
+            return false;
+        }
+
+        // SOAP 1.1 Client fault: <faultcode>...Client... or FailedAuthentication
+        if (1 === preg_match('/<faultcode>[^<]*(Client|Sender|FailedAuthentication)[^<]*<\/faultcode>/i', $body)) {
+            return true;
+        }
+
+        // SOAP 1.2 Sender fault: <Value>...Sender...
+        if (1 === preg_match('/<([a-z0-9_-]+:)?Value>[^<]*Sender[^<]*<\/([a-z0-9_-]+:)?Value>/i', $body)) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -65,6 +65,10 @@ class OAuth2PasswordAuthenticator extends AbstractOAuth2Authenticator
         if ('client_secret_basic' === $this->authMethod) {
             $requestOptions['auth']        = [$this->clientId, $this->clientSecret];
             $requestOptions['form_params'] = $params;
+        } elseif ('client_secret_json' === $this->authMethod) {
+            $params['client_id']           = $this->clientId;
+            $params['client_secret']       = $this->clientSecret;
+            $requestOptions['json']        = $params;
         } else {
             $params['client_id']           = $this->clientId;
             $params['client_secret']       = $this->clientSecret;

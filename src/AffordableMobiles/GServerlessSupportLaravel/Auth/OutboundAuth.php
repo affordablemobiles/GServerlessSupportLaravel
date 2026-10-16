@@ -7,6 +7,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\ConfigurationException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ApiKeyAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\BasicAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ChainAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOAuth2Authenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOidcAuthenticator;
@@ -16,6 +17,8 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2ClientCreden
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2JwtBearerAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2PasswordAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2RefreshTokenAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\PayloadSignatureAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\WsseAuthenticator;
 
 class OutboundAuth
 {
@@ -25,6 +28,56 @@ class OutboundAuth
      * @var array<string,mixed>
      */
     protected static array $requestMap = [];
+
+    /**
+     * Registry of custom authenticator driver creators.
+     *
+     * @var array<string,callable>
+     */
+    protected static array $customCreators = [];
+
+    /**
+     * Registry of custom JWT signer creators.
+     *
+     * @var array<string,callable>
+     */
+    protected static array $customSigners = [];
+
+    /**
+     * Register a custom outbound authenticator driver creator.
+     */
+    public static function extend(string $driver, callable $creator): void
+    {
+        self::$customCreators[strtolower($driver)] = $creator;
+    }
+
+    /**
+     * Register a custom JWT signer creator.
+     */
+    public static function extendSigner(string $type, callable $creator): void
+    {
+        self::$customSigners[strtolower($type)] = $creator;
+    }
+
+    /**
+     * Get all registered custom driver creators.
+     *
+     * @return array<string,callable>
+     */
+    public static function getCustomCreators(): array
+    {
+        return self::$customCreators;
+    }
+
+    /**
+     * Get all registered custom signer creators.
+     *
+     * @return array<string,callable>
+     */
+    public static function getCustomSigners(): array
+    {
+        return self::$customSigners;
+    }
 
     /**
      * Register an outbound authentication configuration scoped to the current request lifecycle.
@@ -234,22 +287,57 @@ class OutboundAuth
         string $name = 'X-API-Key',
         string $in = 'header',
         ?string $prefix = null,
+        array $extraHeaders = [],
     ): ApiKeyAuthenticator {
         return new ApiKeyAuthenticator(
             key: $key,
             name: $name,
             in: $in,
             prefix: $prefix,
+            extraHeaders: $extraHeaders,
         );
     }
 
-    public static function basic(string $username, string $password): ApiKeyAuthenticator
+    public static function basic(string $username, ?string $password = null, string $headerName = 'Authorization'): BasicAuthenticator
     {
-        return new ApiKeyAuthenticator(
-            key: base64_encode($username.':'.$password),
-            name: 'Authorization',
-            in: 'header',
-            prefix: 'Basic',
+        return new BasicAuthenticator($username, $password, $headerName);
+    }
+
+    public static function wsse(
+        string $username,
+        string $secret,
+        string $headerName = 'X-WSSE',
+        bool $binaryDigest = false,
+        int $nonceLength = 32,
+    ): WsseAuthenticator {
+        return new WsseAuthenticator(
+            username: $username,
+            secret: $secret,
+            headerName: $headerName,
+            binaryDigest: $binaryDigest,
+            nonceLength: $nonceLength,
+        );
+    }
+
+    public static function payloadSignature(
+        mixed $key,
+        string $headerName = 'X-Signature',
+        ?string $timestampHeader = null,
+        string $bodySeparator = '',
+        array $extraHeaders = [],
+        string $algorithm = 'sha256',
+        string $signatureFormat = 'base64',
+        string $signerType = 'auto',
+    ): PayloadSignatureAuthenticator {
+        return new PayloadSignatureAuthenticator(
+            key: $key,
+            headerName: $headerName,
+            timestampHeader: $timestampHeader,
+            bodySeparator: $bodySeparator,
+            extraHeaders: $extraHeaders,
+            algorithm: $algorithm,
+            signatureFormat: $signatureFormat,
+            signerType: $signerType,
         );
     }
 
@@ -389,10 +477,29 @@ class OutboundAuth
                 name: (string) ($config['name'] ?? $config['header'] ?? 'X-API-Key'),
                 in: (string) ($config['in'] ?? 'header'),
                 prefix: isset($config['prefix']) ? (string) $config['prefix'] : null,
+                extraHeaders: (array) ($config['extra_headers'] ?? $config['headers'] ?? []),
             ),
             'basic', 'http_basic' => self::basic(
-                username: (string) ($config['username'] ?? $config['user'] ?? ''),
-                password: (string) ($config['password'] ?? $config['pass'] ?? ''),
+                username: (string) ($config['username'] ?? $config['user'] ?? $config['key'] ?? ''),
+                password: isset($config['password']) ? (string) $config['password'] : (isset($config['pass']) ? (string) $config['pass'] : null),
+                headerName: (string) ($config['header_name'] ?? $config['header'] ?? 'Authorization'),
+            ),
+            'wsse', 'x_wsse' => self::wsse(
+                username: (string) ($config['username'] ?? $config['user_name'] ?? $config['user'] ?? ''),
+                secret: (string) ($config['secret'] ?? $config['password'] ?? ''),
+                headerName: (string) ($config['header_name'] ?? 'X-WSSE'),
+                binaryDigest: (bool) ($config['binary_digest'] ?? false),
+                nonceLength: (int) ($config['nonce_length'] ?? 32),
+            ),
+            'payload_signature', 'signature', 'hmac_signature' => self::payloadSignature(
+                key: $config['key'] ?? $config['secret'] ?? '',
+                headerName: (string) ($config['header_name'] ?? $config['header'] ?? 'X-Signature'),
+                timestampHeader: isset($config['timestamp_header']) ? (string) $config['timestamp_header'] : null,
+                bodySeparator: (string) ($config['body_separator'] ?? ''),
+                extraHeaders: (array) ($config['extra_headers'] ?? $config['headers'] ?? []),
+                algorithm: (string) ($config['algorithm'] ?? 'sha256'),
+                signatureFormat: (string) ($config['signature_format'] ?? 'base64'),
+                signerType: (string) ($config['signer_type'] ?? 'auto'),
             ),
             'mtls', 'client_cert' => self::mtls(
                 cert: $config['cert']                  ?? $config['certificate'] ?? '',
@@ -403,8 +510,29 @@ class OutboundAuth
             'chain' => self::chain(
                 array_filter(array_map(self::fromConfig(...), (array) ($config['authenticators'] ?? $config['drivers'] ?? [])))
             ),
-            default => throw new ConfigurationException(\sprintf('Unknown outbound auth driver [%s]', (string) $driver)),
+            default => self::resolveCustomOrClassDriver((string) $driver, $config),
         };
+    }
+
+    /**
+     * Resolve a custom driver registered via extend() or an FQCN class string implementing RequestAuthenticatorInterface.
+     *
+     * @param array<string,mixed> $config
+     */
+    protected static function resolveCustomOrClassDriver(string $driver, array $config): RequestAuthenticatorInterface
+    {
+        $driverLower = strtolower($driver);
+        if (isset(self::$customCreators[$driverLower])) {
+            return (self::$customCreators[$driverLower])($config);
+        }
+
+        if (class_exists($driver) && is_subclass_of($driver, RequestAuthenticatorInterface::class)) {
+            return method_exists($driver, 'fromConfig')
+                ? $driver::fromConfig($config)
+                : app()->make($driver, ['config' => $config]);
+        }
+
+        throw new ConfigurationException(\sprintf('Unknown outbound auth driver [%s]', $driver));
     }
 
     /**

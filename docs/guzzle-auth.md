@@ -209,11 +209,12 @@ Per-request HMAC-SHA256 signature generation for Token-Based Authentication (suc
 - **Signature Base String (§3.4.1.3)**: Includes the request HTTP method, normalized URL, all query string parameters (`?script=...&deploy=...`), and OAuth parameters.
 - **Authorization Header (§3.5.1)**: Emits only `realm` and `oauth_*` parameters in the header. **Query parameters remain in the URL query string and are not duplicated in the header.**
 
-### 8. API Key & HTTP Basic Injection
+### 8. API Key & Multi-Header / Body Injection
 
-Injects static API keys or HTTP Basic credentials.
+Injects static API keys or multiple custom headers into requests, or passes keys via query string or form body:
 
 ```php
+// Standard single header:
 'api.thirdparty.com' => [
     'driver' => 'api_key',
     'key'    => env('THIRDPARTY_API_KEY'),
@@ -221,14 +222,85 @@ Injects static API keys or HTTP Basic credentials.
     'in'     => 'header',
 ],
 
+// Multi-header authentication:
+'api.multiheader.com' => [
+    'driver'        => 'api_key',
+    'key'           => env('PRIMARY_SUBSCRIPTION_KEY'),
+    'name'          => 'Ocp-Apim-Subscription-Key',
+    'extra_headers' => [
+        'X-Tenant-Id'   => env('PARTNER_TENANT_ID'),
+        'X-API-Version' => '1.0',
+    ],
+],
+
+// Injected into form body:
+'api.sms.com' => [
+    'driver' => 'api_key',
+    'key'    => env('SMS_API_KEY'),
+    'name'   => 'apiKey',
+    'in'     => 'form_params',
+],
+```
+
+### 9. HTTP Basic Auth (Standard & Pre-Encoded)
+
+Supports username and password, as well as pre-encoded base64 tokens:
+
+```php
+// Standard username & password:
 'legacy.service.com' => [
     'driver'   => 'basic',
     'username' => env('SERVICE_USERNAME'),
     'password' => env('SERVICE_PASSWORD'),
 ],
+
+// Pre-encoded base64 string from Secret Manager:
+'api.partner.com' => [
+    'driver'   => 'basic',
+    'username' => env('PRE_ENCODED_BASIC_TOKEN'), // e.g. base64(apiKey:secret)
+],
 ```
 
-### 9. Client Certificates (mTLS) & Composable Auth
+### 10. X-WSSE UsernameToken (PasswordDigest)
+
+Implements the OASIS WS-Security REST profile, generating a random 32-character nonce, ISO-8601 timestamp, and SHA-1 password digest per request:
+
+```php
+'api.marketing.com' => [
+    'driver'   => 'wsse',
+    'username' => env('MARKETING_API_USER'),
+    'secret'   => env('MARKETING_API_SECRET'),
+],
+```
+
+### 11. Request Payload & Body Signature (HMAC / RSA)
+
+Computes a cryptographic signature over the outgoing request body (and an optional timestamp header) using either HMAC-SHA256, OpenSSL RSA keys, or Cloud KMS:
+
+```php
+// HMAC-SHA256 signature over request body:
+'api.webhook.com' => [
+    'driver'      => 'payload_signature',
+    'key'         => env('WEBHOOK_HMAC_SECRET'),
+    'header_name' => 'hmac-signature',
+    'algorithm'   => 'sha256',
+],
+
+// Asymmetric RSA signature over timestamp + body with custom separator:
+'partner.ecom.com' => [
+    'driver'           => 'payload_signature',
+    'key'              => env('ECOM_RSA_PRIVATE_KEY'),
+    'header_name'      => 'x-signature',
+    'timestamp_header' => 'x-timestamp',
+    'body_separator'   => '|',
+    'signer_type'      => 'openssl',
+    'extra_headers'    => [
+        'x-partner-id' => 'my-partner-id',
+    ],
+],
+```
+
+### 12. Client Certificates (mTLS) & Composable Auth
 
 For endpoints requiring mutual TLS (mTLS), `MtlsAuthenticator` integrates with `CertificateMaterializer` to handle PEM strings stored in environment variables, automatically normalizing newlines and safely caching content-addressed certificates on tmpfs with `0600` permissions:
 
@@ -273,6 +345,71 @@ Transport options (`proxy`, `verify`, `mtls`) can also be added directly to any 
     // Transport options applied to both token requests and API requests:
     'proxy'         => env('OUTBOUND_PROXY_URL'),
     'verify'        => resource_path('certs/ca-bundle.pem'),
+],
+```
+
+---
+
+## Extensibility: Custom Internal Drivers & Signers
+
+To keep internal vendor protocols inside private repositories without polluting this public library, `GServerlessSupportLaravel` provides two extension seams:
+
+### 1. Custom Authenticator Drivers (`OutboundAuth::extend()`)
+
+In an application service provider:
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+
+// Register custom driver creator:
+OutboundAuth::extend('my_custom_vendor', function (array $config) {
+    return new MyCustomVendorAuthenticator(
+        apiKey: $config['key'],
+        secret: $config['secret'],
+    );
+});
+```
+
+Configuration arrays can now reference `'driver' => 'my_custom_vendor'` directly:
+
+```php
+'api.internal-vendor.com' => [
+    'driver' => 'my_custom_vendor',
+    'key'    => env('VENDOR_KEY'),
+    'secret' => env('VENDOR_SECRET'),
+],
+```
+
+Alternatively, specify a Fully Qualified Class Name (FQCN) implementing `RequestAuthenticatorInterface` directly in the `'driver'` key:
+
+```php
+'api.custom.com' => [
+    'driver' => \App\Auth\CustomVendorAuthenticator::class,
+    'token'  => env('CUSTOM_TOKEN'),
+],
+```
+
+### 2. Custom JWT Signers (`OutboundAuth::extendSigner()`)
+
+If an integration requires a proprietary JWT signing mechanism (e.g. HS256 shared secret signing or hardware token):
+
+```php
+OutboundAuth::extendSigner('custom_hsm', function (array $signerConfig) {
+    return new CustomHsmSigner($signerConfig['slot_id']);
+});
+```
+
+And in your `oauth2_jwt_bearer` profile:
+
+```php
+'partner.example.com' => [
+    'driver'    => 'oauth2_jwt_bearer',
+    'token_url' => 'https://auth.partner.com/token',
+    'signer'    => [
+        'driver'  => 'custom_hsm',
+        'slot_id' => 'slot-1',
+    ],
+    'claims'    => [...],
 ],
 ```
 

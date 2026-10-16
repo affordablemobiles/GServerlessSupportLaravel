@@ -11,16 +11,18 @@ use Psr\Http\Message\RequestInterface;
 class ApiKeyAuthenticator implements RequestAuthenticatorInterface
 {
     /**
-     * @param string      $key    API key value
-     * @param string      $name   Header name or query parameter name
-     * @param string      $in     Location: 'header' or 'query'
-     * @param null|string $prefix Optional prefix for header (e.g. 'Bearer', 'Token')
+     * @param string               $key          API key value
+     * @param string               $name         Header name, query parameter name, or body parameter name
+     * @param string               $in           Location: 'header', 'query', or 'form_params' / 'body'
+     * @param null|string          $prefix       Optional prefix for header (e.g. 'Bearer', 'Token')
+     * @param array<string,string> $extraHeaders Additional static headers to inject
      */
     public function __construct(
         protected readonly string $key,
         protected readonly string $name = 'X-API-Key',
         protected readonly string $in = 'header',
         protected readonly ?string $prefix = null,
+        protected readonly array $extraHeaders = [],
     ) {}
 
     public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
@@ -32,13 +34,21 @@ class ApiKeyAuthenticator implements RequestAuthenticatorInterface
                 ? $query.'&'.rawurlencode($this->name).'='.rawurlencode($this->key)
                 : rawurlencode($this->name).'='.rawurlencode($this->key);
 
-            return $request->withUri(new Uri((string) $uri->withQuery($newQuery)));
+            $request = $request->withUri(new Uri((string) $uri->withQuery($newQuery)));
+        } elseif ('form_params' === $this->in || 'body' === $this->in) {
+            $options['form_params'][$this->name] = $this->key;
+        } else {
+            $headerValue = null !== $this->prefix && '' !== $this->prefix
+                ? $this->prefix.' '.$this->key
+                : $this->key;
+
+            $request = $request->withHeader($this->name, $headerValue);
         }
 
-        $headerValue = null !== $this->prefix && '' !== $this->prefix
-            ? $this->prefix.' '.$this->key
-            : $this->key;
+        foreach ($this->extraHeaders as $headerKey => $headerVal) {
+            $request = $request->withHeader($headerKey, $headerVal);
+        }
 
-        return $request->withHeader($this->name, $headerValue);
+        return $request;
     }
 }

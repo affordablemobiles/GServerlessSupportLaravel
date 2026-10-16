@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\ConfigurationException;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\TokenCache;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\IamSigner;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\JwtSignerInterface;
@@ -98,7 +99,16 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
         ];
 
         if (null !== $this->basicAuth) {
-            $requestOptions['auth'] = \is_array($this->basicAuth) ? $this->basicAuth : explode(':', (string) $this->basicAuth, 2);
+            if (\is_array($this->basicAuth)) {
+                $requestOptions['auth'] = $this->basicAuth;
+            } elseif (str_contains((string) $this->basicAuth, ':')) {
+                $requestOptions['auth'] = explode(':', (string) $this->basicAuth, 2);
+            } else {
+                $requestOptions['headers'] ??= [];
+                $requestOptions['headers']['Authorization'] = str_starts_with((string) $this->basicAuth, 'Basic ')
+                    ? (string) $this->basicAuth
+                    : 'Basic '.trim((string) $this->basicAuth);
+            }
         }
 
         $data = $this->executeTokenRequest($requestOptions, $options);
@@ -162,9 +172,21 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
         }
 
         if (\is_array($signer)) {
-            $type = $signer['driver'] ?? $signer['type'] ?? 'openssl';
+            $type      = (string) ($signer['driver'] ?? $signer['type'] ?? 'openssl');
+            $typeLower = strtolower($type);
 
-            return match ($type) {
+            $customSigners = OutboundAuth::getCustomSigners();
+            if (isset($customSigners[$typeLower])) {
+                return ($customSigners[$typeLower])($signer);
+            }
+
+            if (class_exists($type) && is_subclass_of($type, JwtSignerInterface::class)) {
+                return method_exists($type, 'fromConfig')
+                    ? $type::fromConfig($signer)
+                    : app()->make($type, ['config' => $signer]);
+            }
+
+            return match ($typeLower) {
                 'iam', 'gcp_iam' => new IamSigner(
                     serviceAccountEmail: (string) ($signer['service_account'] ?? $signer['email'] ?? ''),
                     kid: isset($signer['kid']) ? (string) $signer['kid'] : null,

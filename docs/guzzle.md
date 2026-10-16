@@ -62,7 +62,9 @@ $res = $client->get('https://example-api.appspot.com/tasks/list', [
 
 ## AuthTokenMiddleware
 
-[AuthTokenMiddleware](../src/AffordableMobiles/GServerlessSupportLaravel/Auth/Token/Middleware/AuthTokenMiddleware.php) provides a Guzzle compatible middleware that will inject Google IAP compatible OIDC tokens, or OAuth2 tokens (compatible with Google's own APIs) into outbound requests.
+[AuthTokenMiddleware](../src/AffordableMobiles/GServerlessSupportLaravel/Auth/Token/Middleware/AuthTokenMiddleware.php) provides a Guzzle compatible middleware that will inject Google IAP compatible OIDC tokens, Google OAuth2 tokens, OAuth 2.0 (RFC 6749 / RFC 7523), OAuth 1.0a TBA (RFC 5849), or custom API keys into outbound requests.
+
+> **Full Documentation**: See [docs/guzzle-auth.md](guzzle-auth.md) for detailed configuration, RFC standards, Keyless JWT signing with Google IAM, and per-request overrides.
 
 Once enabled, it looks for an "auth" value in the client options:
 * `google_oidc` for IAP compatible OIDC tokens.

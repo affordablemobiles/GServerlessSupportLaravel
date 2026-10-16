@@ -1,0 +1,174 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound;
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\ConfigurationException;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\TokenCache;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\IamSigner;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\JwtSignerInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\KmsSigner;
+use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\OpenSslSigner;
+
+class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
+{
+    public const DEFAULT_JWT_TTL = 300;
+
+    protected readonly JwtSignerInterface $signer;
+
+    /**
+     * @param string                         $tokenUrl             OAuth token endpoint URL
+     * @param array|JwtSignerInterface|mixed $signer               Signer instance or configuration array
+     * @param array<string,mixed>            $claims               JWT claims (iss, sub, aud, etc.)
+     * @param string                         $grantType            Grant type ('client_credentials' or 'urn:ietf:params:oauth:grant-type:jwt-bearer')
+     * @param null|array|string              $basicAuth            Optional Basic Auth credentials [user, pass] or string for token endpoint
+     * @param null|string                    $scope                Optional scope
+     * @param array<string,mixed>            $extraTokenParams     Additional token request parameters
+     * @param array<string,string>           $extraResourceHeaders Additional headers for resource request
+     */
+    public function __construct(
+        string $tokenUrl,
+        mixed $signer,
+        protected readonly array $claims,
+        protected readonly string $grantType = 'client_credentials',
+        protected readonly null|array|string $basicAuth = null,
+        protected readonly ?string $scope = null,
+        protected readonly array $extraTokenParams = [],
+        array $extraResourceHeaders = [],
+        string $headerName = 'Authorization',
+        string $tokenType = 'Bearer',
+        protected readonly int $jwtTtl = self::DEFAULT_JWT_TTL,
+        int $fallbackTtl = self::DEFAULT_FALLBACK_TTL,
+        int $bufferSeconds = self::DEFAULT_BUFFER_SECONDS,
+    ) {
+        parent::__construct(
+            tokenUrl: $tokenUrl,
+            headerName: $headerName,
+            tokenType: $tokenType,
+            extraResourceHeaders: $extraResourceHeaders,
+            fallbackTtl: $fallbackTtl,
+            bufferSeconds: $bufferSeconds,
+        );
+
+        $this->signer = $this->resolveSigner($signer);
+    }
+
+    protected function getCacheKey(): string
+    {
+        return TokenCache::key([
+            'driver'    => 'jwt_bearer',
+            'token_url' => $this->tokenUrl,
+            'iss'       => $this->claims['iss'] ?? '',
+            'sub'       => $this->claims['sub'] ?? '',
+            'aud'       => $this->claims['aud'] ?? '',
+            'scope'     => $this->scope         ?? '',
+        ]);
+    }
+
+    protected function fetchToken(): array
+    {
+        $assertion = $this->generateJwtAssertion();
+
+        $formParams = array_merge([
+            'grant_type' => $this->grantType,
+        ], $this->extraTokenParams);
+
+        if ('client_credentials' === $this->grantType) {
+            $formParams['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+            $formParams['client_assertion']      = $assertion;
+        } else {
+            $formParams['assertion'] = $assertion;
+        }
+
+        if (null !== $this->scope && '' !== $this->scope) {
+            $formParams['scope'] = $this->scope;
+        }
+
+        $options = [
+            'form_params' => $formParams,
+        ];
+
+        if (null !== $this->basicAuth) {
+            $options['auth'] = \is_array($this->basicAuth) ? $this->basicAuth : explode(':', (string) $this->basicAuth, 2);
+        }
+
+        $data = $this->executeTokenRequest($options);
+
+        return [
+            'token'      => (string) $data['access_token'],
+            'expires_in' => (int) ($data['expires_in'] ?? $this->fallbackTtl),
+            'raw'        => $data,
+        ];
+    }
+
+    /**
+     * Build and sign an RFC 7519 / RFC 7523 JWT assertion.
+     */
+    protected function generateJwtAssertion(): string
+    {
+        $header = [
+            'alg' => $this->signer->getAlgorithm(),
+            'typ' => 'JWT',
+        ];
+
+        if (null !== $this->signer->getKid()) {
+            $header['kid'] = $this->signer->getKid();
+        }
+
+        $now     = time();
+        $payload = array_merge([
+            'iss' => $this->claims['iss'] ?? '',
+            'sub' => $this->claims['sub'] ?? $this->claims['iss'] ?? '',
+            'aud' => $this->claims['aud'] ?? $this->tokenUrl,
+            'iat' => $now,
+            'exp' => $now + $this->jwtTtl,
+            'jti' => bin2hex(random_bytes(16)),
+        ], $this->claims);
+
+        $signingInput = self::base64UrlEncode((string) json_encode($header, JSON_UNESCAPED_SLASHES))
+            .'.'
+            .self::base64UrlEncode((string) json_encode($payload, JSON_UNESCAPED_SLASHES));
+
+        $signature = $this->signer->sign($signingInput);
+
+        return $signingInput.'.'.self::base64UrlEncode($signature);
+    }
+
+    protected static function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    protected function resolveSigner(mixed $signer): JwtSignerInterface
+    {
+        if ($signer instanceof JwtSignerInterface) {
+            return $signer;
+        }
+
+        if (\is_array($signer)) {
+            $type = $signer['driver'] ?? $signer['type'] ?? 'openssl';
+
+            return match ($type) {
+                'iam', 'gcp_iam' => new IamSigner(
+                    serviceAccountEmail: (string) ($signer['service_account'] ?? $signer['email'] ?? ''),
+                    kid: isset($signer['kid']) ? (string) $signer['kid'] : null,
+                ),
+                'kms', 'gcp_kms' => new KmsSigner(
+                    keyVersionName: (string) ($signer['key_version'] ?? $signer['key'] ?? ''),
+                    kid: isset($signer['kid']) ? (string) $signer['kid'] : null,
+                    algorithm: (string) ($signer['algorithm'] ?? 'RS256'),
+                ),
+                'openssl', 'pem' => new OpenSslSigner(
+                    privateKey: (string) ($signer['private_key'] ?? $signer['key'] ?? ''),
+                    passphrase: isset($signer['passphrase']) ? (string) $signer['passphrase'] : null,
+                    kid: isset($signer['kid']) ? (string) $signer['kid'] : null,
+                    algorithm: (string) ($signer['algorithm'] ?? 'RS256'),
+                ),
+                default => throw new ConfigurationException(\sprintf('Unknown JWT signer type [%s]', $type)),
+            };
+        }
+
+        throw new ConfigurationException('Invalid JWT signer configuration');
+    }
+}

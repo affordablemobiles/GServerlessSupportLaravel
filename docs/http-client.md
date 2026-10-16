@@ -347,6 +347,15 @@ In `config/gserverlesssupport.php`:
 
 ```php
 'http-client' => [
+    // Global default Guzzle / cURL options applied via Http::globalOptions()
+    'options' => [
+        'timeout'         => env('G_SERVERLESS_HTTP_TIMEOUT', 10),
+        'connect_timeout' => env('G_SERVERLESS_HTTP_CONNECT_TIMEOUT', 2),
+        'verify'          => env('G_SERVERLESS_HTTP_VERIFY', true),
+        // Optional DNS resolution overrides (maps to CURLOPT_RESOLVE, e.g. 'example.com:443:127.0.0.1')
+        'resolve'         => array_filter(explode(',', (string) env('G_SERVERLESS_HTTP_RESOLVE', ''))),
+    ],
+
     // Automatically retry connection/network timeouts using exponential backoff
     'retry' => [
         'enabled' => env('G_SERVERLESS_HTTP_RETRY_ENABLED', true),
@@ -485,5 +494,82 @@ try {
         'faultstring' => $e->faultstring,
         'detail' => $e->detail,
     ]);
+}
+```
+
+---
+
+## Egress Proxying Best Practices (`https_proxy` & `no_proxy`)
+
+For serverless applications routing outbound requests through an internal VPC Squid or NAT proxy (e.g. for static egress IP whitelisting), standard environment variables should be defined in `app.yaml` or Cloud Run environment configurations:
+
+```yaml
+env_variables:
+  https_proxy: 'http://172.20.250.10:3128'
+  http_proxy: 'http://172.20.250.10:3128'
+  no_proxy: '.googleapis.com,metadata.google.internal'
+```
+
+- **Native Resolution**: Guzzle and `libcurl` natively respect `https_proxy`, `http_proxy`, and `no_proxy` (both lowercase and uppercase).
+- **Google Service Isolation**: The `no_proxy` directive ensures calls to Google APIs (`.googleapis.com`) and instance metadata (`metadata.google.internal`) completely bypass the egress proxy.
+- **Per-Host Proxy Normalization**: If a specific partner or host rule requires a dedicated proxy (e.g. `'proxy' => '172.20.250.10:3128'`), `AuthTokenMiddleware` automatically normalizes bare `host:port` strings by prepending `http://` if no scheme is present.
+
+---
+
+## Development Overrides: DNS Resolution & TLS Verification
+
+To test against local or staging endpoints without altering `/etc/hosts` or disabling TLS verification globally:
+
+### Per-Host Scoping in Audience Map
+You can configure `'resolve'` and `'verify'` on specific host entries:
+
+```php
+'middleware' => [
+    'audience' => [
+        'partner-api.example.com' => [
+            'audience' => '...',
+            'verify'   => false, // Disable SSL verification for this host only
+            'resolve'  => 'partner-api.example.com:443:10.0.0.5', // Direct DNS to local/staging IP
+        ],
+    ],
+],
+```
+
+### Global Scoping
+Or globally via `config/gserverlesssupport.php` (applied via `Http::globalOptions()`):
+
+```php
+'http-client' => [
+    'options' => [
+        'verify'  => env('G_SERVERLESS_HTTP_VERIFY', true),
+        'resolve' => array_filter(explode(',', (string) env('G_SERVERLESS_HTTP_RESOLVE', ''))),
+    ],
+],
+```
+
+---
+
+## Convenience Macros
+
+### `Http::ping(string $url, int $timeout = 2): bool`
+Performs a fast, non-redirecting GET request suitable for application health check probes:
+
+```php
+use Illuminate\Support\Facades\Http;
+
+if (!Http::ping('https://internal-service.amlsso.uk/health', timeout: 2)) {
+    // Health probe failed or timed out
+}
+```
+
+### `Response::xml(int $options = LIBXML_NOCDATA): \SimpleXMLElement|false`
+Parses XML response payloads directly, mirroring `$response->json()`:
+
+```php
+$response = Http::get('https://api.example.com/catalog.xml');
+
+$xml = $response->xml();
+if ($xml) {
+    echo $xml->item[0]->title;
 }
 ```

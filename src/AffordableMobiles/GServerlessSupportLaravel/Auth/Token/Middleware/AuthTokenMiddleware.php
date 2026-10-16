@@ -264,7 +264,7 @@ class AuthTokenMiddleware
     }
 
     /**
-     * Apply transport options (proxy, verify, mTLS cert & key) from matched host configuration.
+     * Apply transport options (proxy, verify, resolve, mTLS cert & key) from matched host configuration.
      *
      * @param array<string,mixed> $config
      * @param array<string,mixed> $options
@@ -272,11 +272,24 @@ class AuthTokenMiddleware
     protected function applyTransportOptions(array $config, array &$options): void
     {
         if (!isset($options['proxy']) && !empty($config['proxy'])) {
-            $options['proxy'] = $config['proxy'];
+            $proxy = (string) $config['proxy'];
+            if (!str_contains($proxy, '://')) {
+                $proxy = 'http://'.$proxy;
+            }
+            $options['proxy'] = $proxy;
         }
 
-        if ((!isset($options['verify']) || true === $options['verify']) && !empty($config['verify'])) {
+        if ((!isset($options['verify']) || true === $options['verify']) && isset($config['verify'])) {
             $options['verify'] = $config['verify'];
+        }
+
+        if (!empty($config['resolve'])) {
+            $curlResolve = \defined('CURLOPT_RESOLVE') ? CURLOPT_RESOLVE : 10203;
+            $options['curl'] ??= [];
+            $options['curl'][$curlResolve] = array_values(array_unique(array_merge(
+                (array) ($options['curl'][$curlResolve] ?? []),
+                (array) $config['resolve']
+            )));
         }
 
         $mtls = $config['mtls'] ?? $config;

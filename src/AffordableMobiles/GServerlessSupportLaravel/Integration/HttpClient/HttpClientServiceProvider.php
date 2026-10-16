@@ -12,6 +12,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Integration\Soap\SoapClient;
 use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,28 +36,43 @@ class HttpClientServiceProvider extends ServiceProvider
     {
         $config = $this->app->make('config');
 
-        // 1. Global retry middleware for GCP serverless network / connect timeouts
+        // 1. Global default request options (timeouts, verify, CURLOPT_RESOLVE)
+        $globalOptions = (array) $config->get('gserverlesssupport.http-client.options', []);
+        if (!empty($globalOptions)) {
+            if (!empty($globalOptions['resolve'])) {
+                $curlResolve = \defined('CURLOPT_RESOLVE') ? CURLOPT_RESOLVE : 10203;
+                $globalOptions['curl'] ??= [];
+                $globalOptions['curl'][$curlResolve] = array_values(array_unique(array_merge(
+                    (array) ($globalOptions['curl'][$curlResolve] ?? []),
+                    (array) $globalOptions['resolve']
+                )));
+                unset($globalOptions['resolve']);
+            }
+            Http::globalOptions($globalOptions);
+        }
+
+        // 2. Global retry middleware for GCP serverless network / connect timeouts
         if ($config->get('gserverlesssupport.http-client.retry.enabled', true)) {
             Http::globalMiddleware(GuzzleRetryMiddleware::factory());
         }
 
-        // 2. Global Auth token injection for outbound microservice and 3rd party calls
+        // 3. Global Auth token injection for outbound microservice and 3rd party calls
         if ($config->get('gserverlesssupport.http-client.auth.enabled', true)) {
             Http::globalMiddleware(static fn (callable $handler): callable => AuthTokenMiddleware::factory()($handler));
         }
 
-        // 3. Automated Error Reporting telemetry for outbound HTTP calls
+        // 4. Automated Error Reporting telemetry for outbound HTTP calls
         if ($config->get('gserverlesssupport.http-client.telemetry.enabled', true)) {
             $events->subscribe(OutboundHttpTelemetryListener::class);
         }
 
-        // 4. Register withOutboundAuth macro on PendingRequest and Http facade
+        // 5. Register withOutboundAuth macro on PendingRequest and Http facade
         PendingRequest::macro('withOutboundAuth', function (mixed $auth) {
             // @var PendingRequest $this
             return $this->withOptions(['outbound_auth' => $auth]);
         });
 
-        // 5. Register withClientCert macro for mTLS on PendingRequest and Http facade
+        // 6. Register withClientCert macro for mTLS on PendingRequest and Http facade
         PendingRequest::macro('withClientCert', function (array|string $cert, null|array|string $key = null, ?string $certPassword = null, ?string $keyPassword = null, bool $inMemory = true) {
             /** @var PendingRequest $this */
             $options = [];
@@ -73,12 +89,43 @@ class HttpClientServiceProvider extends ServiceProvider
             return $this->withOptions($options);
         });
 
-        // 6. Register Http::soap() macro for native Http-backed SoapClient
+        // 7. Register Http::soap() macro for native Http-backed SoapClient
         Http::macro('soap', static fn (?string $wsdl = null, array $options = []): SoapClient => new SoapClient($wsdl, $options));
 
-        // 7. Reset request-scoped runtime auth registry at the end of request lifecycle
-        $this->app->terminating(static function (): void {
-            OutboundAuth::clearRequestMap();
+        // 8. Register Http::ping() macro for simple egress / healthcheck probes
+        Http::macro('ping', static function (string $url, int $timeout = 2): bool {
+            try {
+                return Http::withoutRedirecting()
+                    ->timeout($timeout)
+                    ->connectTimeout($timeout)
+                    ->get($url)
+                    ->successful()
+                ;
+            } catch (\Throwable) {
+                return false;
+            }
         });
+
+        // 9. Register Response::xml() macro for XML payload parsing
+        Response::macro('xml', function (int $options = LIBXML_NOCDATA): false|\SimpleXMLElement {
+            /** @var Response $this */
+            $body = $this->body();
+            if ('' === trim($body)) {
+                return false;
+            }
+
+            try {
+                return simplexml_load_string($body, 'SimpleXMLElement', $options);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
+
+        // 10. Reset request-scoped runtime auth registry at the end of request lifecycle
+        if (method_exists($this->app, 'terminating')) {
+            $this->app->terminating(static function (): void {
+                OutboundAuth::clearRequestMap();
+            });
+        }
     }
 }

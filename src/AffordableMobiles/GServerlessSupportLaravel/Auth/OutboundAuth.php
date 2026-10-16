@@ -7,8 +7,10 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\ConfigurationException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ApiKeyAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ChainAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOAuth2Authenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOidcAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\MtlsAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth1TokenAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2ClientCredentialsAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\OAuth2JwtBearerAuthenticator;
@@ -251,6 +253,28 @@ class OutboundAuth
         );
     }
 
+    public static function mtls(
+        array|string $cert,
+        null|array|string $key = null,
+        ?string $certPassword = null,
+        ?string $keyPassword = null,
+    ): MtlsAuthenticator {
+        return new MtlsAuthenticator(
+            cert: $cert,
+            key: $key,
+            certPassword: $certPassword,
+            keyPassword: $keyPassword,
+        );
+    }
+
+    /**
+     * @param array<RequestAuthenticatorInterface> $authenticators
+     */
+    public static function chain(array $authenticators): ChainAuthenticator
+    {
+        return new ChainAuthenticator($authenticators);
+    }
+
     /**
      * Resolve authenticator from configuration array or string.
      *
@@ -263,6 +287,10 @@ class OutboundAuth
         }
 
         if (\is_string($config)) {
+            if (str_starts_with($config, 'config:')) {
+                return self::fromConfig(config(substr($config, 7)));
+            }
+
             if ('oauth2' === $config || 'google_oauth2' === $config) {
                 return self::googleOAuth2();
             }
@@ -279,6 +307,11 @@ class OutboundAuth
         }
 
         $driver = $config['driver'] ?? $config['type'] ?? null;
+
+        // Auto-detect legacy NetSuite TBA configuration arrays without explicit driver
+        if (null === $driver && isset($config['consumer_key'], $config['token_id'])) {
+            $driver = 'oauth1_tba';
+        }
 
         return match ($driver) {
             'google_oidc', 'oidc' => self::oidc(self::resolveCallableOrValue($config['audience'] ?? $config['target_audience'] ?? '')),
@@ -349,7 +382,7 @@ class OutboundAuth
                 tokenId: (string) ($config['token_id'] ?? $config['token'] ?? ''),
                 tokenSecret: (string) ($config['token_secret'] ?? ''),
                 realm: isset($config['realm']) ? (string) $config['realm'] : (isset($config['account_id']) ? (string) $config['account_id'] : null),
-                signatureMethod: (string) ($config['signature_method'] ?? 'HMAC-SHA256'),
+                signatureMethod: isset($config['hmac']) ? 'HMAC-'.strtoupper((string) $config['hmac']) : (string) ($config['signature_method'] ?? 'HMAC-SHA256'),
             ),
             'api_key', 'key' => self::apiKey(
                 key: (string) ($config['key'] ?? $config['token'] ?? ''),
@@ -360,6 +393,15 @@ class OutboundAuth
             'basic', 'http_basic' => self::basic(
                 username: (string) ($config['username'] ?? $config['user'] ?? ''),
                 password: (string) ($config['password'] ?? $config['pass'] ?? ''),
+            ),
+            'mtls', 'client_cert' => self::mtls(
+                cert: $config['cert']                  ?? $config['certificate'] ?? '',
+                key: $config['key']                    ?? $config['ssl_key'] ?? $config['private_key'] ?? null,
+                certPassword: $config['cert_password'] ?? $config['passphrase'] ?? null,
+                keyPassword: $config['key_password']   ?? null,
+            ),
+            'chain' => self::chain(
+                array_filter(array_map(self::fromConfig(...), (array) ($config['authenticators'] ?? $config['drivers'] ?? [])))
             ),
             default => throw new ConfigurationException(\sprintf('Unknown outbound auth driver [%s]', (string) $driver)),
         };

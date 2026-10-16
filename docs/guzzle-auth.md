@@ -179,14 +179,13 @@ Exchanges a refresh token for an access token, with support for rotation callbac
 
 ```php
 'ads.example.com' => [
-    'driver'        => 'oauth2_refresh_token',
-    'token_url'     => 'https://login.example.com/oauth2/v2.0/token',
-    'client_id'     => env('ADS_CLIENT_ID'),
-    'client_secret' => env('ADS_CLIENT_SECRET'),
-    'refresh_token' => env('ADS_REFRESH_TOKEN'),
-    'on_token_refreshed' => function (array $tokenData): void {
-        // Persist newly rotated refresh token to Secret Manager or database
-    },
+    'driver'             => 'oauth2_refresh_token',
+    'token_url'          => 'https://login.example.com/oauth2/v2.0/token',
+    'client_id'          => env('ADS_CLIENT_ID'),
+    'client_secret'      => env('ADS_CLIENT_SECRET'),
+    'refresh_token'      => env('ADS_REFRESH_TOKEN'),
+    // Note: Use an invokable class name or [Class, method] in config files to support `config:cache`!
+    'on_token_refreshed' => App\Auth\AdsTokenRefreshedHandler::class,
 ],
 ```
 
@@ -210,9 +209,9 @@ Per-request HMAC-SHA256 signature generation for Token-Based Authentication (suc
 - **Signature Base String (§3.4.1.3)**: Includes the request HTTP method, normalized URL, all query string parameters (`?script=...&deploy=...`), and OAuth parameters.
 - **Authorization Header (§3.5.1)**: Emits only `realm` and `oauth_*` parameters in the header. **Query parameters remain in the URL query string and are not duplicated in the header.**
 
-### 8. API Key Injection
+### 8. API Key & HTTP Basic Injection
 
-Injects static API keys or bearer tokens into headers or query parameters.
+Injects static API keys or HTTP Basic credentials.
 
 ```php
 'api.thirdparty.com' => [
@@ -220,6 +219,60 @@ Injects static API keys or bearer tokens into headers or query parameters.
     'key'    => env('THIRDPARTY_API_KEY'),
     'name'   => 'X-API-Key',
     'in'     => 'header',
+],
+
+'legacy.service.com' => [
+    'driver'   => 'basic',
+    'username' => env('SERVICE_USERNAME'),
+    'password' => env('SERVICE_PASSWORD'),
+],
+```
+
+### 9. Client Certificates (mTLS) & Composable Auth
+
+For endpoints requiring mutual TLS (mTLS), `MtlsAuthenticator` integrates with `CertificateMaterializer` to handle PEM strings stored in environment variables, automatically normalizing newlines and safely caching content-addressed certificates on tmpfs with `0600` permissions:
+
+```php
+'gateway.example.com' => [
+    'driver'        => 'mtls',
+    'cert'          => env('CLIENT_CERT_PEM'), // Raw PEM string or file path!
+    'key'           => env('CLIENT_KEY_PEM'),  // Optional if cert bundle contains private key
+    'cert_password' => env('CLIENT_CERT_PASSWORD'),
+],
+```
+
+For APIs that require **both** transport-level mTLS and application-layer auth (e.g. OAuth 2.0 or Basic Auth):
+
+```php
+'secure.partner.com' => [
+    'driver'         => 'chain',
+    'authenticators' => [
+        [
+            'driver' => 'mtls',
+            'cert'   => env('PARTNER_CLIENT_CERT_PEM'),
+            'key'    => env('PARTNER_PRIVATE_KEY_PEM'),
+        ],
+        [
+            'driver'        => 'oauth2_client_credentials',
+            'token_url'     => 'https://secure.partner.com/oauth/token',
+            'client_id'     => env('PARTNER_CLIENT_ID'),
+            'client_secret' => env('PARTNER_CLIENT_SECRET'),
+        ],
+    ],
+],
+```
+
+Transport options (`proxy`, `verify`, `mtls`) can also be added directly to any host configuration, and are automatically forwarded to both the resource request and internal token exchange calls:
+
+```php
+'api.financial.com' => [
+    'driver'        => 'oauth2_client_credentials',
+    'token_url'     => 'https://api.financial.com/oauth/token',
+    'client_id'     => env('FIN_CLIENT_ID'),
+    'client_secret' => env('FIN_CLIENT_SECRET'),
+    // Transport options applied to both token requests and API requests:
+    'proxy'         => env('OUTBOUND_PROXY_URL'),
+    'verify'        => resource_path('certs/ca-bundle.pem'),
 ],
 ```
 
@@ -380,6 +433,16 @@ $response = $guzzle->post('https://api.example.com/v1/resource', [
     'outbound_auth' => OutboundAuth::password(...),
     'json'          => $payload,
 ]);
+```
+
+For client certificates (mTLS), pass certificates directly using `Http::withClientCert()`. The underlying `CertificateMaterializer` normalizes newlines and reuses content-addressed cache files on tmpfs:
+
+```php
+$response = Http::withClientCert(
+    cert: env('CLIENT_CERT_PEM'), // Raw PEM string or file path
+    key: env('CLIENT_KEY_PEM'),   // Optional if combined in cert bundle
+    certPassword: env('CLIENT_CERT_PASSWORD'),
+)->post('https://secure.gateway.example.com/v1/session', $payload);
 ```
 
 > 💡 **Why `outbound_auth`?**

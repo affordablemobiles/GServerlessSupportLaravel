@@ -11,6 +11,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOidcAuthenti
 use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OAuth2;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OIDC;
+use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use AffordableMobiles\GServerlessSupportLaravel\Support\UriMatcher;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -169,11 +170,12 @@ class AuthTokenMiddleware
     }
 
     /**
-     * Resolve the appropriate authenticator for the outbound request.
+     * Resolve the appropriate authenticator for the outbound request,
+     * and apply any matched transport options (proxy, verify, mTLS).
      *
      * @param array<string,mixed> $options
      */
-    protected function resolveAuthenticator(RequestInterface $request, array $options): ?RequestAuthenticatorInterface
+    protected function resolveAuthenticator(RequestInterface $request, array &$options): ?RequestAuthenticatorInterface
     {
         $auth = $options['outbound_auth'] ?? $options['auth'] ?? 'google_dynamic';
 
@@ -184,6 +186,8 @@ class AuthTokenMiddleware
 
         // 2. Explicit config array passed in options
         if (\is_array($auth)) {
+            $this->applyTransportOptions($auth, $options);
+
             return OutboundAuth::fromConfig($auth);
         }
 
@@ -205,6 +209,10 @@ class AuthTokenMiddleware
             if (!empty($requestMap)) {
                 $matched = UriMatcher::match($requestMap, $request->getUri());
                 if (null !== $matched) {
+                    if (\is_array($matched)) {
+                        $this->applyTransportOptions($matched, $options);
+                    }
+
                     return OutboundAuth::fromConfig($matched);
                 }
             }
@@ -213,6 +221,10 @@ class AuthTokenMiddleware
             $matched = UriMatcher::match($this->audienceMap, $request->getUri());
 
             if (null !== $matched) {
+                if (\is_array($matched)) {
+                    $this->applyTransportOptions($matched, $options);
+                }
+
                 return OutboundAuth::fromConfig($matched);
             }
 
@@ -222,7 +234,7 @@ class AuthTokenMiddleware
                     return new class($token) implements RequestAuthenticatorInterface {
                         public function __construct(protected readonly string $token) {}
 
-                        public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+                        public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
                         {
                             return $request->withHeader('authorization', 'Bearer '.$this->token);
                         }
@@ -246,6 +258,40 @@ class AuthTokenMiddleware
     }
 
     /**
+     * Apply transport options (proxy, verify, mTLS cert & key) from matched host configuration.
+     *
+     * @param array<string,mixed> $config
+     * @param array<string,mixed> $options
+     */
+    protected function applyTransportOptions(array $config, array &$options): void
+    {
+        if (!isset($options['proxy']) && !empty($config['proxy'])) {
+            $options['proxy'] = $config['proxy'];
+        }
+
+        if ((!isset($options['verify']) || true === $options['verify']) && !empty($config['verify'])) {
+            $options['verify'] = $config['verify'];
+        }
+
+        $mtls = $config['mtls'] ?? $config;
+
+        if (!isset($options['cert']) && !empty($mtls['cert'])) {
+            $options['cert'] = CertificateMaterializer::materialize(
+                $mtls['cert'],
+                $mtls['cert_password'] ?? $mtls['passphrase'] ?? null
+            );
+        }
+
+        if (!isset($options['ssl_key']) && (!empty($mtls['key']) || !empty($mtls['ssl_key']))) {
+            $key                = $mtls['key'] ?? $mtls['ssl_key'];
+            $options['ssl_key'] = CertificateMaterializer::materialize(
+                $key,
+                $mtls['key_password'] ?? null
+            );
+        }
+    }
+
+    /**
      * Invalidate cached token and retry request once.
      *
      * @param array<string,mixed> $options
@@ -260,6 +306,10 @@ class AuthTokenMiddleware
 
         $retryOptions                  = $options;
         $retryOptions['_auth_retried'] = true;
+
+        if ($request->getBody()->isSeekable()) {
+            $request->getBody()->rewind();
+        }
 
         $freshRequest = $authenticator->authenticate($request, $retryOptions);
 

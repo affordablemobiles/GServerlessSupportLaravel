@@ -8,6 +8,7 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\Guzzle\GuzzleRetryMiddleware;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\HttpClient\Listeners\OutboundHttpTelemetryListener;
+use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -54,7 +55,23 @@ class HttpClientServiceProvider extends ServiceProvider
             return $this->withOptions(['outbound_auth' => $auth]);
         });
 
-        // 5. Reset request-scoped runtime auth registry at the end of request lifecycle
+        // 5. Register withClientCert macro for mTLS on PendingRequest and Http facade
+        PendingRequest::macro('withClientCert', function (array|string $cert, null|array|string $key = null, ?string $certPassword = null, ?string $keyPassword = null) {
+            /** @var PendingRequest $this */
+            $options = [];
+
+            if (!empty($cert)) {
+                $options['cert'] = CertificateMaterializer::materialize($cert, $certPassword);
+            }
+
+            if (!empty($key)) {
+                $options['ssl_key'] = CertificateMaterializer::materialize($key, $keyPassword);
+            }
+
+            return $this->withOptions($options);
+        });
+
+        // 6. Reset request-scoped runtime auth registry at the end of request lifecycle
         $this->app->terminating(static function (): void {
             OutboundAuth::clearRequestMap();
         });

@@ -32,7 +32,7 @@ class OAuth1TokenAuthenticator implements RequestAuthenticatorInterface
         }
     }
 
-    public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+    public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
     {
         $oauthParams = [
             'oauth_consumer_key'     => $this->consumerKey,

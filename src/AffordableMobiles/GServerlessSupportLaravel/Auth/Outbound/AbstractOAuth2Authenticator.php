@@ -38,7 +38,7 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
         protected readonly int $bufferSeconds = self::DEFAULT_BUFFER_SECONDS,
     ) {}
 
-    public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+    public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
     {
         $token = TokenCache::remember(
             $this->getCacheKey(),

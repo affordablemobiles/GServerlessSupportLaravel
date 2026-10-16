@@ -23,7 +23,7 @@ class ApiKeyAuthenticator implements RequestAuthenticatorInterface
         protected readonly ?string $prefix = null,
     ) {}
 
-    public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+    public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
     {
         if ('query' === $this->in) {
             $uri      = $request->getUri();

@@ -10,7 +10,7 @@ use Psr\Http\Message\RequestInterface;
 
 class GoogleOAuth2Authenticator implements RequestAuthenticatorInterface
 {
-    public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+    public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
     {
         $token = OAuth2::fetchToken();
 

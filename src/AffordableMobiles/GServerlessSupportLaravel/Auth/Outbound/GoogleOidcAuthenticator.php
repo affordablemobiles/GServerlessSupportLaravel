@@ -17,7 +17,7 @@ class GoogleOidcAuthenticator implements RequestAuthenticatorInterface
         protected readonly mixed $audience,
     ) {}
 
-    public function authenticate(RequestInterface $request, array $options = []): RequestInterface
+    public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
     {
         $targetAudience = \is_callable($this->audience)
             ? ($this->audience)($request)

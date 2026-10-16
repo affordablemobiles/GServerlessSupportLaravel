@@ -132,8 +132,9 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
             'typ' => 'JWT',
         ];
 
-        if (null !== $this->signer->getKid()) {
-            $header['kid'] = $this->signer->getKid();
+        $kidBefore = $this->signer->getKid();
+        if (null !== $kidBefore) {
+            $header['kid'] = $kidBefore;
         }
 
         $now           = time();
@@ -156,6 +157,15 @@ class OAuth2JwtBearerAuthenticator extends AbstractOAuth2Authenticator
             .self::base64UrlEncode((string) json_encode($payload, JSON_UNESCAPED_SLASHES));
 
         $signature = $this->signer->sign($signingInput);
+
+        // If the signer auto-discovered or rotated its keyId during sign() (e.g. IamSigner on cold start or key rotation)
+        if ($this->signer->getKid() !== $kidBefore) {
+            $header['kid'] = $this->signer->getKid();
+            $signingInput  = self::base64UrlEncode((string) json_encode($header, JSON_UNESCAPED_SLASHES))
+                .'.'
+                .self::base64UrlEncode((string) json_encode($payload, JSON_UNESCAPED_SLASHES));
+            $signature     = $this->signer->sign($signingInput);
+        }
 
         return $signingInput.'.'.self::base64UrlEncode($signature);
     }

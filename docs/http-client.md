@@ -389,5 +389,3 @@ In `config/gserverlesssupport.php`:
     ],
 ],
 ```
-})
-```

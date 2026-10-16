@@ -7,6 +7,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\SigningException;
 use AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer\JwtSignerInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 use Psr\Http\Message\RequestInterface;
 
 class PayloadSignatureAuthenticator implements RequestAuthenticatorInterface
@@ -77,13 +78,22 @@ class PayloadSignatureAuthenticator implements RequestAuthenticatorInterface
             || str_contains($keyString, 'BEGIN RSA PRIVATE KEY');
 
         if ($isOpenSsl) {
-            $pkey = openssl_pkey_get_private($keyString);
+            $normalizedKey = CertificateMaterializer::normalize($keyString);
+            $pkey          = openssl_pkey_get_private($normalizedKey);
             if (false === $pkey) {
                 throw new SigningException('Failed to load private key for payload signing');
             }
 
+            $algo = match (strtoupper($this->algorithm)) {
+                'RS256', 'SHA256' => OPENSSL_ALGO_SHA256,
+                'RS384', 'SHA384' => OPENSSL_ALGO_SHA384,
+                'RS512', 'SHA512' => OPENSSL_ALGO_SHA512,
+                'SHA1'            => OPENSSL_ALGO_SHA1,
+                default           => $this->algorithm,
+            };
+
             $rawSignature = '';
-            if (!openssl_sign($data, $rawSignature, $pkey, $this->algorithm)) {
+            if (!openssl_sign($data, $rawSignature, $pkey, $algo)) {
                 throw new SigningException('OpenSSL payload signing failed');
             }
 

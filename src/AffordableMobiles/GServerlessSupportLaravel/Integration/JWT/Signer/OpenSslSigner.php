@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\SigningException;
+use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
 
 class OpenSslSigner implements JwtSignerInterface
 {
@@ -33,7 +34,8 @@ class OpenSslSigner implements JwtSignerInterface
 
     public function sign(string $signingInput): string
     {
-        $key = openssl_pkey_get_private($this->privateKey, $this->passphrase ?? '');
+        $normalizedKey = CertificateMaterializer::normalize($this->privateKey);
+        $key           = openssl_pkey_get_private($normalizedKey, $this->passphrase ?? '');
         if (false === $key) {
             throw new SigningException('Failed to load OpenSSL private key: '.(openssl_error_string() ?: 'invalid key format'));
         }

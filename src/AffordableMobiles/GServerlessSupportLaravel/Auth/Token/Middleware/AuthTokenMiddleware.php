@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\AbstractOAuth2Authenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ChainAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOAuth2Authenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOidcAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
@@ -72,7 +73,12 @@ class AuthTokenMiddleware
             $promise = $handler($request, $options);
 
             // Handle automatic single re-auth retry on 401 Unauthorized for cached OAuth2 tokens
-            if ($authenticator instanceof AbstractOAuth2Authenticator && empty($options['_auth_retried'])) {
+            $canRetry = empty($options['_auth_retried']) && (
+                $authenticator instanceof AbstractOAuth2Authenticator
+                || ($authenticator instanceof ChainAuthenticator && $authenticator->hasOAuth2Authenticator())
+            );
+
+            if ($canRetry) {
                 return $promise->then(
                     function (ResponseInterface $response) use ($handler, $request, $options, $authenticator) {
                         if (401 === $response->getStatusCode()) {
@@ -297,7 +303,7 @@ class AuthTokenMiddleware
         callable $handler,
         RequestInterface $request,
         array $options,
-        AbstractOAuth2Authenticator $authenticator,
+        AbstractOAuth2Authenticator|ChainAuthenticator $authenticator,
     ): PromiseInterface {
         $authenticator->invalidateToken();
 

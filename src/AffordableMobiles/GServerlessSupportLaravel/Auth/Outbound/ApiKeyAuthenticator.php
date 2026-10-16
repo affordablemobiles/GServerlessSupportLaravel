@@ -6,6 +6,7 @@ namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
 use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 
 class ApiKeyAuthenticator implements RequestAuthenticatorInterface
@@ -36,7 +37,14 @@ class ApiKeyAuthenticator implements RequestAuthenticatorInterface
 
             $request = $request->withUri(new Uri((string) $uri->withQuery($newQuery)));
         } elseif ('form_params' === $this->in || 'body' === $this->in) {
-            $options['form_params'][$this->name] = $this->key;
+            $body    = (string) $request->getBody();
+            $pair    = rawurlencode($this->name).'='.rawurlencode($this->key);
+            $newBody = '' !== $body ? $body.'&'.$pair : $pair;
+            $request = $request->withBody(Utils::streamFor($newBody));
+
+            if (!$request->hasHeader('Content-Type')) {
+                $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+            }
         } else {
             $headerValue = null !== $this->prefix && '' !== $this->prefix
                 ? $this->prefix.' '.$this->key

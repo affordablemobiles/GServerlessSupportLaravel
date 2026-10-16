@@ -15,7 +15,7 @@ class PayloadSignatureAuthenticator implements RequestAuthenticatorInterface
      * @param JwtSignerInterface|string $key             HMAC secret, PEM private key, or JwtSignerInterface instance
      * @param string                    $headerName      Header to store computed signature in
      * @param null|string               $timestampHeader Optional header to store current UNIX timestamp in
-     * @param string                    $bodySeparator   Optional separator between timestamp and body (e.g. '|' for Samsung)
+     * @param string                    $bodySeparator   Optional separator between timestamp and body (e.g. '|')
      * @param array<string,string>      $extraHeaders    Additional static headers to inject (e.g. partner IDs)
      * @param string                    $algorithm       Signature algorithm ('sha256', 'sha1', etc.)
      * @param string                    $signatureFormat Signature output format ('base64' or 'hex')

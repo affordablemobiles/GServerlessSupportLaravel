@@ -398,7 +398,7 @@ class OutboundAuth
 
         $driver = $config['driver'] ?? $config['type'] ?? null;
 
-        // Auto-detect legacy NetSuite TBA configuration arrays without explicit driver
+        // Auto-detect OAuth 1.0a TBA configuration arrays without explicit driver
         if (null === $driver && isset($config['consumer_key'], $config['token_id'])) {
             $driver = 'oauth1_tba';
         }

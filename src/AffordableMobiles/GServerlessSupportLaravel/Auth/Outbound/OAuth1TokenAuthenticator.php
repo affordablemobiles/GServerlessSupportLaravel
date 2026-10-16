@@ -16,7 +16,7 @@ class OAuth1TokenAuthenticator implements RequestAuthenticatorInterface
      * @param string      $consumerSecret  OAuth 1.0 consumer secret / client secret
      * @param string      $tokenId         Token ID / access token
      * @param string      $tokenSecret     Token secret
-     * @param null|string $realm           Optional realm (e.g. NetSuite account ID)
+     * @param null|string $realm           Optional realm (e.g. ERP account ID or realm)
      * @param string      $signatureMethod Signature method ('HMAC-SHA256' or 'HMAC-SHA1')
      */
     public function __construct(

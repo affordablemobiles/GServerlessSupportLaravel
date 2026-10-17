@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware;
 
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\OutboundAuthenticationException;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\AbstractOAuth2Authenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ChainAuthenticator;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOAuth2Authenticator;
@@ -63,10 +64,25 @@ class AuthTokenMiddleware
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, array $options) use ($handler) {
+            // Prevent duplicate authentication middleware instances from executing on the same request
+            if (!empty($options['_gserverless_auth_applied'])) {
+                return $handler($request, $options);
+            }
+            $options['_gserverless_auth_applied'] = true;
+
             $authenticator = $this->resolveAuthenticator($request, $options);
 
             if (null !== $authenticator) {
-                $request = $authenticator->authenticate($request, $options);
+                try {
+                    $request = $authenticator->authenticate($request, $options);
+                    $request = $this->synchronizeRequestBody($request);
+                } catch (OutboundAuthenticationException $e) {
+                    if (config('gserverlesssupport.http-client.telemetry.enabled', true)) {
+                        report($e);
+                    }
+
+                    throw $e;
+                }
             }
 
             /** @var PromiseInterface $promise */
@@ -327,9 +343,40 @@ class AuthTokenMiddleware
             $request->getBody()->rewind();
         }
 
-        $freshRequest = $authenticator->authenticate($request, $retryOptions);
+        try {
+            $freshRequest = $authenticator->authenticate($request, $retryOptions);
+            $freshRequest = $this->synchronizeRequestBody($freshRequest);
+        } catch (OutboundAuthenticationException $e) {
+            if (config('gserverlesssupport.http-client.telemetry.enabled', true)) {
+                report($e);
+            }
+
+            throw $e;
+        }
 
         return $handler($freshRequest, $retryOptions);
+    }
+
+    /**
+     * Ensure request body stream pointer is rewound and Content-Length header matches actual body size.
+     */
+    protected function synchronizeRequestBody(RequestInterface $request): RequestInterface
+    {
+        $body = $request->getBody();
+
+        if ($body->isSeekable() && $body->tell() > 0) {
+            $body->rewind();
+        }
+
+        $size = $body->getSize();
+        if (null !== $size && $request->hasHeader('Content-Length')) {
+            $currentLength = $request->getHeaderLine('Content-Length');
+            if ((string) $size !== $currentLength) {
+                $request = $request->withHeader('Content-Length', (string) $size);
+            }
+        }
+
+        return $request;
     }
 
     /**

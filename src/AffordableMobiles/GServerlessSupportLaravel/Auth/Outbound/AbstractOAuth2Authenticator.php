@@ -115,6 +115,10 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
             $clientConfig['curl'] = array_replace($clientConfig['curl'] ?? [], $runtimeOptions['curl']);
         }
 
+        if (!empty($clientConfig['proxy']) && \is_string($clientConfig['proxy']) && !str_contains($clientConfig['proxy'], '://')) {
+            $clientConfig['proxy'] = 'http://'.$clientConfig['proxy'];
+        }
+
         $client = new GuzzleClient($clientConfig);
 
         try {

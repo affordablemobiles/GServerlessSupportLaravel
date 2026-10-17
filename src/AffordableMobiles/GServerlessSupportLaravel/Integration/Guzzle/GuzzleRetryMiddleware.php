@@ -63,6 +63,12 @@ class GuzzleRetryMiddleware
      */
     public function __invoke(RequestInterface $request, array $options): PromiseInterface
     {
+        // Prevent duplicate retry middleware instances from running on the same request
+        if (!empty($options['_gserverless_retry_active']) && empty($options['retry_count'])) {
+            return ($this->nextHandler)($request, $options);
+        }
+        $options['_gserverless_retry_active'] = true;
+
         // Combine options with defaults specified by this middleware
         $options = array_replace($this->defaultOptions, $options);
 

@@ -57,7 +57,13 @@ class OAuth1TokenAuthenticator implements RequestAuthenticatorInterface
         // Include form-urlencoded body params if applicable
         $contentType = $request->getHeaderLine('Content-Type');
         if (str_starts_with(strtolower($contentType), 'application/x-www-form-urlencoded')) {
-            $body = (string) $request->getBody();
+            $bodyStream = $request->getBody();
+            $body       = (string) $bodyStream;
+
+            if ($bodyStream->isSeekable()) {
+                $bodyStream->rewind();
+            }
+
             if ('' !== $body) {
                 parse_str($body, $bodyParams);
                 foreach ($bodyParams as $k => $v) {

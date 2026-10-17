@@ -178,166 +178,20 @@ To prevent double-reporting the outer domain wrapper, configure your application
 
 ---
 
-## The 4-Tier Configuration Architecture
+## Outbound Authentication & The 4-Tier Configuration Architecture
 
-To handle everything from simple Google IAP services to complex multi-tenant, multi-brand integrations where credentials change dynamically per incoming request, `GServerlessSupportLaravel` supports **four configuration tiers**:
+`HttpClientServiceProvider` seamlessly integrates `AuthTokenMiddleware` with Laravel's `Http` client. Authentication can be configured at any of four tiers based on application needs:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│ Tier 1: Global Declarative Map (config/auth.php or config/gserverlesssupport.php)│
-│ Best for: 1:1 host maps, Google IAP OIDC, Google APIs, single-tenant ERPs       │
-└────────────────────────────────────────┬────────────────────────────────────────┘
-                                         │
-┌────────────────────────────────────────┴────────────────────────────────────────┐
-│ Tier 2: Request-Scoped Runtime Registry (OutboundAuth::registerForRequest)       │
-│ Best for: Multi-brand / multi-theme routes (ConfigController / Route Middleware)│
-└────────────────────────────────────────┬────────────────────────────────────────┘
-                                         │
-┌────────────────────────────────────────┴────────────────────────────────────────┐
-│ Tier 3: Scoped Http Client Macros (Http::macro / feature ServiceProvider)       │
-│ Best for: Domain service classes with co-located service credentials            │
-└────────────────────────────────────────┬────────────────────────────────────────┘
-                                         │
-┌────────────────────────────────────────┴────────────────────────────────────────┐
-│ Tier 4: Per-Request DTOs (Http::withOutboundAuth(OutboundAuth::...))             │
-│ Best for: Inline ad-hoc calls, dynamic per-order credentials, testOrder toggles │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
+1. **Tier 1 (Global Declarative Map)**: In `config/auth.php` (under `middleware.audience`) for static 1:1 host mappings, Google OIDC, OAuth2, and wildcards (`*.internal.net`).
+2. **Tier 2 (Request-Scoped Runtime Registry)**: Via `OutboundAuth::registerForRequest('api.partner.com/*', $config)` in Route Middleware or Base Controllers for multi-brand/multi-theme credentials that change per incoming request.
+3. **Tier 3 (Scoped Http Client Macros)**: Via `Http::macro('partnerClient', fn () => Http::withOutboundAuth(...))` in service providers.
+4. **Tier 4 (Per-Request DTOs)**: Directly inline via `Http::withOutboundAuth(OutboundAuth::...)`.
 
----
+> 📖 **Full Authentication Documentation:**
+> See **[docs/guzzle-auth.md](guzzle-auth.md#configuration-architecture-the-4-tiers)** for comprehensive guides, middleware code examples for each tier, driver reference (Google OIDC/OAuth2, RFC 6749 OAuth 2.0, RFC 5849 OAuth 1.0a TBA, API keys, HTTP Basic, WSSE, Payload Signing, mTLS), and keyless Google IAM/KMS signing.
 
-### Tier 1: Global Declarative Host Map
-
-Define static host mappings in `config/auth.php` (under `middleware.audience`):
-
-```php
-'audience' => [
-    // Exact hostname mapping (Google OIDC)
-    'orders.example.com'        => '123456789-abcdef.apps.googleusercontent.com',
-
-    // OAuth2 Bearer token (Google APIs / Cloud Storage)
-    'storage.googleapis.com'    => 'oauth2',
-
-    // Path-specific audience mapping on the same host
-    'service.internal.net/v1/*' => 'v1-audience.apps.googleusercontent.com',
-    'service.internal.net/v2/*' => 'v2-audience.apps.googleusercontent.com',
-    'service.internal.net'      => 'default-audience.apps.googleusercontent.com',
-
-    // Wildcard host mapping
-    '*.cloudfunctions.net'      => 'cloudfunctions-audience.apps.googleusercontent.com',
-    '*.internal.net'            => 'internal-audience.apps.googleusercontent.com',
-],
-```
-
----
-
-### Tier 2: Request-Scoped Runtime Registration (Route Middleware / Controller Hook)
-
-In multi-tenant or multi-brand services, an incoming request carries contextual parameters (e.g. `brand=buymobiles` vs `brand=affordable`, or `testOrder=true` vs `live`). A static global hostname map cannot know which credentials to use for `api.partner.com`.
-
-Use `OutboundAuth::registerForRequest()` inside a **Route Group Middleware** or a **Base Controller**:
-
-```php
-namespace App\Http\Middleware;
-
-use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
-use Closure;
-use Illuminate\Http\Request;
-
-class BindConnectorAuthMiddleware
-{
-    public function handle(Request $request, Closure $next, string $connectorName)
-    {
-        // 1. Resolve credentials dynamically based on incoming brand / theme / test flags
-        $themeCode = $request->input('themeCode', 'default');
-        $config    = config("{$themeCode}-{$connectorName}.connectors.{$connectorName}");
-
-        // 2. Register the connector's outbound auth for this request lifecycle
-        if (!empty($config['auth'])) {
-            OutboundAuth::registerForRequest('api.partner.com/*', $config['auth']);
-        }
-
-        return $next($request);
-    }
-}
-```
-
-Apply the middleware to your route group in `routes/api.php`:
-
-```php
-Route::prefix('/partner/v1')
-    ->middleware('connector.auth:partner')
-    ->group(function () {
-        Route::post('/orders', [PartnerOrderController::class, 'store']);
-    });
-```
-
-Downstream service classes and models simply call `Http::post('https://api.partner.com/orders', ...)` with **zero auth boilerplate in the model** and **zero configuration pollution in `config/auth.php`**. `HttpClientServiceProvider` automatically purges the request-scoped registry when the request terminates.
-
----
-
-### Tier 3: Scoped Laravel Http Client Macros
-
-For dedicated domain clients co-located in service providers, register named `Http` macros:
-
-```php
-namespace App\Providers;
-
-use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\ServiceProvider;
-
-class PartnerIntegrationServiceProvider extends ServiceProvider
-{
-    public function boot(): void
-    {
-        Http::macro('partnerClient', function () {
-            return Http::withOutboundAuth(OutboundAuth::clientCredentials(
-                tokenUrl: config('services.partner.token_url'),
-                clientId: config('services.partner.client_id'),
-                clientSecret: config('services.partner.client_secret'),
-            ))->baseUrl(config('services.partner.base_url'));
-        });
-    }
-}
-```
-
-Usage anywhere in your application:
-
-```php
-$response = Http::partnerClient()->post('/v1/shipments', $shipmentData);
-```
-
----
-
-### Tier 4: Per-Request DTOs & Options
-
-For ad-hoc calls, dynamic per-order credentials, or one-off scripts, pass an authenticator directly via `Http::withOutboundAuth()`:
-
-```php
-use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
-use Illuminate\Support\Facades\Http;
-
-$response = Http::withOutboundAuth(OutboundAuth::password(
-    tokenUrl: 'https://auth.example.com/oauth/token',
-    clientId: $apiKey,
-    clientSecret: $apiSecret,
-    username: $username,
-    password: $password,
-))->post('https://api.example.com/v1/invitations', $payload);
-```
-
-Or when using raw Guzzle:
-
-```php
-$response = $guzzle->post('https://api.example.com/v1/invitations', [
-    'outbound_auth' => OutboundAuth::password(...),
-    'json'          => $payload,
-]);
-```
-
-> 💡 **Why `outbound_auth`?**
-> When passing custom auth configurations to Guzzle, use `'outbound_auth'` rather than `'auth'`. Guzzle's native `Client::applyOptions()` intercepts array configs in `$options['auth']` before middleware runs, treating them as Basic Auth. Using `'outbound_auth'` (or `Http::withOutboundAuth()`) ensures custom authenticators pass cleanly to `AuthTokenMiddleware`.
+> 💡 **Why `withOutboundAuth()`?**
+> When passing custom auth configurations to Guzzle or Laravel's HTTP client, use `'outbound_auth'` (or the `Http::withOutboundAuth()` macro) rather than `'auth'`. Guzzle's native `Client::applyOptions()` intercepts array configs in `$options['auth']` before middleware runs, treating them as Basic Auth. Using `'outbound_auth'` ensures custom authenticators pass cleanly to `AuthTokenMiddleware`.
 
 ---
 

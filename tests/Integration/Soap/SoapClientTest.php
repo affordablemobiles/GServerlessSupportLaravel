@@ -19,58 +19,6 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\TestCase;
 
-if (!class_exists(TestCase::class)) {
-    abstract class StandaloneTestCase
-    {
-        public ?string $expectedException        = null;
-        public ?string $expectedExceptionMessage = null;
-
-        protected function setUp(): void {}
-
-        public static function assertTrue(bool $condition, string $msg = ''): void
-        {
-            \assert($condition, $msg);
-        }
-
-        public static function assertFalse(bool $condition, string $msg = ''): void
-        {
-            \assert(!$condition, $msg);
-        }
-
-        public static function assertSame(mixed $expected, mixed $actual, string $msg = ''): void
-        {
-            \assert($expected === $actual, $msg);
-        }
-
-        public static function assertInstanceOf(string $expected, mixed $actual, string $msg = ''): void
-        {
-            \assert($actual instanceof $expected, $msg);
-        }
-
-        public static function assertStringContainsString(string $needle, string $haystack, string $msg = ''): void
-        {
-            \assert(str_contains($haystack, $needle), $msg);
-        }
-
-        public static function assertStringNotContainsString(string $needle, string $haystack, string $msg = ''): void
-        {
-            \assert(!str_contains($haystack, $needle), $msg);
-        }
-
-        public function expectException(string $class): void
-        {
-            $this->expectedException = $class;
-        }
-
-        public function expectExceptionMessage(string $msg): void
-        {
-            $this->expectedExceptionMessage = $msg;
-        }
-    }
-
-    class_alias(StandaloneTestCase::class, TestCase::class);
-}
-
 /**
  * @internal
  *
@@ -294,40 +242,4 @@ XML;
         self::assertStringContainsString('schemaLocation="https://ws.example.com/services/common/common.xsd"', $rewrittenXml);
         self::assertStringContainsString('schemaLocation="https://other.com/external.xsd"', $rewrittenXml);
     }
-}
-
-if (\PHP_SAPI === 'cli' && isset($_SERVER['argv'][0]) && str_ends_with($_SERVER['argv'][0], 'SoapClientTest.php')) {
-    require_once __DIR__.'/../../../vendor/autoload.php';
-    $test        = new SoapClientTest();
-    $methods     = get_class_methods($test);
-    $setUpMethod = new \ReflectionMethod($test, 'setUp');
-    $setUpMethod->setAccessible(true);
-    $passed = 0;
-    foreach ($methods as $method) {
-        if (str_starts_with($method, 'test')) {
-            $setUpMethod->invoke($test);
-            $test->expectException('');
-            $test->expectedException        = null;
-            $test->expectedExceptionMessage = null;
-
-            try {
-                $test->{$method}();
-                if (null !== $test->expectedException) {
-                    throw new \RuntimeException("Failed asserting that exception {$test->expectedException} was thrown in {$method}");
-                }
-            } catch (\Throwable $e) {
-                if (null !== $test->expectedException && $e instanceof $test->expectedException) {
-                    if (null !== $test->expectedExceptionMessage) {
-                        \assert(str_contains($e->getMessage(), $test->expectedExceptionMessage));
-                    }
-                } else {
-                    throw $e;
-                }
-            }
-
-            ++$passed;
-            echo "PASS: {$method}\n";
-        }
-    }
-    echo "\nAll {$passed} tests in SoapClientTest passed!\n";
 }

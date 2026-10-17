@@ -410,20 +410,16 @@ class OutboundAuth
             'google_oidc', 'oidc' => self::oidc(self::resolveCallableOrValue($config['audience'] ?? $config['target_audience'] ?? '')),
             'google_oauth2', 'oauth2' => self::googleOAuth2(),
             'oauth2_client_credentials', 'client_credentials' => self::clientCredentials(
+                ...self::commonOAuth2Args($config),
                 tokenUrl: (string) ($config['token_url'] ?? $config['url'] ?? ''),
                 clientId: (string) ($config['client_id'] ?? ''),
                 clientSecret: (string) ($config['client_secret'] ?? ''),
                 scope: isset($config['scope']) ? (string) $config['scope'] : null,
                 audience: isset($config['audience']) ? (string) $config['audience'] : null,
                 authMethod: (string) ($config['auth_method'] ?? 'client_secret_basic'),
-                extraTokenParams: (array) ($config['extra_token_params'] ?? $config['token_params'] ?? []),
-                extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
-                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
-                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
-                headerName: (string) ($config['header_name'] ?? 'Authorization'),
-                tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
             'oauth2_password', 'password' => self::password(
+                ...self::commonOAuth2Args($config),
                 tokenUrl: (string) ($config['token_url'] ?? $config['url'] ?? ''),
                 clientId: (string) ($config['client_id'] ?? ''),
                 clientSecret: (string) ($config['client_secret'] ?? ''),
@@ -431,14 +427,9 @@ class OutboundAuth
                 password: (string) ($config['password'] ?? ''),
                 scope: isset($config['scope']) ? (string) $config['scope'] : null,
                 authMethod: (string) ($config['auth_method'] ?? 'client_secret_basic'),
-                extraTokenParams: (array) ($config['extra_token_params'] ?? []),
-                extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
-                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
-                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
-                headerName: (string) ($config['header_name'] ?? 'Authorization'),
-                tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
             'oauth2_refresh_token', 'refresh_token' => self::refreshToken(
+                ...self::commonOAuth2Args($config),
                 tokenUrl: (string) ($config['token_url'] ?? $config['url'] ?? ''),
                 clientId: (string) ($config['client_id'] ?? ''),
                 clientSecret: (string) ($config['client_secret'] ?? ''),
@@ -446,14 +437,9 @@ class OutboundAuth
                 scope: isset($config['scope']) ? (string) $config['scope'] : null,
                 authMethod: (string) ($config['auth_method'] ?? 'client_secret_basic'),
                 onTokenRefreshed: $config['on_token_refreshed'] ?? null,
-                extraTokenParams: (array) ($config['extra_token_params'] ?? []),
-                extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? []),
-                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
-                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
-                headerName: (string) ($config['header_name'] ?? 'Authorization'),
-                tokenType: (string) ($config['token_type'] ?? 'Bearer'),
             ),
             'oauth2_jwt_bearer', 'jwt_bearer' => self::jwtBearer(
+                ...self::commonOAuth2Args($config),
                 tokenUrl: (string) ($config['token_url'] ?? $config['url'] ?? ''),
                 signer: $config['signer'] ?? [],
                 claims: (array) ($config['claims'] ?? []),
@@ -461,12 +447,6 @@ class OutboundAuth
                 basicAuth: $config['basic_auth'] ?? null,
                 scope: isset($config['scope']) ? (string) $config['scope'] : null,
                 includeJti: (bool) ($config['include_jti'] ?? true),
-                extraTokenParams: (array) ($config['extra_token_params'] ?? []),
-                extraResourceHeaders: (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
-                tokenClientOptions: (array) ($config['token_client_options'] ?? []),
-                tokenResponseKey: (string) ($config['token_response_key'] ?? 'access_token'),
-                headerName: (string) ($config['header_name'] ?? 'Authorization'),
-                tokenType: (string) ($config['token_type'] ?? 'Bearer'),
                 jwtTtl: (int) ($config['jwt_ttl'] ?? 300),
             ),
             'oauth1_tba', 'oauth1', 'tba' => self::oauth1Tba(
@@ -558,5 +538,24 @@ class OutboundAuth
         }
 
         return $value;
+    }
+
+    /**
+     * Extract shared OAuth2 options from configuration array.
+     *
+     * @param array<string,mixed> $config
+     *
+     * @return array<string,mixed>
+     */
+    private static function commonOAuth2Args(array $config): array
+    {
+        return [
+            'extraTokenParams'     => (array) ($config['extra_token_params'] ?? $config['token_params'] ?? []),
+            'extraResourceHeaders' => (array) ($config['extra_resource_headers'] ?? $config['request_headers'] ?? []),
+            'tokenClientOptions'   => (array) ($config['token_client_options'] ?? []),
+            'tokenResponseKey'     => (string) ($config['token_response_key'] ?? 'access_token'),
+            'headerName'           => (string) ($config['header_name'] ?? 'Authorization'),
+            'tokenType'            => (string) ($config['token_type'] ?? 'Bearer'),
+        ];
     }
 }

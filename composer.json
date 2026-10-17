@@ -29,7 +29,8 @@
         "laravel/framework": "~12"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.70"
+        "friendsofphp/php-cs-fixer": "^3.70",
+        "phpunit/phpunit": "^10.5 || ^11.0"
     },
     "suggest": {
         "a1comms/php-gds": "Provides legacy Datastore support",
@@ -51,6 +52,11 @@
         "files": [
             "src/preload.php"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AffordableMobiles\\GServerlessSupportLaravel\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "laravel": {

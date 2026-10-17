@@ -40,7 +40,12 @@ class ApiKeyAuthenticator implements RequestAuthenticatorInterface
             $body    = (string) $request->getBody();
             $pair    = rawurlencode($this->name).'='.rawurlencode($this->key);
             $newBody = '' !== $body ? $body.'&'.$pair : $pair;
-            $request = $request->withBody(Utils::streamFor($newBody));
+            $stream  = Utils::streamFor($newBody);
+
+            $request = $request
+                ->withBody($stream)
+                ->withHeader('Content-Length', (string) $stream->getSize())
+            ;
 
             if (!$request->hasHeader('Content-Type')) {
                 $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');

@@ -11,6 +11,10 @@ use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\TokenCache;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Psr7\Message;
+use Illuminate\Http\Client\Factory as HttpClientFactory;
+use Illuminate\Http\Client\RequestException as LaravelRequestException;
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -119,24 +123,57 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
             $clientConfig['proxy'] = 'http://'.$clientConfig['proxy'];
         }
 
-        $client = new GuzzleClient($clientConfig);
+        $http = class_exists(Http::class) && null !== Facade::getFacadeApplication()
+            ? Http::getFacadeRoot()
+            : null;
 
-        try {
-            $response = $client->post($this->tokenUrl, $requestOptions);
-        } catch (BadResponseException $e) {
-            $this->handleTokenErrorResponse($e->getResponse());
-        } catch (\Throwable $e) {
-            $host = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+        if ($http instanceof HttpClientFactory) {
+            $pendingRequest = $http->withOptions(array_merge($clientConfig, [
+                '_gserverless_auth_applied' => true,
+            ]));
 
-            throw new TokenExchangeException(
-                message: \sprintf("[%s] POST -> Connection Error\nURL: %s\nResponse summary:\n%s", $host, $this->tokenUrl, $e->getMessage()),
-                code: (int) $e->getCode(),
-                previous: $e,
-                tokenEndpoint: $this->tokenUrl,
-            );
+            try {
+                $response = $pendingRequest->send('POST', $this->tokenUrl, $requestOptions);
+                if ($response->failed()) {
+                    $this->handleTokenErrorResponse($response->toPsrResponse());
+                }
+                $psrResponse = $response->toPsrResponse();
+            } catch (BadResponseException $e) {
+                $this->handleTokenErrorResponse($e->getResponse());
+            } catch (LaravelRequestException $e) {
+                $this->handleTokenErrorResponse($e->response->toPsrResponse());
+            } catch (\Throwable $e) {
+                $host = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+
+                throw new TokenExchangeException(
+                    message: \sprintf("[%s] POST -> Connection Error\nURL: %s\nResponse summary:\n%s", $host, $this->tokenUrl, $e->getMessage()),
+                    code: (int) $e->getCode(),
+                    previous: $e,
+                    tokenEndpoint: $this->tokenUrl,
+                );
+            }
+        } else {
+            $client = new GuzzleClient(array_merge($clientConfig, [
+                '_gserverless_auth_applied' => true,
+            ]));
+
+            try {
+                $psrResponse = $client->post($this->tokenUrl, $requestOptions);
+            } catch (BadResponseException $e) {
+                $this->handleTokenErrorResponse($e->getResponse());
+            } catch (\Throwable $e) {
+                $host = parse_url($this->tokenUrl, PHP_URL_HOST) ?? 'unknown-host';
+
+                throw new TokenExchangeException(
+                    message: \sprintf("[%s] POST -> Connection Error\nURL: %s\nResponse summary:\n%s", $host, $this->tokenUrl, $e->getMessage()),
+                    code: (int) $e->getCode(),
+                    previous: $e,
+                    tokenEndpoint: $this->tokenUrl,
+                );
+            }
         }
 
-        $body = (string) $response->getBody();
+        $body = (string) $psrResponse->getBody();
         $data = json_decode($body, true);
 
         $token = \is_array($data) ? data_get($data, $this->tokenResponseKey) : null;
@@ -147,7 +184,7 @@ abstract class AbstractOAuth2Authenticator implements RequestAuthenticatorInterf
             throw new TokenExchangeException(
                 message: \sprintf("[%s] POST -> 200 OK\nURL: %s\nResponse summary:\nMissing token response key [%s]", $host, $this->tokenUrl, $this->tokenResponseKey),
                 tokenEndpoint: $this->tokenUrl,
-                response: $response,
+                response: $psrResponse,
             );
         }
 

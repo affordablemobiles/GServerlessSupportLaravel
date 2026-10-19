@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Integration\JWT\Signer;
 
+use Google\Auth\ApplicationDefaultCredentials;
+use Google\Auth\Credentials\GCECredentials;
+use Google\Auth\Iam;
 use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signer\Key;
 
@@ -67,23 +70,22 @@ class IAMSigner implements Signer
      */
     public function createHash($payload, Key $key)
     {
-        $client = new \Google_Client();
+        $iam = new Iam();
 
-        $client->setApplicationName('GServerlessSupportLaravel-JWT/0.1');
-        $client->useApplicationDefaultCredentials();
-        $client->addScope('https://www.googleapis.com/auth/cloud-platform');
+        $gce = new GCECredentials();
+        if ($gce->onGce()) {
+            $accessToken = $gce->fetchAuthToken()['access_token'];
+        } else {
+            $creds = ApplicationDefaultCredentials::getCredentials([
+                'https://www.googleapis.com/auth/cloud-platform',
+            ]);
+            $accessToken = $creds->fetchAuthToken()['access_token'];
+        }
 
-        $service = new \Google_Service_IAMCredentials($client);
+        $serviceAccount   = $key->contents();
+        $signedBlobBase64 = $iam->signBlob($serviceAccount, $accessToken, $payload);
 
-        $keyID = \sprintf('projects/-/serviceAccounts/%s', $key->contents());
-
-        $requestBody = new \Google_Service_IAMCredentials_SignBlobRequest();
-
-        $requestBody->setPayload(base64_encode($payload));
-
-        $response = $service->projects_serviceAccounts->signBlob($keyID, $requestBody);
-
-        return base64_decode($response->getSignedBlob(), true);
+        return base64_decode($signedBlobBase64, true);
     }
 
     /**

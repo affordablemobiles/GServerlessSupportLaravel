@@ -34,9 +34,11 @@ Based on original work for App Engine ([GaeSupportL5](https://github.com/shpasse
     * **Cloud Trace** (via [opentelemetry](https://github.com/open-telemetry/opentelemetry-php)) (see [docs/trace.md](docs/trace.md))
         * Distributed trace propagation via [Guzzle](src/AffordableMobiles/GServerlessSupportLaravel/Trace/Instrumentation/Guzzle/GuzzleInstrumentation.php#L70).
         * Integration with [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar) (optional, see [docs/debugbar.md](docs/debugbar.md)).
-* **Identity Aware Proxy (IAP)** integration
+* **Identity Aware Proxy (IAP) & Outbound Authentication**
     * **Inbound authentication** via Laravel's Guards (optional, see [docs/iap-auth-verify.md](docs/iap-auth-verify.md)).
-    * **Outbound authentication** via Guzzle middleware (optional, see [docs/guzzle.md](docs/guzzle.md#authtokenmiddleware)).
+    * **Outbound authentication** via Guzzle middleware (optional, see [docs/guzzle.md](docs/guzzle.md#authtokenmiddleware) and [docs/guzzle-auth.md](docs/guzzle-auth.md)).
+* **Laravel HTTP Client integration**
+    * Unified connection retries, Google authentication, and automated Error Reporting telemetry via `HttpClientServiceProvider` (optional, see [docs/http-client.md](docs/http-client.md)).
 * **Cloud SQL** integration
     * **IAM Authentication** (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#iam-authentication)).
     * Automatic failover between read replicas (optional, see [docs/cloud-sql.md](docs/cloud-sql.md#multiple-read-replicas)).

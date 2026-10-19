@@ -1,0 +1,617 @@
+# Outbound Authentication & Token Management
+
+`AuthTokenMiddleware` provides unified, standards-compliant outbound authentication for both Guzzle and Laravel's HTTP Client (`Http::...`).
+
+It supports Google IAP/OIDC, Google OAuth2, OAuth 2.0 (RFC 6749 / RFC 7523), OAuth 1.0a Token-Based Authentication (RFC 5849), and custom API keys.
+
+---
+
+## Table of Contents
+
+- [Overview & Architecture](#overview--architecture)
+- [Declarative Configuration](#declarative-configuration)
+  - [Audience Map Location](#audience-map-location)
+  - [URL & Path Matching with UriMatcher](#url--path-matching-with-urimatcher)
+- [Supported Authentication Strategies](#supported-authentication-strategies)
+  - [1. Google OIDC (IAP & Cloud Run)](#1-google-oidc-iap--cloud-run)
+  - [2. Google OAuth2 (Google APIs)](#2-google-oauth2-google-apis)
+  - [3. OAuth 2.0 Client Credentials (RFC 6749 §4.4)](#3-oauth-20-client-credentials-rfc-6749-44)
+  - [4. OAuth 2.0 JWT Bearer (RFC 7523)](#4-oauth-20-jwt-bearer-rfc-7523)
+  - [5. OAuth 2.0 Password (RFC 6749 §4.3)](#5-oauth-20-password-rfc-6749-43)
+  - [6. OAuth 2.0 Refresh Token (RFC 6749 §6)](#6-oauth-20-refresh-token-rfc-6749-6)
+  - [7. OAuth 1.0a Token-Based Authentication (RFC 5849)](#7-oauth-10a-token-based-authentication-rfc-5849)
+  - [8. API Key Injection](#8-api-key-injection)
+- [Keyless JWT Signing Architecture](#keyless-jwt-signing-architecture)
+  - [Tier 1 (Recommended): Google IAM signBlob + Public JWKS](#tier-1-recommended-google-iam-signblob--public-jwks)
+  - [Tier 2: Google Cloud KMS Asymmetric Signing](#tier-2-google-cloud-kms-asymmetric-signing)
+  - [Tier 3: In-Memory OpenSSL PEM Key](#tier-3-in-memory-openssl-pem-key)
+- [Token Caching & Lifecycle](#token-caching--lifecycle)
+  - [Collision-Free Caching](#collision-free-caching)
+  - [Dynamic TTL & Safety Margin](#dynamic-ttl--safety-margin)
+  - [Automatic 401 Re-Authentication Retry](#automatic-401-re-authentication-retry)
+- [Per-Request Overrides with OutboundAuth](#per-request-overrides-with-outboundauth)
+- [Exception Hierarchy & SRE Visibility](#exception-hierarchy--sre-visibility)
+
+---
+
+## Overview & Architecture
+
+Outbound authentication operates as a pluggable strategy pipeline implementing `RequestAuthenticatorInterface`:
+
+```
+Outbound HTTP Request
+         │
+         ▼
+[ AuthTokenMiddleware ]
+         │
+         ├─► Per-Request 'auth' Option (OutboundAuth DTO) ──► Uses Specified Authenticator
+         │
+         └─► Default Dynamic Resolution (UriMatcher)
+                   │
+                   ├─► Match by Host + Path Pattern (config/auth.php)
+                   ├─► Fallback to Wildcards (*.internal.net)
+                   └─► Auto-Detect Cloud Functions (scheme://host/path OIDC)
+```
+
+Requests can be configured either **declaratively** via your application's audience configuration map, or **imperatively per-request** using the `OutboundAuth` helper class.
+
+---
+
+## Declarative Configuration
+
+### Audience Map Location
+
+In `config/gserverlesssupport.php`, configure the config path pointing to your audience mapping array:
+
+```php
+return [
+    'auth' => [
+        'middleware' => [
+            'audience_map_location' => 'auth.middleware.audience',
+        ],
+    ],
+];
+```
+
+### URL & Path Matching with UriMatcher
+
+In `config/auth.php` (under `middleware.audience`), define your domain and path authentication profiles. `UriMatcher` resolves configurations using specificity precedence:
+
+1. Exact Host + Exact Path (`api.example.com/v1/checkout`)
+2. Exact Host + Wildcard Path (`api.example.com/v1/*`)
+3. Exact Host Catch-All (`api.example.com`)
+4. Wildcard Host + Path (`*.internal.net/v1/*`)
+5. Wildcard Host Catch-All (`*.internal.net`)
+6. Global Catch-All (`*`)
+
+---
+
+## Supported Authentication Strategies
+
+### 1. Google OIDC (IAP & Cloud Run)
+
+Injects OpenID Connect ID tokens issued by Google metadata server for authenticating against IAP-secured applications or Cloud Run services.
+
+```php
+'audience' => [
+    // Standard string syntax
+    'service.example.com' => '123456789-abcdef.apps.googleusercontent.com',
+
+    // Or explicit driver syntax
+    'secure.example.com' => [
+        'driver'   => 'google_oidc',
+        'audience' => '123456789-abcdef.apps.googleusercontent.com',
+    ],
+],
+```
+
+### 2. Google OAuth2 (Google APIs)
+
+Injects Google OAuth2 access tokens for Google APIs (e.g. Cloud Storage, BigQuery).
+
+```php
+'audience' => [
+    'storage.googleapis.com' => 'oauth2',
+],
+```
+
+### 3. OAuth 2.0 Client Credentials (RFC 6749 §4.4)
+
+Exchanges client credentials at an external authorization server for an access token.
+
+```php
+'api.example.com' => [
+    'driver'        => 'oauth2_client_credentials',
+    'token_url'     => 'https://auth.example.com/oauth/v2/token',
+    'client_id'     => env('EXAMPLE_CLIENT_ID'),
+    'client_secret' => env('EXAMPLE_CLIENT_SECRET'),
+    'scope'         => 'read write',
+    'auth_method'   => 'client_secret_basic', // 'client_secret_basic', 'client_secret_post', or 'client_secret_json'
+    'extra_resource_headers' => [
+        'X-Client-ID' => env('EXAMPLE_CLIENT_ID'),
+    ],
+],
+```
+
+### 4. OAuth 2.0 JWT Bearer (RFC 7523)
+
+Generates and signs a JSON Web Token assertion and exchanges it for an access token at the authorization server.
+
+```php
+'partner.example.com' => [
+    'driver'     => 'oauth2_jwt_bearer',
+    'token_url'  => 'https://auth.partner.example.com/oauth2/token',
+    'grant_type' => 'client_credentials', // sends client_assertion
+    'basic_auth' => env('PARTNER_BASIC_AUTH'), // optional [username, password]
+    'signer'     => [
+        'driver'          => 'iam',
+        'service_account' => 'integration@my-gcp-project.iam.gserviceaccount.com',
+    ],
+    'claims' => [
+        'iss' => 'my-app@my-gcp-project.iam.gserviceaccount.com',
+        'sub' => 'my-client-id',
+        'aud' => 'https://auth.partner.example.com',
+    ],
+    'extra_resource_headers' => [
+        'X-Vendor-Client-ID' => env('PARTNER_CLIENT_ID'),
+    ],
+],
+```
+
+### 5. OAuth 2.0 Password (RFC 6749 §4.3)
+
+Resource Owner Password Credentials Grant with credential-isolated caching.
+
+```php
+'api.example.com' => [
+    'driver'        => 'oauth2_password',
+    'token_url'     => 'https://auth.example.com/oauth/token',
+    'client_id'     => env('EXAMPLE_CLIENT_ID'),
+    'client_secret' => env('EXAMPLE_CLIENT_SECRET'),
+    'username'      => env('EXAMPLE_USERNAME'),
+    'password'      => env('EXAMPLE_PASSWORD'),
+],
+```
+
+### 6. OAuth 2.0 Refresh Token (RFC 6749 §6)
+
+Exchanges a refresh token for an access token, with support for rotation callbacks.
+
+```php
+'ads.example.com' => [
+    'driver'             => 'oauth2_refresh_token',
+    'token_url'          => 'https://login.example.com/oauth2/v2.0/token',
+    'client_id'          => env('ADS_CLIENT_ID'),
+    'client_secret'      => env('ADS_CLIENT_SECRET'),
+    'refresh_token'      => env('ADS_REFRESH_TOKEN'),
+    // Note: Use an invokable class name or [Class, method] in config files to support `config:cache`!
+    'on_token_refreshed' => App\Auth\AdsTokenRefreshedHandler::class,
+],
+```
+
+### 7. OAuth 1.0a Token-Based Authentication (RFC 5849)
+
+Per-request HMAC-SHA256 signature generation for Token-Based Authentication (such as ERP RESTlets).
+
+```php
+'*.restlets.example.com' => [
+    'driver'           => 'oauth1_tba',
+    'consumer_key'     => env('ERP_CONSUMER_KEY'),
+    'consumer_secret'  => env('ERP_CONSUMER_SECRET'),
+    'token_id'         => env('ERP_TOKEN_ID'),
+    'token_secret'     => env('ERP_TOKEN_SECRET'),
+    'realm'            => env('ERP_ACCOUNT_ID'),
+    'signature_method' => 'HMAC-SHA256',
+],
+```
+
+#### RFC 5849 Parameter Normalization
+- **Signature Base String (§3.4.1.3)**: Includes the request HTTP method, normalized URL, all query string parameters (`?script=...&deploy=...`), and OAuth parameters.
+- **Authorization Header (§3.5.1)**: Emits only `realm` and `oauth_*` parameters in the header. **Query parameters remain in the URL query string and are not duplicated in the header.**
+
+### 8. API Key & Multi-Header / Body Injection
+
+Injects static API keys or multiple custom headers into requests, or passes keys via query string or form body:
+
+```php
+// Standard single header:
+'api.thirdparty.com' => [
+    'driver' => 'api_key',
+    'key'    => env('THIRDPARTY_API_KEY'),
+    'name'   => 'X-API-Key',
+    'in'     => 'header',
+],
+
+// Multi-header authentication:
+'api.multiheader.com' => [
+    'driver'        => 'api_key',
+    'key'           => env('PRIMARY_SUBSCRIPTION_KEY'),
+    'name'          => 'Ocp-Apim-Subscription-Key',
+    'extra_headers' => [
+        'X-Tenant-Id'   => env('PARTNER_TENANT_ID'),
+        'X-API-Version' => '1.0',
+    ],
+],
+
+// Injected into form body:
+'api.sms.com' => [
+    'driver' => 'api_key',
+    'key'    => env('SMS_API_KEY'),
+    'name'   => 'apiKey',
+    'in'     => 'form_params',
+],
+```
+
+### 9. HTTP Basic Auth (Standard & Pre-Encoded)
+
+Supports username and password, as well as pre-encoded base64 tokens:
+
+```php
+// Standard username & password:
+'legacy.service.com' => [
+    'driver'   => 'basic',
+    'username' => env('SERVICE_USERNAME'),
+    'password' => env('SERVICE_PASSWORD'),
+],
+
+// Pre-encoded base64 string from Secret Manager:
+'api.partner.com' => [
+    'driver'   => 'basic',
+    'username' => env('PRE_ENCODED_BASIC_TOKEN'), // e.g. base64(apiKey:secret)
+],
+```
+
+### 10. X-WSSE UsernameToken (PasswordDigest)
+
+Implements the OASIS WS-Security REST profile, generating a random 32-character nonce, ISO-8601 timestamp, and SHA-1 password digest per request:
+
+```php
+'api.marketing.com' => [
+    'driver'   => 'wsse',
+    'username' => env('MARKETING_API_USER'),
+    'secret'   => env('MARKETING_API_SECRET'),
+],
+```
+
+### 11. Request Payload & Body Signature (HMAC / RSA)
+
+Computes a cryptographic signature over the outgoing request body (and an optional timestamp header) using either HMAC-SHA256, OpenSSL RSA keys, or Cloud KMS:
+
+```php
+// HMAC-SHA256 signature over request body:
+'api.webhook.com' => [
+    'driver'      => 'payload_signature',
+    'key'         => env('WEBHOOK_HMAC_SECRET'),
+    'header_name' => 'hmac-signature',
+    'algorithm'   => 'sha256',
+],
+
+// Asymmetric RSA signature over timestamp + body with custom separator:
+'partner.ecom.com' => [
+    'driver'           => 'payload_signature',
+    'key'              => env('ECOM_RSA_PRIVATE_KEY'),
+    'header_name'      => 'x-signature',
+    'timestamp_header' => 'x-timestamp',
+    'body_separator'   => '|',
+    'signer_type'      => 'openssl',
+    'extra_headers'    => [
+        'x-partner-id' => 'my-partner-id',
+    ],
+],
+```
+
+### 12. Client Certificates (mTLS) & Composable Auth
+
+`MtlsAuthenticator` and `CertificateMaterializer` provide two-tier client certificate support for serverless runtimes:
+
+#### Tier 1: In-Memory cURL Blobs (Preferred & Default)
+In PHP 8.1+ with cURL 7.71.0+, cURL supports `CURLOPT_SSLCERT_BLOB` and `CURLOPT_SSLKEY_BLOB`. When secrets from Secret Manager are loaded as PEM strings in environment variables:
+- `MtlsAuthenticator` injects the raw PEM strings directly into cURL in-memory.
+- **Zero disk writes and zero temporary files**: Private keys never touch tmpfs or disk.
+
+```php
+'gateway.example.com' => [
+    'driver'        => 'mtls',
+    'cert'          => env('CLIENT_CERT_PEM'), // Raw PEM string in environment!
+    'key'           => env('CLIENT_KEY_PEM'),  // Optional if cert bundle contains private key
+    'cert_password' => env('CLIENT_CERT_PASSWORD'),
+],
+```
+
+#### Tier 2: Content-Addressed Disk Materialization (Fallback & External Clients)
+If an existing file path is supplied (e.g. `resource_path('certs/client.pem')`), or if an external client (such as PHP's native `SoapClient` or a non-cURL stream handler) requires a physical file on disk:
+- `CertificateMaterializer::materializePem()` normalizes escaped newlines and writes the certificate atomically to `/tmp/cache/GServerlessSupportLaravel/certs/cert_<sha256>.pem` with `chmod 0600`.
+- Because the file is content-addressed by its SHA-256 hash, thousands of requests across a serverless instance reuse the exact same file on disk, eliminating the `/tmp` file leaks caused by `tempnam()`.
+- To force file materialization, pass `'in_memory' => false`.
+
+For APIs that require **both** transport-level mTLS and application-layer auth (e.g. OAuth 2.0 or Basic Auth):
+
+```php
+'secure.partner.com' => [
+    'driver'         => 'chain',
+    'authenticators' => [
+        [
+            'driver' => 'mtls',
+            'cert'   => env('PARTNER_CLIENT_CERT_PEM'),
+            'key'    => env('PARTNER_PRIVATE_KEY_PEM'),
+        ],
+        [
+            'driver'        => 'oauth2_client_credentials',
+            'token_url'     => 'https://secure.partner.com/oauth/token',
+            'client_id'     => env('PARTNER_CLIENT_ID'),
+            'client_secret' => env('PARTNER_CLIENT_SECRET'),
+        ],
+    ],
+],
+```
+
+Transport options (`proxy`, `verify`, `mtls`) can also be added directly to any host configuration, and are automatically forwarded to both the resource request and internal token exchange calls:
+
+```php
+'api.financial.com' => [
+    'driver'        => 'oauth2_client_credentials',
+    'token_url'     => 'https://api.financial.com/oauth/token',
+    'client_id'     => env('FIN_CLIENT_ID'),
+    'client_secret' => env('FIN_CLIENT_SECRET'),
+    // Transport options applied to both token requests and API requests:
+    'proxy'         => env('OUTBOUND_PROXY_URL'),
+    'verify'        => resource_path('certs/ca-bundle.pem'),
+],
+```
+
+---
+
+## Extensibility: Custom Internal Drivers & Signers
+
+To keep internal vendor protocols inside private repositories without polluting this public library, `GServerlessSupportLaravel` provides two extension seams:
+
+### 1. Custom Authenticator Drivers (`OutboundAuth::extend()`)
+
+In an application service provider:
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+
+// Register custom driver creator:
+OutboundAuth::extend('my_custom_vendor', function (array $config) {
+    return new MyCustomVendorAuthenticator(
+        apiKey: $config['key'],
+        secret: $config['secret'],
+    );
+});
+```
+
+Configuration arrays can now reference `'driver' => 'my_custom_vendor'` directly:
+
+```php
+'api.internal-vendor.com' => [
+    'driver' => 'my_custom_vendor',
+    'key'    => env('VENDOR_KEY'),
+    'secret' => env('VENDOR_SECRET'),
+],
+```
+
+Alternatively, specify a Fully Qualified Class Name (FQCN) implementing `RequestAuthenticatorInterface` directly in the `'driver'` key:
+
+```php
+'api.custom.com' => [
+    'driver' => \App\Auth\CustomVendorAuthenticator::class,
+    'token'  => env('CUSTOM_TOKEN'),
+],
+```
+
+### 2. Custom JWT Signers (`OutboundAuth::extendSigner()`)
+
+If an integration requires a proprietary JWT signing mechanism (e.g. HS256 shared secret signing or hardware token):
+
+```php
+OutboundAuth::extendSigner('custom_hsm', function (array $signerConfig) {
+    return new CustomHsmSigner($signerConfig['slot_id']);
+});
+```
+
+And in your `oauth2_jwt_bearer` profile:
+
+```php
+'partner.example.com' => [
+    'driver'    => 'oauth2_jwt_bearer',
+    'token_url' => 'https://auth.partner.com/token',
+    'signer'    => [
+        'driver'  => 'custom_hsm',
+        'slot_id' => 'slot-1',
+    ],
+    'claims'    => [...],
+],
+```
+
+---
+
+## Keyless JWT Signing Architecture
+
+For RFC 7523 JWT Bearer flows, `GServerlessSupportLaravel` supports three signing tiers:
+
+### Tier 1 (Recommended): Google IAM signBlob + Public JWKS
+
+**Zero Stored Private Keys**: The application runtime builds the unsigned JWT payload and delegates signing to the Google Cloud IAM Credentials API (`projects/-/serviceAccounts/{email}:signBlob`) using its attached service account identity.
+
+1. Provision a dedicated Google Service Account for the integration: `integration-partner@my-project.iam.gserviceaccount.com`.
+2. Grant your Cloud Run / App Engine runtime service account `roles/iam.serviceAccountTokenCreator` on that target service account.
+3. Configure the signer in your audience profile:
+   ```php
+   'signer' => [
+       'driver'          => 'iam',
+       'service_account' => 'integration-partner@my-project.iam.gserviceaccount.com',
+   ],
+   ```
+4. Provide the third party with Google's public JWKS endpoint:
+   `https://www.googleapis.com/service_accounts/v1/metadata/jwk/{SERVICE_ACCOUNT_EMAIL}`
+
+> ⚠️ **Critical Requirement for Third Parties**:
+> Google automatically rotates system-managed service account signing keys roughly every 15 days. The third-party OAuth server **must dynamically poll and cache the JWKS endpoint** respecting HTTP Cache-Control headers. If a partner requires uploading a static certificate or public key file, do not use Tier 1; use Tier 2 instead.
+
+### Tier 2: Google Cloud KMS Asymmetric Signing
+
+When a third party requires uploading a static public key (`.pem`) or registering a Certificate Signing Request (CSR):
+
+1. Create an asymmetric signing key in Google Cloud KMS (`RSA_SIGN_PKCS1_2048_SHA256`).
+2. Export the public key via `gcloud kms keys versions get-public-key` and upload it to the partner portal.
+3. Configure `KmsSigner`:
+   ```php
+   'signer' => [
+       'driver'      => 'kms',
+       'key_version' => 'projects/my-project/locations/europe-west1/keyRings/integrations/cryptoKeys/partner-key/cryptoKeyVersions/1',
+   ],
+   ```
+Private key material never leaves the Cloud KMS Hardware Security Module (HSM).
+
+### Tier 3: In-Memory OpenSSL PEM Key
+
+If an encrypted or plain PEM private key must be loaded from Secret Manager or environment:
+
+```php
+'signer' => [
+    'driver'      => 'openssl',
+    'private_key' => env('PARTNER_PRIVATE_KEY_PEM'),
+    'passphrase'  => env('PARTNER_KEY_PASSPHRASE'),
+],
+```
+
+Keys are processed entirely in memory via `openssl_sign` and never written to temporary files on disk.
+
+---
+
+## Token Caching & Lifecycle
+
+### Collision-Free Caching
+Tokens are stored in the serverless instance-scoped cache (`/tmp/cache/GServerlessSupportLaravel`).
+Cache keys are computed using a SHA-256 hash across all identity dimensions:
+`outbound_token_<hash(driver, token_url, client_id, scopes, subject, user_hash)>`
+
+This guarantees that multi-tenant or multi-credential calls hitting the same token endpoint never overwrite each other.
+
+### Dynamic TTL & Safety Margin
+Tokens are cached for:
+$$\text{TTL} = \max(30, \text{expires\_in} - 120)$$
+
+The 120-second safety margin ensures tokens are refreshed before they can expire mid-flight during slow outbound requests.
+
+### Automatic 401 Re-Authentication Retry
+If an external provider revokes an access token before its scheduled expiration and returns `401 Unauthorized`, `AuthTokenMiddleware` automatically:
+1. Evicts the token from the instance-scoped cache store.
+2. Negotiates a fresh token with the provider.
+3. Re-authenticates and retries the outbound request once.
+
+---
+
+---
+
+## Configuration Architecture: The 4 Tiers
+
+To accommodate everything from standard internal services to complex multi-tenant connectors, `GServerlessSupportLaravel` supports **four configuration tiers**:
+
+### Tier 1: Global Declarative Host Map
+Configured in `config/auth.php` (under `middleware.audience`). Best for static 1:1 host maps, Google IAP OIDC audiences, and single-tenant providers.
+
+> ⚠️ **Config Caching Note (`php artisan config:cache` / `gserverless:prepare`)**:
+> Configuration files must not contain raw `Closure`s. When specifying callbacks like `on_token_refreshed` or dynamic `refresh_token`, use an **invokable class string** (e.g. `App\Auth\TokenRefreshedHandler::class`), which the container resolves automatically via `app($class)`.
+
+### Tier 2: Request-Scoped Runtime Registration (Route Middleware / Controller Hook)
+When an application routes requests based on incoming parameters (such as `themeCode`, `brand`, or `testOrder`), credentials vary dynamically per request. A static hostname map in `config/auth.php` cannot distinguish between multiple brands calling the same partner hostname.
+
+Use `OutboundAuth::registerForRequest()` in a Route Middleware or Base Controller:
+
+```php
+namespace App\Http\Middleware;
+
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Closure;
+use Illuminate\Http\Request;
+
+class BindConnectorAuthMiddleware
+{
+    public function handle(Request $request, Closure $next, string $connectorName)
+    {
+        $themeCode = $request->input('themeCode', 'default');
+        $connector = config("{$themeCode}-{$connectorName}.connectors.{$connectorName}");
+
+        if (!empty($connector['auth'])) {
+            OutboundAuth::registerForRequest('api.partner.com/*', $connector['auth']);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+Downstream models and services simply execute `Http::post('https://api.partner.com/...', ...)` without any auth boilerplate. The request-scoped registry is automatically cleared when the request finishes.
+
+### Tier 3: Scoped Http Client Macros
+Co-located inside a feature Service Provider:
+
+```php
+Http::macro('partnerClient', function () {
+    return Http::withOutboundAuth(config('services.partner.auth'))
+        ->baseUrl(config('services.partner.base_url'));
+});
+
+// Usage:
+$response = Http::partnerClient()->post('/v1/orders', $data);
+```
+
+### Tier 4: Per-Request Options & DTOs
+For ad-hoc calls or dynamic per-order credentials, pass an authenticator directly using `Http::withOutboundAuth()`:
+
+```php
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
+use Illuminate\Support\Facades\Http;
+
+$response = Http::withOutboundAuth(OutboundAuth::password(
+    tokenUrl: 'https://auth.example.com/oauth/token',
+    clientId: $brandConfig['client_id'],
+    clientSecret: $brandConfig['client_secret'],
+    username: $brandConfig['username'],
+    password: $brandConfig['password'],
+))->post('https://api.example.com/v1/resource', $payload);
+```
+
+Or when using raw Guzzle:
+
+```php
+$response = $guzzle->post('https://api.example.com/v1/resource', [
+    'outbound_auth' => OutboundAuth::password(...),
+    'json'          => $payload,
+]);
+```
+
+For client certificates (mTLS), pass certificates directly using `Http::withClientCert()`. The underlying `CertificateMaterializer` normalizes newlines and reuses content-addressed cache files on tmpfs:
+
+```php
+$response = Http::withClientCert(
+    cert: env('CLIENT_CERT_PEM'), // Raw PEM string or file path
+    key: env('CLIENT_KEY_PEM'),   // Optional if combined in cert bundle
+    certPassword: env('CLIENT_CERT_PASSWORD'),
+)->post('https://secure.gateway.example.com/v1/session', $payload);
+```
+
+> 💡 **Why `outbound_auth`?**
+> When passing custom auth configurations to Guzzle, use `'outbound_auth'` rather than `'auth'`. Guzzle's native `Client::applyOptions()` intercepts array configs in `$options['auth']` before middleware runs, treating them as Basic Auth. Using `'outbound_auth'` (or `Http::withOutboundAuth()`) ensures custom authenticators pass cleanly to `AuthTokenMiddleware`.
+
+---
+
+## Exception Hierarchy & SRE Visibility
+
+Authentication failures throw strongly typed exceptions under `AffordableMobiles\GServerlessSupportLaravel\Auth\Exception`:
+
+```
+\RuntimeException
+ └── OutboundAuthenticationException
+      ├── ConfigurationException              // Missing or invalid driver credentials
+      ├── SigningException                    // IAM signBlob / KMS sign / OpenSSL failure
+      ├── TokenExchangeException              // Provider token endpoint returned 4xx/5xx or invalid payload
+      │    └── InvalidClientCredentialsException // Specifically 400 invalid_client / 401 on token endpoint
+      └── TargetUnauthorizedException         // Target resource returned 401/403 even after auth injection
+```
+
+- **Sensitive Data Redaction**: Passwords and client secrets are automatically omitted from exception messages and stack traces.
+- **SRE Integration**: When caught by `HttpClientServiceProvider` / `OutboundHttpTelemetryListener`, exceptions report to Google Cloud Error Reporting with clean, host-isolated signatures:
+  `[auth.example.com] POST /oauth/v2/token -> 401 Unauthorized`

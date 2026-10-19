@@ -1,5 +1,8 @@
 # Guzzle Integration
 
+> **Using Laravel's HTTP Client (`Http::...`)?**
+> See [docs/http-client.md](http-client.md) for the bundled `HttpClientServiceProvider`, which automatically registers retry middleware, auth token injection, and Error Reporting telemetry globally for Laravel's HTTP Client.
+
 This package provides the following Guzzle middleware:
 
 * [GuzzleRetryMiddleware](guzzle.md#guzzleretrymiddleware)
@@ -59,7 +62,9 @@ $res = $client->get('https://example-api.appspot.com/tasks/list', [
 
 ## AuthTokenMiddleware
 
-[AuthTokenMiddleware](../src/AffordableMobiles/GServerlessSupportLaravel/Auth/Token/Middleware/AuthTokenMiddleware.php) provides a Guzzle compatible middleware that will inject Google IAP compatible OIDC tokens, or OAuth2 tokens (compatible with Google's own APIs) into outbound requests.
+[AuthTokenMiddleware](../src/AffordableMobiles/GServerlessSupportLaravel/Auth/Token/Middleware/AuthTokenMiddleware.php) provides a Guzzle compatible middleware that will inject Google IAP compatible OIDC tokens, Google OAuth2 tokens, OAuth 2.0 (RFC 6749 / RFC 7523), OAuth 1.0a TBA (RFC 5849), or custom API keys into outbound requests.
+
+> **Full Documentation**: See [docs/guzzle-auth.md](guzzle-auth.md) for detailed configuration, RFC standards, Keyless JWT signing with Google IAM, and per-request overrides.
 
 Once enabled, it looks for an "auth" value in the client options:
 * `google_oidc` for IAP compatible OIDC tokens.
@@ -90,10 +95,27 @@ return [
 
     'middleware' => [
         'audience' => [
+            // Standard exact hostname mapping
             'api.example.com'                   => '111111-aaaaaaaaa.apps.googleusercontent.com',
             'example-api.appspot.com'           => '222222-bbbbbbbbb.apps.googleusercontent.com',
 
+            // OAuth2 token injection
             'storage.googleapis.com'            => 'oauth2',
+
+            // Path-specific audience mapping (highest specificity wins)
+            'service.internal.net/v1/*'         => 'v1-audience.apps.googleusercontent.com',
+            'service.internal.net/v2/*'         => 'v2-audience.apps.googleusercontent.com',
+            'service.internal.net'              => 'default-audience.apps.googleusercontent.com',
+
+            // Wildcard host mapping
+            '*.cloudfunctions.net'              => 'cloudfunctions-audience.apps.googleusercontent.com',
+            '*.internal.net'                    => 'internal-audience.apps.googleusercontent.com',
+
+            // Or nested path mapping per host
+            'microservice.internal.net' => [
+                '/admin/*'                      => 'admin-audience.apps.googleusercontent.com',
+                '*'                             => 'general-audience.apps.googleusercontent.com',
+            ],
         ],
     ],
 ];

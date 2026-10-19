@@ -9,7 +9,6 @@ use Google\Cloud\Core\ExponentialBackoff;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Promise\Create;
-use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\RequestInterface;
@@ -62,8 +61,14 @@ class GuzzleRetryMiddleware
     /**
      * @param array<string,mixed> $options
      */
-    public function __invoke(RequestInterface $request, array $options): Promise
+    public function __invoke(RequestInterface $request, array $options): PromiseInterface
     {
+        // Prevent duplicate retry middleware instances from running on the same request
+        if (!empty($options['_gserverless_retry_active']) && empty($options['retry_count'])) {
+            return ($this->nextHandler)($request, $options);
+        }
+        $options['_gserverless_retry_active'] = true;
+
         // Combine options with defaults specified by this middleware
         $options = array_replace($this->defaultOptions, $options);
 
@@ -223,7 +228,7 @@ class GuzzleRetryMiddleware
      *
      * @param array<string,mixed> $options
      */
-    protected function doRetry(RequestInterface $request, array $options, ?ResponseInterface $response = null): Promise
+    protected function doRetry(RequestInterface $request, array $options, ?ResponseInterface $response = null): PromiseInterface
     {
         // Increment the retry count
         ++$options['retry_count'];

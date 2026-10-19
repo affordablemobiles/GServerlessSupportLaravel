@@ -4,125 +4,147 @@ declare(strict_types=1);
 
 namespace AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware;
 
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Contracts\RequestAuthenticatorInterface;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Exception\OutboundAuthenticationException;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\AbstractOAuth2Authenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\ChainAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOAuth2Authenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\Outbound\GoogleOidcAuthenticator;
+use AffordableMobiles\GServerlessSupportLaravel\Auth\OutboundAuth;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OAuth2;
 use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\OIDC;
+use AffordableMobiles\GServerlessSupportLaravel\Support\CertificateMaterializer;
+use AffordableMobiles\GServerlessSupportLaravel\Support\UriMatcher;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
- * AuthTokenMiddleware is a Guzzle Middleware that adds an Authorization header
- * providing either an OIDC "id_token" or OAuth2 "access_token".
- *
- * Requests will be accessed with the authorization header:
- *
- * 'authorization' 'Bearer <value of auth_token>'
+ * AuthTokenMiddleware is a Guzzle Middleware that adds outbound authentication
+ * to requests, supporting Google IAP/OIDC, Google OAuth2, OAuth 2.0 (RFC 6749 / RFC 7523),
+ * OAuth 1.0a TBA (RFC 5849), and custom API keys.
  */
 class AuthTokenMiddleware
 {
     /**
-     * @var callable
+     * @var null|callable
      */
     private $audienceSource;
 
     /**
-     * @var callable
+     * @var null|callable
      */
     private $tokenTypeSource;
 
     /**
-     * Creates a new AuthTokenMiddleware.
-     *
-     * @param callable $audienceSource (optional) function to be called to return the target_audience for OIDC
+     * @var array<string,mixed>
      */
-    public function __construct(?callable $audienceSource = null, ?callable $tokenTypeSource = null)
-    {
+    private array $audienceMap = [];
+
+    /**
+     * @param null|callable       $audienceSource  (optional) callable to return target_audience for OIDC
+     * @param null|callable       $tokenTypeSource (optional) callable to return token_type
+     * @param array<string,mixed> $audienceMap     (optional) full audience / outbound auth mapping array
+     */
+    public function __construct(
+        ?callable $audienceSource = null,
+        ?callable $tokenTypeSource = null,
+        array $audienceMap = [],
+    ) {
         $this->audienceSource  = $audienceSource;
         $this->tokenTypeSource = $tokenTypeSource;
+        $this->audienceMap     = $audienceMap;
     }
 
     /**
-     * Updates the request with an Authorization header when auth is 'google_auth'.
-     *
-     *   use GuzzleHttp\Client;
-     *   use GuzzleHttp\HandlerStack;
-     *   use AffordableMobiles\GServerlessSupportLaravel\Auth\Token\Middleware\AuthTokenMiddleware;
-     *
-     *   $audienceSource = function(\Psr\Http\Message\UriInterface $request_uri) {
-     *       return "my-client-id@gcloud.internal";
-     *   }
-     *
-     *   $authMiddleware = new AuthTokenMiddleware($audienceSource);
-     *   $stack = HandlerStack::create();
-     *   $stack->push($authMiddleware);
-     *
-     *   $client = new Client([
-     *       'handler' => $stack,
-     *        // authorize all requests,
-     *        // "google_oidc" or "google_oauth2"
-     *       'auth' => 'google_oidc'
-     *   ]);
-     *
-     *   $res = $client->get('https://my-super-secure-app.appspot.com/tasks/list');
-     *
      * @return \Closure
      */
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            $authType = $options['auth'] ?? 'google_dynamic';
+            // Prevent duplicate authentication middleware instances from executing on the same request
+            if (!empty($options['_gserverless_auth_applied'])) {
+                return $handler($request, $options);
+            }
+            $options['_gserverless_auth_applied'] = true;
 
-            switch ($authType) {
-                case 'google_oidc':
-                    $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOIDCToken(
-                        $request->getUri()
-                    ));
+            $authenticator = $this->resolveAuthenticator($request, $options);
 
-                    break;
-
-                case 'google_oauth2':
-                    $request = $request->withHeader('authorization', 'Bearer '.$this->fetchOAuth2Token(
-                        $request->getUri()
-                    ));
-
-                    break;
-
-                case 'google_dynamic':
-                    $token = $this->fetchDynamicToken(
-                        $request->getUri()
-                    );
-                    if (!empty($token)) {
-                        $request = $request->withHeader('authorization', 'Bearer '.$token);
+            if (null !== $authenticator) {
+                try {
+                    $request = $authenticator->authenticate($request, $options);
+                    $request = $this->synchronizeRequestBody($request);
+                } catch (OutboundAuthenticationException $e) {
+                    if (config('gserverlesssupport.http-client.telemetry.enabled', true)) {
+                        report($e);
                     }
 
-                    break;
-
-                default:
-                    break;
+                    throw $e;
+                }
             }
 
-            return $handler($request, $options);
+            /** @var PromiseInterface $promise */
+            $promise = $handler($request, $options);
+
+            // Handle automatic single re-auth retry on 401 Unauthorized for cached OAuth2 tokens
+            $canRetry = empty($options['_auth_retried']) && (
+                $authenticator instanceof AbstractOAuth2Authenticator
+                || ($authenticator instanceof ChainAuthenticator && $authenticator->hasOAuth2Authenticator())
+            );
+
+            if ($canRetry) {
+                return $promise->then(
+                    function (ResponseInterface $response) use ($handler, $request, $options, $authenticator) {
+                        if (401 === $response->getStatusCode()) {
+                            return $this->retryWithFreshToken($handler, $request, $options, $authenticator);
+                        }
+
+                        return $response;
+                    },
+                    function (\Throwable $reason) use ($handler, $request, $options, $authenticator) {
+                        if ($reason instanceof BadResponseException && 401 === $reason->getResponse()->getStatusCode()) {
+                            return $this->retryWithFreshToken($handler, $request, $options, $authenticator);
+                        }
+
+                        throw $reason;
+                    }
+                );
+            }
+
+            return $promise;
         };
     }
 
     /**
-     * Provides a closure that can be pushed onto the handler stack,
-     *  with a default, reusable implementation.
+     * Factory creating a configured AuthTokenMiddleware instance from configuration.
      *
-     * Example:
-     * <code>$handlerStack->push(AuthTokenMiddleware::factory());</code>
-     *
-     * @param array<string,string> $audienceMap
+     * @param array<string,mixed> $audienceMap
      */
     public static function factory(array $audienceMap = []): self
     {
         if (empty($audienceMap)) {
-            $audienceMap = config(
-                config('gserverlesssupport.auth.middleware.audience_map_location'),
-                [],
-            );
+            try {
+                $location    = config('gserverlesssupport.auth.middleware.audience_map_location', 'auth.middleware.audience');
+                $audienceMap = (array) config($location, []);
+            } catch (\Throwable) {
+                $audienceMap = [];
+            }
         }
 
         $audienceSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            $matched = UriMatcher::match($audienceMap, $request_uri);
+
+            if (\is_array($matched)) {
+                $matchedAudience = $matched['audience'] ?? $matched['target_audience'] ?? null;
+                if (null !== $matchedAudience) {
+                    return $matchedAudience;
+                }
+            } elseif (\is_string($matched) && '' !== $matched) {
+                return $matched;
+            }
+
             if (self::isCloudFunction($request_uri)) {
                 return \sprintf(
                     '%s://%s%s',
@@ -132,57 +154,273 @@ class AuthTokenMiddleware
                 );
             }
 
-            return $audienceMap[$request_uri->getHost()];
+            return null;
         };
 
         $tokenTypeSource = static function (UriInterface $request_uri) use ($audienceMap) {
+            $matched = UriMatcher::match($audienceMap, $request_uri);
+
+            if (\is_array($matched)) {
+                if (isset($matched['token_type'])) {
+                    return $matched['token_type'];
+                }
+
+                $matchedAudience = $matched['audience'] ?? $matched['target_audience'] ?? null;
+                if ('oauth2' === $matchedAudience) {
+                    return 'oauth2';
+                }
+
+                return null !== $matchedAudience ? 'oidc' : false;
+            }
+
+            if ('oauth2' === $matched) {
+                return 'oauth2';
+            }
+
+            if (\is_string($matched) && '' !== $matched) {
+                return 'oidc';
+            }
+
             if (self::isCloudFunction($request_uri)) {
                 return 'oidc';
             }
 
-            $audience = $audienceMap[$request_uri->getHost()] ?? false;
-
-            if ('oauth2' === $audience) {
-                return 'oauth2';
-            }
-
-            return false !== $audience ? 'oidc' : false;
+            return false;
         };
 
-        return new static($audienceSource, $tokenTypeSource);
+        return new static($audienceSource, $tokenTypeSource, $audienceMap);
     }
 
     /**
-     * Call dynamic handler to fetch the token.
+     * Resolve the appropriate authenticator for the outbound request,
+     * and apply any matched transport options (proxy, verify, mTLS).
+     *
+     * @param array<string,mixed> $options
      */
-    protected function fetchDynamicToken(UriInterface $request_uri): ?string
+    protected function resolveAuthenticator(RequestInterface $request, array &$options): ?RequestAuthenticatorInterface
     {
-        $tokenType = \call_user_func($this->tokenTypeSource, $request_uri);
+        $auth = $options['outbound_auth'] ?? $options['auth'] ?? 'google_dynamic';
 
-        switch ($tokenType) {
-            case 'oidc':
-                return $this->fetchOIDCToken($request_uri);
+        // 1. Explicit RequestAuthenticatorInterface passed in options
+        if ($auth instanceof RequestAuthenticatorInterface) {
+            return $auth;
+        }
 
-            case 'oauth2':
-                return $this->fetchOAuth2Token($request_uri);
+        // 2. Explicit config array passed in options
+        if (\is_array($auth)) {
+            $this->applyTransportOptions($auth, $options);
 
-            default:
-                return null;
+            return OutboundAuth::fromConfig($auth);
+        }
+
+        // 3. Explicit named driver strings
+        if ('google_oidc' === $auth) {
+            $audience = $this->fetchOIDCTargetAudience($request->getUri());
+
+            return '' !== $audience ? new GoogleOidcAuthenticator($audience) : null;
+        }
+
+        if ('google_oauth2' === $auth) {
+            return new GoogleOAuth2Authenticator();
+        }
+
+        // 4. Default dynamic resolution via request map, audience map & UriMatcher
+        if ('google_dynamic' === $auth) {
+            // Check request-scoped runtime map first (e.g. registered by Route Middleware or ConfigController)
+            $requestMap = OutboundAuth::getRequestMap();
+            if (!empty($requestMap)) {
+                $matched = UriMatcher::match($requestMap, $request->getUri());
+                if (null !== $matched) {
+                    if (\is_array($matched)) {
+                        $this->applyTransportOptions($matched, $options);
+                    }
+
+                    return OutboundAuth::fromConfig($matched);
+                }
+            }
+
+            // Fallback to configured global audience / outbound auth map
+            $matched = UriMatcher::match($this->audienceMap, $request->getUri());
+
+            if (null !== $matched) {
+                if (\is_array($matched)) {
+                    $this->applyTransportOptions($matched, $options);
+                }
+
+                return OutboundAuth::fromConfig($matched);
+            }
+
+            if (null !== $this->tokenTypeSource && null !== $this->audienceSource) {
+                $token = $this->fetchDynamicToken($request->getUri());
+                if (!empty($token)) {
+                    return new class($token) implements RequestAuthenticatorInterface {
+                        public function __construct(protected readonly string $token) {}
+
+                        public function authenticate(RequestInterface $request, array &$options = []): RequestInterface
+                        {
+                            return $request->withHeader('authorization', 'Bearer '.$this->token);
+                        }
+                    };
+                }
+            }
+
+            if (self::isCloudFunction($request->getUri())) {
+                $audience = \sprintf(
+                    '%s://%s%s',
+                    $request->getUri()->getScheme(),
+                    $request->getUri()->getHost(),
+                    $request->getUri()->getPath(),
+                );
+
+                return new GoogleOidcAuthenticator($audience);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Apply transport options (proxy, verify, resolve, mTLS cert & key) from matched host configuration.
+     *
+     * @param array<string,mixed> $config
+     * @param array<string,mixed> $options
+     */
+    protected function applyTransportOptions(array $config, array &$options): void
+    {
+        if (!isset($options['proxy']) && !empty($config['proxy'])) {
+            $proxy = (string) $config['proxy'];
+            if (!str_contains($proxy, '://')) {
+                $proxy = 'http://'.$proxy;
+            }
+            $options['proxy'] = $proxy;
+        }
+
+        if ((!isset($options['verify']) || true === $options['verify']) && isset($config['verify'])) {
+            $options['verify'] = $config['verify'];
+        }
+
+        if (!empty($config['resolve'])) {
+            $curlResolve = \defined('CURLOPT_RESOLVE') ? CURLOPT_RESOLVE : 10203;
+            $options['curl'] ??= [];
+            $options['curl'][$curlResolve] = array_values(array_unique(array_merge(
+                (array) ($options['curl'][$curlResolve] ?? []),
+                (array) $config['resolve']
+            )));
+        }
+
+        $mtls = $config['mtls'] ?? $config;
+
+        if (!empty($mtls['cert'])) {
+            $inMemory = (bool) ($mtls['in_memory'] ?? true);
+            CertificateMaterializer::bindToRequestOptions(
+                $options,
+                $mtls['cert'],
+                $mtls['key']           ?? $mtls['ssl_key'] ?? null,
+                $mtls['cert_password'] ?? $mtls['passphrase'] ?? null,
+                $mtls['key_password']  ?? null,
+                $inMemory,
+            );
         }
     }
 
     /**
-     * Call OIDC handler to fetch the token.
+     * Invalidate cached token and retry request once.
+     *
+     * @param array<string,mixed> $options
      */
-    protected function fetchOIDCToken(UriInterface $request_uri): string
-    {
-        $target_audience = \call_user_func($this->audienceSource, $request_uri);
+    protected function retryWithFreshToken(
+        callable $handler,
+        RequestInterface $request,
+        array $options,
+        AbstractOAuth2Authenticator|ChainAuthenticator $authenticator,
+    ): PromiseInterface {
+        $authenticator->invalidateToken();
 
-        return OIDC::fetchToken($target_audience);
+        $retryOptions                  = $options;
+        $retryOptions['_auth_retried'] = true;
+
+        if ($request->getBody()->isSeekable()) {
+            $request->getBody()->rewind();
+        }
+
+        try {
+            $freshRequest = $authenticator->authenticate($request, $retryOptions);
+            $freshRequest = $this->synchronizeRequestBody($freshRequest);
+        } catch (OutboundAuthenticationException $e) {
+            if (config('gserverlesssupport.http-client.telemetry.enabled', true)) {
+                report($e);
+            }
+
+            throw $e;
+        }
+
+        return $handler($freshRequest, $retryOptions);
     }
 
     /**
-     * Call OAuth2 handler to fetch the token.
+     * Ensure request body stream pointer is rewound and Content-Length header matches actual body size.
+     */
+    protected function synchronizeRequestBody(RequestInterface $request): RequestInterface
+    {
+        $body = $request->getBody();
+
+        if ($body->isSeekable() && $body->tell() > 0) {
+            $body->rewind();
+        }
+
+        $size = $body->getSize();
+        if (null !== $size && $request->hasHeader('Content-Length')) {
+            $currentLength = $request->getHeaderLine('Content-Length');
+            if ((string) $size !== $currentLength) {
+                $request = $request->withHeader('Content-Length', (string) $size);
+            }
+        }
+
+        return $request;
+    }
+
+    /**
+     * Call dynamic handler to fetch legacy token.
+     */
+    protected function fetchDynamicToken(UriInterface $request_uri): ?string
+    {
+        if (null === $this->tokenTypeSource) {
+            return null;
+        }
+
+        $tokenType = \call_user_func($this->tokenTypeSource, $request_uri);
+
+        return match ($tokenType) {
+            'oidc'   => $this->fetchOIDCToken($request_uri),
+            'oauth2' => $this->fetchOAuth2Token($request_uri),
+            default  => null,
+        };
+    }
+
+    /**
+     * Call OIDC handler to fetch token.
+     */
+    protected function fetchOIDCToken(UriInterface $request_uri): string
+    {
+        $targetAudience = $this->fetchOIDCTargetAudience($request_uri);
+
+        return OIDC::fetchToken($targetAudience);
+    }
+
+    /**
+     * Resolve target audience string for URI.
+     */
+    protected function fetchOIDCTargetAudience(UriInterface $request_uri): string
+    {
+        if (null !== $this->audienceSource) {
+            return (string) \call_user_func($this->audienceSource, $request_uri);
+        }
+
+        return '';
+    }
+
+    /**
+     * Call OAuth2 handler to fetch token.
      */
     protected function fetchOAuth2Token(UriInterface $request_uri): string
     {
